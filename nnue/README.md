@@ -1,6 +1,6 @@
-# What is it
-
 Source: https://github.com/dshawul/nnue-probe
+
+# What is it
 
 nnue-probe is library for probing NNUE neural networks for chess.
 The core nnue probing code is taken from [CFish](https://github.com/syzygy1/Cfish) and modified a bit.
@@ -28,3 +28,14 @@ The result
     NNUE loaded !
     Score =  42
 
+
+# Requirements
+    
+    A size of 21022697 bytes. 20MB. If it is bigger it does not work.
+    
+    if (readu_le_u32(d) != NnueVersion) return false;
+    if (readu_le_u32(d + 4) != 0x3e5aa6eeU) return false;
+    if (readu_le_u32(d + 8) != 177) return false;
+    if (readu_le_u32(d + TransformerStart) != 0x5d69d7b8) return false;
+    if (readu_le_u32(d + NetworkStart) != 0x63337156) return false;
+    
