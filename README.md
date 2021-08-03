@@ -4,10 +4,10 @@
 
 La principal fuente de información para el desarrollo de motores de ajedrez son las páginas Wiki de programación de ajedrez (https://www.chessprogramming.org/Main_Page).
 
-También he utilizado la información disponible en Internet, de código fuente de otros motores, como Rodent, Tucano, Ethereal, Demolito, Bison, Tscp, Cpw, Crafty, Olithink...
+También he utilizado la información disponible en Internet, código fuente de otros motores como: Rodent, Tucano, Ethereal, Demolito, Bison, Tscp, Cpw, Crafty, Olithink...
 
 El motor esta preparado para usar redes neuronales.
-En esta [web](https://tests.stockfishchess.org/nns) encontraras una gran variedad, de entre todas ellas hay cuatro o cinco oficiales o han pasado los test de pruebas.
+En esta [web](https://tests.stockfishchess.org/nns) encontraras una gran variedad, de entre todas ellas hay cuatro o cinco oficiales o que ha pasado los test de pruebas (Mejor ELO).
 Puede que hayan algunos archivos .nnue que no pueda cargarlos sobre todo los de tamaño de 40MB. Supongo que por falta de compatibilidad de la .dll y la red neuronal.
 
 
@@ -94,4 +94,23 @@ Para obtener todos los detalles, lea la copia de la GPL v3 que se encuentra en e
 
 
 
-Gracias a todos los desarrolladores que pusieron estos conocimientos a disposición.
+## Agradecimientos
+
+Estoy muy agradecido a las siguientes personas:
+
+- A mi familia y amigos, que siempre están ahí para ayudar.
+
+- A todos aquellos que han decidido compartir el código fuente de sus motores (Me han aclarado funciones y entendimiento de ellos).
+
+- A la web CPW https://www.chessprogramming.org/Main_Page por todo el contenido sobre las técnicas aplicables a un motor ajedrez.
+
+- A todos aquellos que han jugado con el motor y han publicado su experiencia y opiniones.
+
+- A los archivos de rendimientos .epd de posiciones estratégicas tipo: WAC, IQ6, mes400... En especial a la web https://sites.google.com/site/strategictestsuite/
+
+- A la web CCRL 40/4 y a CEGT 40/4, por realizar un torneo y darle una clasificación de ELO.
+
+- A toda web que haya publicado una clasificación ELO o/y haya añadido un enlace a mi web.
+
+- A Pedro Castro por ser el primero en probar y realizar un torneo. Autor de la web Motores de ajedrez hispanos y autor de DanaSah.
+
