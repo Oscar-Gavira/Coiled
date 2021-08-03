@@ -49,13 +49,22 @@ Actualmente, Coiled-NNUE tiene las siguientes parámetros UCI:
   * #### GaviotaProbeLimit
     Indica a partir de cuantas piezas busca en la tabla de finales.
 
+  * #### NnueUse *
+    Activa/desactiva el uso de de una red neuronal (nnue).
+
+  * #### NnuePath *
+    Para asignar el archivo de la red neuronal (nnue).
+
   * #### UCI_Chess960 **
     Activa/desactiva el modo de juego Chess960. Acepta las anotaciones Shredder-FEN (AHah) o X-FEN (KQkq).
 
   * #### UCI_Chess960CastlingSign **
     Indica si utiliza el enroque estándar del protocolo UCI o el de la GUI Arena.
 
-  ** Si activa UCI_Chess960 y utiliza la GUI de Arena, en la opción UCI_Chess960CastlingSign debes seleccionar la configuración: O-O/O-O-O. Para un correcto funcionamiento con la GUI Arena.
+
+  [*] Esta versión solo funciona con redes neuronales, no dispone de evaluación interna.
+  
+  [**] Si activa UCI_Chess960 y utiliza la GUI de Arena, en la opción UCI_Chess960CastlingSign debes seleccionar la configuración: O-O/O-O-O. Para un correcto funcionamiento con la GUI Arena.
 
 	
 
