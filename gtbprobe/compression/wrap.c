@@ -1,9 +1,10 @@
-/* wrap.h */
+/* wrap.c */
 
 /*
- X11 License:
+This Software is distributed with the following X11 License,
+sometimes also known as MIT license.
 
- Copyright (c) 2010 Miguel A. Ballicora
+Copyright (c) 2010 Miguel A. Ballicora
 
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
@@ -27,13 +28,54 @@
  OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#if !defined(H_WRAP)
-#define H_WRAP
+#include "wrap.h"
 
-/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
-#include <stdlib.h>
+#define LZMA86
 
-extern int lzma_decode (const unsigned char *in_start, size_t in_len, unsigned char *out_start, size_t *pout_len, size_t out_max);
-
-/*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+#if defined(LZMA86)
+#include "lzma/Lzma86Dec.h"
 #endif
+
+#if !defined(NDEBUG)
+#define NDEBUG
+#endif
+#ifdef DEBUG
+#undef NDEBUG
+#endif
+#include "assert.h"
+
+/* external, so the compiler can be silenced */
+size_t TB_DUMMY_unused;
+
+/***********************************************************************************************************/
+
+extern int
+lzma_decode
+(const unsigned char *in_start, size_t in_len, unsigned char *out_start, size_t *pout_len, size_t out_max)
+{
+		size_t nn = out_max;
+		int x = Lzma86_Decode(out_start, &nn, in_start, &in_len);
+		*pout_len = nn;
+		return x == SZ_OK;
+}
+
+/***********************************************************************************************************/
+
+#define TRUE 1
+#define FALSE 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
