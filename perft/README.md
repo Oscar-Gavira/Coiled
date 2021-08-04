@@ -9,14 +9,16 @@ Source: https://github.com/AndyGrant/Ethereal/tree/master/src/perft
 
 
 # Línea de comando
-Para la versión fischer.epd, se ha de compilar con la opción UCI_Chess960 = true por defecto. O las fallara todas.
 * perft.py "Coiled_07_x64.exe" "standard.epd" > standard.txt
-* perft.py "Coiled_07_x64_Chess960.exe" "fischer.epd" > fischer.txt
+* perft.py "Coiled_07_x64_Chess960.exe" "fischer.epd" --chess960 true > fischer.txt
 
-La opción "> standard.txt" es para volcar la salida a un archivo.
+La opción "> standard.txt" o " > fischer.txt" es para volcar la salida a un archivo.
 
 
 # Ayuda
 Usage:
-* perft.py (motor) (epd)
+* perft.py (motor) (epd) --chess960 true --depth 3
+
+Para más ayuda:
+* perft.py -h
 
