@@ -23,6 +23,7 @@ import argparse, subprocess, sys, time
 parser = argparse.ArgumentParser()
 parser.add_argument('engine',  help='Path to Engine')
 parser.add_argument('dataset', help='PERFT data file')
+parser.add_argument('--chess960', help='true or false', default="false")
 parser.add_argument('--depth', help='Depth of PERFT [ blank = unlimited ]', default=128)
 arguments = parser.parse_args()
 
@@ -44,6 +45,8 @@ sys.stdout.write(SEPERATOR)
 sys.stdout.write(HEADER.format('Depth', 'Nodes', 'FEN', 'Status'))
 sys.stdout.write(SEPERATOR)
 
+if arguments.chess960 == "true": process.stdin.write('setoption name UCI_Chess960 value true\n')
+
 start = time.time()
 
 for line in data:
@@ -53,7 +56,7 @@ for line in data:
         fen   = line.split(';')[0]
         depth = int(token.split(' ')[0][1:])
         nodes = int(token.split(' ')[1])
-        if depth > arguments.depth: break
+        if depth > int(arguments.depth): break
 
         sys.stdout.write('| {0:>5} | {1:>11} | {2:<76} | '.format(depth, nodes, fen))
         sys.stdout.flush()
