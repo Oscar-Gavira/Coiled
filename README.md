@@ -81,6 +81,8 @@ Esta distribución de Coiled-NNUE consta de los siguientes archivos:
    * [nnue](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/main/nnue), un subdirectorio que contiene el código fuente para probar las redes neuronales NNUE. Genera una librería para ser utilizado por Coiled-NNUE.
 	 
    * [gtbprobe](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/main/gtbprobe), un subdirectorio que contiene el código fuente para probar las bases de finales de gaviota. Genera una librería para ser utilizado por Coiled-NNUE.
+
+   * [perft](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/main/perft), un subdirectorio que contiene pruebas de perft para varias posiciones que son útiles para depurar, comenzando con la posición de inicio.
    
 
 
