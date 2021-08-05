@@ -23,13 +23,13 @@
 #*.lo
 
 # Shared objects (inc. Windows DLLs)
-*.dll
+src/*.dll
 #*.so
 #*.so.*
 #*.dylib
 
 # Executables
-*.exe
+src/*.exe
 #*.out
 #*.app
 #*.i*86
@@ -51,7 +51,8 @@
 #Mkfile.old
 #dkms.conf
 
-*.py
-*.db
-*.cbp
-*.html
+perft/*.py
+sts/*.py
+src/*.db
+src/*.cbp
+src/*.html
