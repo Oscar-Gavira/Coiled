@@ -1,5 +1,14 @@
 # Coiled-NNUE
 
+Ahora Coiled es de código abierto.
+
+Quiero aportar mi pequeño granito de arena a la comunidad de investigación, que tanto me ha aportado a mi en la creación de Coiled.
+
+Espero no infligir nada, no ofender a nadie con alguna acción incorrecta... Toda ayuda y mejora sera bien recibida.
+
+He decidido quitar la parte interna de la evaluación, ya que es muy densa y poco clara. Poco a poco volveré a implementar un código de evaluación propio/interno. Pues en esta versión, solo funciona con redes neuronales.
+
+
 [Coiled-NNUE](https://www.oscargavira.es/?sec=Coiled_Informacion) es un motor de ajedrez de protocolo UCI escrito en C. Es un programa de línea de comandos (Aplicación de consola), que no está diseñado para usarse directamente, sino a través de una interfaz de usuario o GUI, con capacidad para tratar el protocolo UCI, como: Cute Chess, Tarrasch, Banksia, c-chess-cli, Arena, Fritz, [Ver más](https://www.chessprogramming.org/GUI#Chess_GUIs)
 
 La principal fuente de información para el desarrollo de motores de ajedrez son las páginas Wiki de programación de ajedrez (https://www.chessprogramming.org/Main_Page).
