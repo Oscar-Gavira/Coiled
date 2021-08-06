@@ -108,5 +108,3 @@ Estoy muy agradecido a las siguientes personas:
 - A la web CCRL 40/4 y a CEGT 40/4, por realizar un torneo y darle una clasificación de ELO.
 - A toda web que haya publicado una clasificación ELO o/y haya añadido un enlace a mi web.
 - A Pedro Castro por ser el primero en probar y realizar un torneo. Autor de la web Motores de ajedrez hispanos y autor de DanaSah.
-- 
-
