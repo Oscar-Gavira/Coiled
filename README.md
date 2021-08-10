@@ -4,7 +4,9 @@ Ahora Coiled es de código abierto.
 
 Quiero aportar mi pequeño granito de arena a la comunidad de investigación, que tanto me ha aportado a mi en la creación de Coiled.
 
-Espero no infligir nada, no ofender a nadie con alguna acción incorrecta... Toda ayuda y mejora sera bien recibida.
+Espero no infligir nada, no ofender a nadie... Toda ayuda y mejora sera bien recibida.
+
+También quiero decir que es mi primer proyecto de código abierto.
 
 He decidido quitar la parte interna de la evaluación, ya que es muy densa y poco clara. Poco a poco volveré a implementar un código de evaluación propio/interno. Pues en esta versión, solo funciona con redes neuronales.
 
@@ -81,18 +83,15 @@ Actualmente, Coiled-NNUE tiene las siguientes parámetros UCI:
 
 Esta distribución de Coiled-NNUE consta de los siguientes archivos:
 
+   * [Release](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/master/Release), contiene todo lo necesario para ejecutar Coiled-NNUE.
+   * [gtbprobe](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/main/gtbprobe), contiene el código fuente para probar las bases de finales de gaviota. Genera una librería para ser utilizado por Coiled-NNUE.
+   * [nnue](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/main/nnue), un subdirectorio que contiene el código fuente para probar las redes neuronales NNUE. Genera una librería para ser utilizado por Coiled-NNUE.
+   * [perft](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/main/perft), contiene pruebas de perft para varias posiciones que son útiles para depurar, comenzando con la posición de inicio.
+   * [src](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/main/src), contiene el código fuente completo de Coiled-NNUE. 
+   * [sts](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/master/sts), contiene una suite de posiciones estratégicas.
    * [Readme.md](https://github.com/Oscar-Gavira/Coiled-NNUE/blob/main/README.md), el archivo que está leyendo actualmente.
-
    * [License](https://github.com/Oscar-Gavira/Coiled-NNUE/blob/main/LICENSE), un archivo de texto que contiene la licencia pública general GNU versión 3.
 
-   * [src](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/main/src), un subdirectorio que contiene el código fuente completo de Coiled-NNUE. 
-	 
-   * [nnue](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/main/nnue), un subdirectorio que contiene el código fuente para probar las redes neuronales NNUE. Genera una librería para ser utilizado por Coiled-NNUE.
-	 
-   * [gtbprobe](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/main/gtbprobe), un subdirectorio que contiene el código fuente para probar las bases de finales de gaviota. Genera una librería para ser utilizado por Coiled-NNUE.
-
-   * [perft](https://github.com/Oscar-Gavira/Coiled-NNUE/tree/main/perft), un subdirectorio que contiene pruebas de perft para varias posiciones que son útiles para depurar, comenzando con la posición de inicio.
-   
 
 
 ## Términos de Uso
