@@ -1,1 +1,3 @@
 # Coiled-NNUE
+En obras, pruebas...
+Pronto una nueva version.
