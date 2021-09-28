@@ -36,7 +36,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 	#include "nnue.h"
 #endif
 /*******************************************************************************
-									Métodos
+									Metodos
 *******************************************************************************/
 void UciEntrada(char *ptr);									/* Procesa las entradas */
 void LeerComandos(char *entrada, int longitud);				/* Lee las entradas */
@@ -47,16 +47,16 @@ void CargarNnue();											/* Carga las NNue */
 void CargarGaviotaTB();										/* Carga las GaviotaTB */
 void CargarSyzygy();										/* Carga las Syzygy */
 void CacheGaviotaTB();										/* Establecemos cache GaviotaTB */
-void IniciarConfiguracion();								/* Inicia la configuración */
+void IniciarConfiguracion();								/* Inicia la configuracion */
 
 /******************************************************************************
 Iniciamos las variables globales
 *******************************************************************************/
 
 _ST_TableroX64 TableroGlobal;									/* Tablero actual. */
-_ST_TipoJuego TipoJuego;										/* Almacena información del juego por tiempo. */
-_ST_Puntos Blancas;												/* Almacenamos información de la evaluación de las blancas */
-_ST_Puntos Negras;												/* Almacenamos información de la evaluación de las negras */
+_ST_TipoJuego TipoJuego;										/* Almacena informacion del juego por tiempo. */
+_ST_Puntos Blancas;												/* Almacenamos informacion de la evaluacion de las blancas */
+_ST_Puntos Negras;												/* Almacenamos informacion de la evaluacion de las negras */
 int Salir;														/* Indica al programa que salga, para evitar un "exit(EXIT_FAILURE)" sin liberar la tabla hash */
 
 #ifdef ARC_64BIT
@@ -111,6 +111,7 @@ int main(int argc, char *argv[])
 	Iniciar_AlphaBeta();
 	Inicializar_See();
 	IniciarConfiguracion();
+	CargarEvaluacion();
 
 	/* Cargamos DLL */
 #ifdef USAR_SQLITE
@@ -433,13 +434,13 @@ void Position_Fen_Startpos(char *ptr)
 			Position_Fen_Startpos(buffer);
 			return;
 		}
-		/* Desde una posición Fen, el libro no encuentra variaciones de aperturas, lo finalizamos */
+		/* Desde una posicion Fen, el libro no encuentra variaciones de aperturas, lo finalizamos */
 #ifdef USAR_SQLITE
 		if (TipoJuego.Ajedrez960 == false)
 			LibroSql.FinVariacion = true;
 #endif
 	}
-	else /* Posición inicial (STARTPOS) */
+	else /* Posicion inicial (STARTPOS) */
 	{
 		memset(contenedor, 0, MAX_DIR * sizeof(char));
 		ptr = SplitString(ptr, contenedor, MAX_DIR);
@@ -708,7 +709,7 @@ void InicioBusqueda(char *ptr) {
 				}
 			}
 		}
-		else if (time < 10000) /* menor de 10 segundos. Reducimos el tiempo más. */
+		else if (time < 10000) /* menor de 10 segundos. Reducimos el tiempo mas. */
 		{
 			if (inc)
 			{
@@ -726,7 +727,7 @@ void InicioBusqueda(char *ptr) {
 		Ok = true;
 	}
 
-	/* Lanzamos la búsqueda */
+	/* Lanzamos la busqueda */
 	if (Ok == true)
 	{
 		Buscar();
@@ -762,9 +763,9 @@ void IniciarConfiguracion()
 	memset(Gaviota.Directorio, 0, MAX_DIR * sizeof(char));		/* Limpiamos la ruta */
 	Gaviota.DirectorioNuevo = false;							/* Indica un cambio de directorio, para un re-load en caso de que si. */
 
-	Gaviota.Informacion = true;									/* Muestra información 0 = non-verbose, 1 = verbose */
-	Gaviota.Compresion = 4;										/* Compresión solo .cp4 */
-	Gaviota.Limite = 5;											/* Numero de piezas máximas para empezar a buscar. */
+	Gaviota.Informacion = true;									/* Muestra informacion 0 = non-verbose, 1 = verbose */
+	Gaviota.Compresion = 4;										/* Compresion solo .cp4 */
+	Gaviota.Limite = 5;											/* Numero de piezas maximas para empezar a buscar. */
 	Gaviota.CacheMB = MB_GAVIOTA_CACHE;							/* Cache para las bases de datos */
 	Gaviota.CacheNueva = false;									/* Si hay un cambio de valor en la cache, para un re-load */
 	Gaviota.Fraccion = 0;										/* 	wdl_fraction:	0 = Solo DTM	128 = Solo WDL
@@ -819,7 +820,6 @@ void Setoption(char *ptr)
 	/*************************************************************************
 								MostrarVp
 	*************************************************************************/
-#ifdef USAR_PVS
 	if (strcmp(nombre, "ShowPv") == 0)
 	{
 		if (strcmp(valor, "None") == 0)
@@ -835,8 +835,6 @@ void Setoption(char *ptr)
 			TipoJuego.MostrarVp = 2;
 		}
 	}
-
-#endif
 	/********************************************************************************
 							LIBRO DE APERTURAS
 	********************************************************************************/
