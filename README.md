@@ -1,11 +1,5 @@
-Coiled 0.8 - Motor de ajedrez por Oscar Gavira.
+Coiled - Motor de ajedrez por Oscar Gavira.
 ===============================================
-
-Versión del motor: 0.8
-
-Fecha de publicación: Septiembre - 2021
-
-Versiones disponibles: Windows 64 bits.
 
 Protocolo de comunicación: UCI
 
@@ -106,7 +100,7 @@ Actualmente Coiled solo funciona en 64bit por las redes neuronales :
 
 **SISTEMA OPERATIVO** Windows 64 bit.
 
-**PROCESADOR** Intel o Ahtlon con soporte AVX2.
+**PROCESADOR** Intel o Ahtlon con soporte SSE3 o SSE4.1 o AVX2.
 
 **RAM** 128MB Mínimo.
 
@@ -118,7 +112,7 @@ Versión 0.3 No publicada. Se incrementó en 250. Dando así una fuerza de 2250 
 
 Coiled-NNUE 0.7	± 3050 ELO.
 
-La versión actual de Coiled 0.8 calculo que alcanza los 3250 ELO.
+La versión actual de Coiled 0.9 calculo que alcanza los 3250 ELO.
 
 
 ### CCRL (40/4)
@@ -237,7 +231,11 @@ Activa/desactiva el uso de redes neuronales. (por defecto: true)
 
 NnuePath \*
 
-Para asignar la ruta de la red neuronal. (por defecto: nn-a9f9e868162a.nnue)
+Para asignar la ruta de la red neuronal. (por defecto: red_neuronal.nnue)
+
+NnueTechnology \*
+
+Indica el tipo de tecnología que utiliza la red neuronal para mayor compatibilidad con las CPU. AVX2 o SSE4.1 o SSE3. (por defecto: AVX2)
 
 UCI\_Chess960 \*\*
 
@@ -315,4 +313,4 @@ Estoy muy agradecido a las siguientes personas:
 
 - Grupo de Stockfish. [Aquí](https://tests.stockfishchess.org/nns) encontraras una gran variedad de redes neuronales.
 
-Seleccionar la red neuronal descargada mediante las opciones UCI o renombrar el archivo a red_neuronal.nnue y colóquelo en el mismo directorio que Coiled_08_x64.exe
+Seleccionar la red neuronal descargada mediante las opciones UCI o renombrar el archivo a red_neuronal.nnue y colóquelo en el mismo directorio que Coiled_09_x64.exe
