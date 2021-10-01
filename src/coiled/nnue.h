@@ -28,6 +28,7 @@ typedef struct tag_nnue
 {
 	int Usar;															/* Se puede usar la tablas de gaviota (true/false) */
 	int Dll_Cargada;													/* Esta cargada la DLL */
+	int Tecnologia;														/* 0 = SSE3		1 = SSE4.1		2 = AVX2 */
 	char Directorio[MAX_DIR];											/* Obtenemos las rutas a las tablas de finales */
 	int DirectorioNuevo;
 } _ST_Nnue;
@@ -45,7 +46,7 @@ typedef int (CDECL *NNUE_EVALUATE)(
 );
 
 
-/* Inicia la carga de la información */
+/* Inicia la carga de la informacion */
 NNUE_INIT NNUE_init;
 NNUE_EVALUATE NNUE_evaluate;
 
@@ -57,7 +58,7 @@ enum NNUE_Piezas
 };
 
 /**************************************************************************************
-Métodos
+Metodos
 **************************************************************************************/
 int Cargar_nnue_dll();
 int Descargar_nnue_dll();
