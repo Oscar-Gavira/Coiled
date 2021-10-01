@@ -21,7 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define DEFINICIONES_H
 
 #define NOMBRE "Coiled"
-#define VER  "0.8"
+#define VER  "0.9"
 #define AUTOR  "Oscar Gavira"
 
 #define USAR_SQLITE														/* Para compilar el uso de sqlite. Libro de aperturas. */
@@ -60,13 +60,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define U64_FORMAT "%"PRIu64""
 #define S32_FORMAT "%"PRId32""
 #define STRING_FORMAT "%s"
-#define MAX_PLY					(128)									/* Máximos ply */
-#define MB_HASH_TABLE_MAX		(4096)									/* Tamaño de la tabla hash maximo */
-#define MB_HASH_TABLE			(128)									/* Tamaño de la tabla hash por defecto */
-#define MB_HASH_TABLE_MIN		(8)										/* Tamaño de la tabla hash minimo */
-#define MB_GAVIOTA_CACHE_MAX	(1024)									/* Tamaño maximo de cache, para las tablas de finales de gaviota. */
-#define MB_GAVIOTA_CACHE		(32)									/* Tamaño por defecto de cache, para las tablas de finales de gaviota. */
-#define MB_GAVIOTA_CACHE_MIN	(8)										/* Tamaño minimo de cache, para las tablas de finales de gaviota. */
+#define MAX_PLY					(128)									/* Maximos ply */
+#define MB_HASH_TABLE_MAX		(4096)									/* Tamano de la tabla hash maximo */
+#define MB_HASH_TABLE			(128)									/* Tamano de la tabla hash por defecto */
+#define MB_HASH_TABLE_MIN		(8)										/* Tamano de la tabla hash minimo */
+#define MB_GAVIOTA_CACHE_MAX	(1024)									/* Tamano maximo de cache, para las tablas de finales de gaviota. */
+#define MB_GAVIOTA_CACHE		(32)									/* Tamano por defecto de cache, para las tablas de finales de gaviota. */
+#define MB_GAVIOTA_CACHE_MIN	(8)										/* Tamano minimo de cache, para las tablas de finales de gaviota. */
 
 typedef uint64_t U64;
 typedef int64_t S64;													/* 9.223.372.036.854.775.807 / -9.223.372.036.854.775.806. Para el historico. */
@@ -75,13 +75,13 @@ typedef int64_t S64;													/* 9.223.372.036.854.775.807 / -9.223.372.036.8
 #define U64_FORMAT "%"PRIu32""
 #define S32_FORMAT "%"PRId32""
 #define STRING_FORMAT "%s"
-#define MAX_PLY					(64)									/* Máximos ply */
-#define MB_HASH_TABLE_MAX		(2048)									/* Tamaño de la tabla hash maximo */
-#define MB_HASH_TABLE			(16)									/* Tamaño de la tabla hash por defecto */
-#define MB_HASH_TABLE_MIN		(2)										/* Tamaño de la tabla hash minimo */
-#define MB_GAVIOTA_CACHE_MAX	(512)									/* Tamaño maximo de cache, para las tablas de finales de gaviota. */
-#define MB_GAVIOTA_CACHE		(16)									/* Tamaño por defecto de cache, para las tablas de finales de gaviota. */
-#define MB_GAVIOTA_CACHE_MIN	(4)										/* Tamaño minimo de cache, para las tablas de finales de gaviota. */
+#define MAX_PLY					(64)									/* Maximos ply */
+#define MB_HASH_TABLE_MAX		(2048)									/* Tamano de la tabla hash maximo */
+#define MB_HASH_TABLE			(16)									/* Tamano de la tabla hash por defecto */
+#define MB_HASH_TABLE_MIN		(2)										/* Tamano de la tabla hash minimo */
+#define MB_GAVIOTA_CACHE_MAX	(512)									/* Tamano maximo de cache, para las tablas de finales de gaviota. */
+#define MB_GAVIOTA_CACHE		(16)									/* Tamano por defecto de cache, para las tablas de finales de gaviota. */
+#define MB_GAVIOTA_CACHE_MIN	(4)										/* Tamano minimo de cache, para las tablas de finales de gaviota. */
 
 typedef uint32_t U64;
 typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el historico. (Si alcanza mucha profundidad en la busqueda FALLOS...) */
@@ -92,9 +92,9 @@ typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el histori
 #define MAX(a,b)			(((a) > (b)) ? (a) : (b))
 #define MIN(a,b)			(((a) < (b)) ? (a) : (b))
 #define COLUMNA(x)			((x & 7))									/* Obtenemos la columna donde esta situada la pieza de A a H (0 a 7) */
-#define HORIZONTAL(x)		((7 - (x >> 3)))							/* Obtenemos la línea horizontal donde esta situada la pieza 1 a 8 (0 a 7) */
+#define HORIZONTAL(x)		((7 - (x >> 3)))							/* Obtenemos la linea horizontal donde esta situada la pieza 1 a 8 (0 a 7) */
 
-#define MAX_JUGADAS			(256)										/* Numero máximo de jugadas que se pueden obtener */
+#define MAX_JUGADAS			(256)										/* Numero maximo de jugadas que se pueden obtener */
 #define MAX_HISTORICO		(800)										/* Maximo numero de jugadas de historico.  */
 #define COMPROBAR_ENTRADAS	(1024)										/* Cada x tiempo comprobamos entradas */
 
@@ -125,7 +125,7 @@ typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el histori
 
 #define NO_MOVIMIENTO (0)
 
-/* Cuadro origen, cuadro destino, pieza movida, pieza capturada, coronación, EP/Dos adelante/Enroque */
+/* Cuadro origen, cuadro destino, pieza movida, pieza capturada, coronacion, EP/Dos adelante/Enroque */
 #define MOVIMIENTO(o,d,p,c,co,f) ( (o) | ((d) << 7) | ( (p) << 14 ) | ( (c) << 18 ) | ( (co) << 22 ) | (f))
 
 #define HASH_PIEZA(p, c) (TableroGlobal.Hash ^= zobrist_Tablero[(p)][(c)])
@@ -133,8 +133,8 @@ typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el histori
 #define HASH_LADO (TableroGlobal.Hash ^= zobrist_Tablero[7][32])
 #define HASH_EP(p) (TableroGlobal.Hash ^= zobrist_Tablero[0][(p)])
 
-#define CUADRADO_ORIGEN(m) ((m) & 0x7F)									/* Obtenemos el índice de donde esta la pieza */
-#define CUADRADO_DESTINO(m) (((m)>>7) & 0x7F)							/* Obtenemos el índice de donde va la pieza */
+#define CUADRADO_ORIGEN(m) ((m) & 0x7F)									/* Obtenemos el indice de donde esta la pieza */
+#define CUADRADO_DESTINO(m) (((m)>>7) & 0x7F)							/* Obtenemos el indice de donde va la pieza */
 #define PIEZAMOVIDA(m) (((m)>>14) & MFLAGMOV)							/* Devuelve la pieza (1,2,3,4,5,6 - 8,9,10,11,12,13) */
 #define CAPTURADA(m) (((m)>>18) & MFLAGCAP)								/* Devuelve MFLAGCAP o la pieza (1,2,3,4,5,6 - 8,9,10,11,12,13) */
 #define CORONACION(m) (((m)>>22) & MFLAGPROM)							/* Devuelve MFLAGPROM o la pieza (2,3,4,5 - 9,10,11,12) */
@@ -144,14 +144,14 @@ typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el histori
 #define ENROQUE(m) (m & MFLAGCA)										/* Devuelve 0 o MFLAGCA. Indica movimiento de enroque */
 
 /* Valor de las piezas en el tablero */
-#define PeonB  (1)														/* Valor del peón blanco en el tablero */
+#define PeonB  (1)														/* Valor del peon blanco en el tablero */
 #define CaballoB  (2)													/* Valor del caballo blanco en el tablero */
 #define AlfilB  (3)														/* Valor del alfil blanco en el tablero */
 #define TorreB  (4)														/* Valor de la torre blanco en el tablero */
 #define DamaB  (5)														/* Valor de la dama blanco en el tablero */
 #define ReyB  (6)														/* Valor del rey blanco en el tablero */
 #define CasillaVacia  (7)												/* Valor vacio en el tablero */
-#define PeonN  (8)														/* Valor del peón negro en el tablero */
+#define PeonN  (8)														/* Valor del peon negro en el tablero */
 #define CaballoN  (9)													/* Valor del caballo negro en el tablero */
 #define AlfilN  (10)													/* Valor del alfil negro en el tablero */
 #define TorreN  (11)													/* Valor de la torre negro en el tablero */
@@ -159,13 +159,13 @@ typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el histori
 #define ReyN  (13)														/* Valor del rey negro en el tablero */
 #define NoPieza (14)
 
-/* Enumeración para saber que enroques están permitidos o esta realizado */
+/* Enumeracion para saber que enroques estan permitidos o esta realizado */
 #define Enroque (-1)													/* Indica si el enroque se ha realizado */
 #define Ninguno	(0)														/* Ya no hay posibilidad de enroque (Enroque perdido) */
 #define Corto	(1)														/* Solo enroque corto */
 #define Largo	(2)														/* Solo enroque largo */
 #define LosDos	(3)														/* Largo y corto */
-/* Enumeración para obtener todos los movimientos o Capturas y coronaciones */
+/* Enumeracion para obtener todos los movimientos o Capturas y coronaciones */
 #define Todos (1)				    									/* Generara todas los movimientos posibles */
 #define CapturasCoronacion (2)											/* Generar todas las capturas y coronaciones posibles */
 
