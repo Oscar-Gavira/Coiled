@@ -111,7 +111,6 @@ int main(int argc, char *argv[])
 	Iniciar_AlphaBeta();
 	Inicializar_See();
 	IniciarConfiguracion();
-	CargarEvaluacion();
 
 	/* Cargamos DLL */
 #ifdef USAR_SQLITE
@@ -278,6 +277,21 @@ void UciEntrada(char* parametro)
 				printf("option name NnuePath type string default "STRING_FORMAT"\n", Nnue.Directorio);
 			fflush(stdout);
 		}
+		switch (Nnue.Tecnologia)
+		{
+		case 0:
+			printf("option name NnueTechnology type combo default SSE3 var AVX2 var SSE4.1 var SSE3\n");
+			break;
+		case 1:
+			printf("option name NnueTechnology type combo default SSE4.1 var AVX2 var SSE4.1 var SSE3\n");
+			break;
+		case 2:
+			printf("option name NnueTechnology type combo default AVX2 var AVX2 var SSE4.1 var SSE3\n");
+			break;
+		default:
+			break;
+		}
+		fflush(stdout);
 #endif
 #ifdef USAR_AJEDREZ960
 		if (TipoJuego.Ajedrez960 == true)
@@ -785,6 +799,7 @@ void IniciarConfiguracion()
 #ifdef USAR_NNUE
 	Nnue.Usar = true;
 	Nnue.Dll_Cargada = false;
+	Nnue.Tecnologia = 2;										/* Por defecto AVX */
 	memset(Nnue.Directorio, 0, MAX_DIR * sizeof(char));
 	strcpy(Nnue.Directorio, "red_neuronal.nnue");
 	Nnue.DirectorioNuevo = false;
@@ -1001,6 +1016,30 @@ void Setoption(char *ptr)
 			}
 		}
 	}
+	if (strcmp(nombre, "NnueTechnology") == 0)
+	{
+		if (strcmp(valor, "AVX2") == 0)
+		{
+			Nnue.Tecnologia = 2;
+			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
+			Nnue.Dll_Cargada = Cargar_nnue_dll();
+			if (Nnue.Dll_Cargada == true) CargarNnue();
+		}
+		else if (strcmp(valor, "SSE4.1") == 0)
+		{
+			Nnue.Tecnologia = 1;
+			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
+			Nnue.Dll_Cargada = Cargar_nnue_dll();
+			if (Nnue.Dll_Cargada == true) CargarNnue();
+		}
+		else if (strcmp(valor, "SSE3") == 0)
+		{
+			Nnue.Tecnologia = 0;
+			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
+			Nnue.Dll_Cargada = Cargar_nnue_dll();
+			if (Nnue.Dll_Cargada == true) CargarNnue();
+		}
+	}
 #endif
 	/*************************************************************************
 							CHES960
@@ -1129,7 +1168,7 @@ void CargarNnue()
 		{
 			Nnue.Usar = false;
 			printf("Loading NNUE: "STRING_FORMAT"\n", Nnue.Directorio);
-			printf("NNUE file not found or Unsupported.\n");
+			printf("NNUE file not found, Unsupported or NnueTechnology Unsupported.\n");
 			fflush(stdout);
 		}
 	}
