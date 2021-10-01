@@ -23,8 +23,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 HMODULE NNUE_hmod = NULL;
 
-char NNUE_NOMBRE[] = { "nnue_avx2.dll" };
-
 int NNUE_FLIP[64] =
 	{
 		56, 57, 58, 59, 60, 61, 62, 63,
@@ -38,6 +36,24 @@ int NNUE_FLIP[64] =
 
 int Cargar_nnue_dll()
 {
+	char NNUE_NOMBRE[16];
+	memset(NNUE_NOMBRE, 0, 16 * sizeof(char));
+
+	switch (Nnue.Tecnologia)
+	{
+	case 0:
+		strcpy(NNUE_NOMBRE, "nnue_sse3.dll");
+		break;
+	case 1:
+		strcpy(NNUE_NOMBRE, "nnue_sse4.1.dll");
+		break;
+	case 2:
+		strcpy(NNUE_NOMBRE, "nnue_avx2.dll");
+		break;
+	default:
+		break;
+	}
+
 	if ((NNUE_hmod = LoadLibrary(NNUE_NOMBRE)) != 0)
 	{
 		NNUE_init = (NNUE_INIT)GetProcAddress(NNUE_hmod, "nnue_init"); 
