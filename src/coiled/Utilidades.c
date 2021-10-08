@@ -108,11 +108,19 @@ char *SplitString(char *_string, char *contenedor, int longitud)
 /* Obtenemos el tiempo */
 U64 ObtenerTiempo()
 {
+#if defined(_WIN32) || defined(_WIN64)
 	return GetTickCount();
+#else
+	struct timeval tv;
+
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+#endif
 }
 
 int EntradaStdIn ()
 {
+#ifdef _WIN32
 	static int init = 0, pipe;
 	static HANDLE inh;
 	DWORD dw;
@@ -138,6 +146,17 @@ int EntradaStdIn ()
 		GetNumberOfConsoleInputEvents(inh, &dw);
 		return dw <= 1 ? 0 : 1;
 	}
+#else
+	fd_set readfds;
+	struct timeval tv;
+
+	FD_ZERO(&readfds);
+	FD_SET(STDIN_FILENO, &readfds);
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+	select(STDIN_FILENO + 1, &readfds, NULL, NULL, &tv);
+	return FD_ISSET(STDIN_FILENO, &readfds);
+#endif
 }
 
 /* Obtenemos el valor de la pieza */
