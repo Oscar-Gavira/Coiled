@@ -34,5 +34,5 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define	ORDENAR_REFUTACION			 (500000)
 
 extern void OrdenarMovimientosTodos(int *Capacidad, int *hMov, _ST_Movimiento *M);			/* Asignamos valores a los movimientos generados */
-extern void OrdenaMovimiento(int *indice, int *Capacidad, _ST_Movimiento *M);				/* Ordenamos el movimiento según su valor de mayor a menor */
+extern void OrdenaMovimiento(int *indice, int *Capacidad, _ST_Movimiento *M);				/* Ordenamos el movimiento segun su valor de mayor a menor */
 #endif
