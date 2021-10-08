@@ -22,15 +22,15 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include "Hash.h"
 #include "GeneradorDeMovimientos.h"
 #include "Perft.h"
+#include "Cpu.h"
 
 #ifdef USAR_SQLITE
 	#include "LibroAperturas.h"
 #endif
-#ifdef USAR_TBPROBE
+#ifdef USAR_TABLAS_DE_FINALES
 	#include "tbprobe.h"
-#endif
-#ifdef USAR_TBSYZYGY
-#	include "syzygy.h"
+	#include "syzygy.h"
+	#include "egbb.h"
 #endif
 #ifdef USAR_NNUE
 	#include "nnue.h"
@@ -41,12 +41,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 void UciEntrada(char *ptr);									/* Procesa las entradas */
 void LeerComandos(char *entrada, int longitud);				/* Lee las entradas */
 void InicioBusqueda(char *ptr);								/* Empieza a analizar */
-void Setoption(char *ptr);									/* Filtra las opciones recibidas */
 void UciNewGame();											/* Inicia las variables */
-void CargarNnue();											/* Carga las NNue */
-void CargarGaviotaTB();										/* Carga las GaviotaTB */
-void CargarSyzygy();										/* Carga las Syzygy */
-void CacheGaviotaTB();										/* Establecemos cache GaviotaTB */
 void IniciarConfiguracion();								/* Inicia la configuracion */
 
 /******************************************************************************
@@ -57,6 +52,13 @@ _ST_TableroX64 TableroGlobal;									/* Tablero actual. */
 _ST_TipoJuego TipoJuego;										/* Almacena informacion del juego por tiempo. */
 _ST_Puntos Blancas;												/* Almacenamos informacion de la evaluacion de las blancas */
 _ST_Puntos Negras;												/* Almacenamos informacion de la evaluacion de las negras */
+#ifdef USAR_NNUE
+	_ST_Cpu Cpu;
+#endif
+
+#ifdef USAR_TABLAS_DE_FINALES
+	_ST_TablaDeFinales TablaDeFinales;
+#endif
 int Salir;														/* Indica al programa que salga, para evitar un "exit(EXIT_FAILURE)" sin liberar la tabla hash */
 
 #ifdef ARC_64BIT
@@ -101,7 +103,6 @@ U64 zobrist_Tablero[14][64] = {
 int main(int argc, char *argv[])
 {
 	char command[16350];
-	srand((unsigned int)ObtenerTiempo());
 
 	Salir = false;
 
@@ -111,19 +112,32 @@ int main(int argc, char *argv[])
 	Iniciar_AlphaBeta();
 	Inicializar_See();
 	IniciarConfiguracion();
+	CargarEvaluacion();
 
 	/* Cargamos DLL */
 #ifdef USAR_SQLITE
 	LibroSql.Dll_Cargada = Cargar_sqlite_dll();
 #endif
-#ifdef USAR_TBPROBE
-	Gaviota.Dll_Cargada = Cargar_gaviota_dll();
-#endif
-#ifdef USAR_TBSYZYGY
-	Syzygy.Dll_Cargada = Cargar_Syzygy_dll();
-	if (Syzygy.Dll_Cargada == true) Iniciar_Mascara();
+#ifdef USAR_TABLAS_DE_FINALES
+	TablaDeFinales.Dll_CargadaBb = Cargar_egbb_dll();
+	TablaDeFinales.Dll_CargadaGv = Cargar_gaviota_dll();
+	#ifdef ARC_64BIT
+		TablaDeFinales.Dll_CargadaSg = Cargar_Syzygy_dll();
+		if (TablaDeFinales.Dll_CargadaSg == true) Iniciar_Mascara();
+	#endif
 #endif
 #ifdef USAR_NNUE
+	/* Auto configurando Nnue.Tecnologia al mas actual, soportado por la CPU. */
+	ObtenerCpu(&Cpu);
+	if (Cpu.AVX2)
+		Nnue.Tecnologia = 4;
+	else if (Cpu.SSE41)
+		Nnue.Tecnologia = 3;
+	else if (Cpu.SSE3)
+		Nnue.Tecnologia = 2;
+	else if (Cpu.SSE2)
+		Nnue.Tecnologia = 1;
+
 	Nnue.Dll_Cargada = Cargar_nnue_dll();
 	if (Nnue.Dll_Cargada == true) CargarNnue();
 #endif
@@ -146,11 +160,12 @@ int main(int argc, char *argv[])
 #ifdef USAR_HASH_TB
 	LiberarMemoria();
 #endif
-#ifdef USAR_TBPROBE
+#ifdef USAR_TABLAS_DE_FINALES
 	Descargar_gaviota_dll();
-#endif
-#ifdef USAR_TBSYZYGY
-	Descargar_Syzygy_dll();
+	Descargar_egbb_dll();
+	#ifdef ARC_64BIT
+		Descargar_Syzygy_dll();
+	#endif
 #endif
 #ifdef USAR_SQLITE
 	Descargar_sqlite_dll();
@@ -161,6 +176,8 @@ int main(int argc, char *argv[])
 
 void UciEntrada(char* parametro)
 {
+	char Str[MAX_DIR];
+
 	if (strncmp(parametro, "ucinewgame", 10) == 0)
 	{
 		UciNewGame();
@@ -176,6 +193,7 @@ void UciEntrada(char* parametro)
 #endif
 		fflush(stdout);
 		printf("id author "AUTOR"\n"); fflush(stdout);
+		printf("\n"); fflush(stdout);
 #ifdef USAR_HASH_TB
 		printf("option name Hash type spin default "U64_FORMAT" min "S32_FORMAT" max "S32_FORMAT"\n", TT_Opciones.tt_Mb, MB_HASH_TABLE_MIN, MB_HASH_TABLE_MAX);
 		fflush(stdout);
@@ -213,80 +231,80 @@ void UciEntrada(char* parametro)
 			break;
 		}
 		fflush(stdout);
-#ifdef USAR_TBPROBE
-		if (Gaviota.Dll_Cargada == true)
-		{
-			if (Gaviota.Usar == true)
-			{
-				printf("option name GaviotaUse type check default true\n");
-			}
-			else
-			{
-				printf("option name GaviotaUse type check default false\n");
-			}
-			fflush(stdout);
-			if (Gaviota.Directorio[0] == '\0')
-				printf("option name GaviotaPath type string default "STRING_FORMAT"\n", "<empty>");
-			else
-				printf("option name GaviotaPath type string default "STRING_FORMAT"\n", Gaviota.Directorio);
-
-			fflush(stdout);
-			printf("option name GaviotaCache type spin default "U64_FORMAT" min "S32_FORMAT" max "S32_FORMAT"\n", Gaviota.CacheMB, MB_GAVIOTA_CACHE_MIN, MB_GAVIOTA_CACHE_MAX);
-			fflush(stdout);
-			printf("option name GaviotaProbeLimit type spin default "S32_FORMAT" min 3 max 5\n", Gaviota.Limite);
-			fflush(stdout);
-		}
+#ifdef USAR_TABLAS_DE_FINALES
+		memset(Str, 0, MAX_DIR * sizeof(char));
+		strcat(Str, " var None");
+#ifdef ARC_64BIT
+		strcat(Str, " var Syzygy");
 #endif
-#ifdef  USAR_TBSYZYGY
-		if (Syzygy.Dll_Cargada == true)
-		{
-			if (Syzygy.Usar == true)
-			{
-				printf("option name SyzygyUse type check default true\n");
-			}
-			else
-			{
-				printf("option name SyzygyUse type check default false\n");
-			}
-			fflush(stdout);
-			if (Syzygy.Directorio[0] == '\0')
-				printf("option name SyzygyPath type string default "STRING_FORMAT"\n", "<empty>");
-			else
-				printf("option name SyzygyPath type string default "STRING_FORMAT"\n", Syzygy.Directorio);
-			fflush(stdout);
-			printf("option name SyzygyLimit type spin default "S32_FORMAT" min 3 max 7\n", Syzygy.Limite);
-			fflush(stdout);
-		}
-#endif
-#ifdef USAR_NNUE
-		if (Nnue.Dll_Cargada == true)
-		{
-			if (Nnue.Usar == true)
-			{
-				printf("option name NnueUse type check default true\n");
-			}
-			else
-			{
-				printf("option name NnueUse type check default false\n");
-			}
-			fflush(stdout);
+		strcat(Str, " var Gaviota var Scorpio");
 
-			if (Nnue.Directorio[0] == '\0')
-				printf("option name NnuePath type string default "STRING_FORMAT"\n", "<empty>");
-			else
-				printf("option name NnuePath type string default "STRING_FORMAT"\n", Nnue.Directorio);
-			fflush(stdout);
-		}
-		switch (Nnue.Tecnologia)
+		switch (TablaDeFinales.Usar)
 		{
 		case 0:
-			printf("option name NnueTechnology type combo default SSE3 var AVX2 var SSE4.1 var SSE3\n");
+			printf("option name EndGamesTableBases type combo default None"STRING_FORMAT"\n", Str);
 			break;
 		case 1:
-			printf("option name NnueTechnology type combo default SSE4.1 var AVX2 var SSE4.1 var SSE3\n");
+			printf("option name EndGamesTableBases type combo default Syzygy"STRING_FORMAT"\n", Str);
 			break;
 		case 2:
-			printf("option name NnueTechnology type combo default AVX2 var AVX2 var SSE4.1 var SSE3\n");
+			printf("option name EndGamesTableBases type combo default Gaviota"STRING_FORMAT"\n", Str);
+			break;
+		case 3:
+			printf("option name EndGamesTableBases type combo default Scorpio"STRING_FORMAT"\n", Str);
+			break;
+		default:
+			break;
+		}
+		fflush(stdout);
+		if (TablaDeFinales.Directorio[0] == '\0')
+			printf("option name EndGamesTableBasesPath type string default "STRING_FORMAT"\n", "<empty>");
+		else
+			printf("option name EndGamesTableBasesPath type string default "STRING_FORMAT"\n", TablaDeFinales.Directorio);
+		fflush(stdout);
+		printf("option name EndGamesTableBasesLimit type spin default "S32_FORMAT" min 3 max 7\n", TablaDeFinales.Limite);
+		fflush(stdout);
+		printf("option name EndGamesTableBasesCache type spin default "U64_FORMAT" min "S32_FORMAT" max "S32_FORMAT"\n", TablaDeFinales.CacheMB, MB_TABLAS_CACHE_MIN, MB_TABLAS_CACHE_MAX);
+		fflush(stdout);
+#endif
+
+#ifdef USAR_NNUE
+		if (Nnue.Usar == true)
+		{
+			printf("option name NnueUse type check default true\n");
+		}
+		else
+		{
+			printf("option name NnueUse type check default false\n");
+		}
+		fflush(stdout);
+		if (Nnue.Directorio[0] == '\0')
+			printf("option name NnuePath type string default "STRING_FORMAT"\n", "<empty>");
+		else
+			printf("option name NnuePath type string default "STRING_FORMAT"\n", Nnue.Directorio);
+		fflush(stdout);
+		memset(Str, 0, MAX_DIR * sizeof(char));
+		if (Cpu.AVX2)
+			strcat(Str, " var AVX2");
+		if (Cpu.SSE41)
+			strcat(Str, " var SSE4.1");
+		if (Cpu.SSE3)
+			strcat(Str, " var SSE3");
+		if (Cpu.SSE2)
+			strcat(Str, " var SSE2");
+		switch (Nnue.Tecnologia)
+		{
+		case 1:
+			printf("option name NnueTechnology type combo default SSE2"STRING_FORMAT"\n", Str);
+			break;
+		case 2:
+			printf("option name NnueTechnology type combo default SSE3"STRING_FORMAT"\n", Str);
+			break;
+		case 3:
+			printf("option name NnueTechnology type combo default SSE4.1"STRING_FORMAT"\n", Str);
+			break;
+		case 4:
+			printf("option name NnueTechnology type combo default AVX2"STRING_FORMAT"\n", Str);
 			break;
 		default:
 			break;
@@ -323,17 +341,241 @@ void UciEntrada(char* parametro)
 	}
 	else if (strncmp(parametro, "isready", 7) == 0)
 	{
+#ifdef USAR_TABLAS_DE_FINALES
+		if (TablaDeFinales.Usar != 0 && (TablaDeFinales.UsarNuevo == true || TablaDeFinales.DirectorioNuevo == true || TablaDeFinales.CacheNueva == true))
+		{
+#ifdef ARC_64BIT
+			if (TablaDeFinales.Usar == 1) CargarSyzygy();
+#endif
+			if (TablaDeFinales.Usar == 2)
+			{
+				if (TablaDeFinales.paths != NULL)
+					TBpaths_done(TablaDeFinales.paths);
+				CargarGaviotaTB();
+			}
+			if (TablaDeFinales.Usar == 3) CargarEgbb();
+		}
+#endif
+
 		printf("readyok\n");
 		fflush(stdout);
 		return;
 	}
-	else if (strncmp(parametro, "setoption", 9) == 0)
+#ifdef USAR_HASH_TB
+	else if (strncmp(parametro, "setoption name Hash value ", 26) == 0)
 	{
-		parametro += 10;	/* setoption */
-		parametro += 5;		/* name */
-		Setoption(parametro);
-		return;
+		parametro += 26;
+		TT_Opciones.tt_Mb = MAX(MB_HASH_TABLE_MIN, (int)atoll(parametro));
+		if (TT_Opciones.tt_Mb > MB_HASH_TABLE_MAX) TT_Opciones.tt_Mb = MB_HASH_TABLE;
+		CrearTransposicion(TT_Opciones.tt_Mb);
 	}
+#endif
+#ifdef USAR_SQLITE
+	else if (strncmp(parametro, "setoption name OwnBook value ", 29) == 0)
+	{
+		parametro += 29;
+		if (LibroSql.Dll_Cargada == true)
+		{
+			if (strcmp(parametro, "true") == 0)
+				LibroSql.UsarLibro = true;
+			else if (strcmp(parametro, "false") == 0)
+				LibroSql.UsarLibro = false;
+		}
+	}
+	else if (strncmp(parametro, "setoption name OwnBookLimit value ", 34) == 0)
+	{
+		parametro += 34;
+		LibroSql.LimiteJugadas = MAX(2, (int)atoll(parametro));
+		if (LibroSql.LimiteJugadas > 10) LibroSql.LimiteJugadas = 8;
+	}
+#endif
+	else if (strncmp(parametro, "setoption name ShowPv value ", 28) == 0)
+	{
+		parametro += 28;
+		if (strcmp(parametro, "None") == 0)
+			TipoJuego.MostrarVp = 0;
+		else if (strcmp(parametro, "Middle") == 0)
+			TipoJuego.MostrarVp = 1;
+		else if (strcmp(parametro, "Full") == 0)
+			TipoJuego.MostrarVp = 2;
+	}
+#ifdef USAR_TABLAS_DE_FINALES
+	else if (strncmp(parametro, "setoption name EndGamesTableBases value ", 40) == 0)
+	{
+		int Temp = TablaDeFinales.Usar;
+		parametro += 40;
+		if (strcmp(parametro, "None") == 0)
+		{
+			TablaDeFinales.Usar = 0;
+		}
+		else if (strcmp(parametro, "Syzygy") == 0)
+		{
+			if (TablaDeFinales.Dll_CargadaSg == true)
+				TablaDeFinales.Usar = 1;
+			else
+			{
+#ifdef ARC_64BIT
+				TablaDeFinales.Dll_CargadaSg = Cargar_Syzygy_dll();
+				if (TablaDeFinales.Dll_CargadaSg == true) Iniciar_Mascara();
+#endif
+			}
+		}
+		else if (strcmp(parametro, "Gaviota") == 0)
+		{
+			if (TablaDeFinales.Dll_CargadaGv == true)
+				TablaDeFinales.Usar = 2;
+			else
+				TablaDeFinales.Dll_CargadaGv = Cargar_gaviota_dll();
+		}
+		else if (strcmp(parametro, "Scorpio") == 0)
+		{
+			if (TablaDeFinales.Dll_CargadaBb == true)
+				TablaDeFinales.Usar = 3;
+			else
+				TablaDeFinales.Dll_CargadaBb = Cargar_egbb_dll();
+		}
+		if (Temp == TablaDeFinales.Usar)
+			TablaDeFinales.UsarNuevo = false;
+		else
+			TablaDeFinales.UsarNuevo = true;
+	}
+	else if (strncmp(parametro, "setoption name EndGamesTableBasesPath value ", 44) == 0)
+	{
+		parametro += 44;
+		if (strcmp(parametro, TablaDeFinales.Directorio) == 0)
+			TablaDeFinales.DirectorioNuevo = false;
+		else
+			TablaDeFinales.DirectorioNuevo = true;
+
+		if (TablaDeFinales.DirectorioNuevo == true)
+		{
+			memset(TablaDeFinales.Directorio, 0, MAX_DIR * sizeof(char));
+			strcat(TablaDeFinales.Directorio, parametro);
+			if (TablaDeFinales.Directorio[strlen(TablaDeFinales.Directorio)] != '\\')
+				strcat(TablaDeFinales.Directorio, "\\");
+		}
+	}
+	else if (strncmp(parametro, "setoption name EndGamesTableBasesLimit value ", 45) == 0)
+	{
+		parametro += 45;
+		TablaDeFinales.Limite = MAX(3, (int)atoll(parametro));
+		if (TablaDeFinales.Usar == 1 && TablaDeFinales.Limite > 7) TablaDeFinales.Limite = 5;
+		if (TablaDeFinales.Usar == 2 && TablaDeFinales.Limite > 5) TablaDeFinales.Limite = 5;
+		if (TablaDeFinales.Usar == 3 && TablaDeFinales.Limite > 6) TablaDeFinales.Limite = 5;
+	}
+	else if (strncmp(parametro, "setoption name EndGamesTableBasesCache value ", 45) == 0)
+	{
+		parametro += 45;
+		int Temp = (int)TablaDeFinales.CacheMB;
+		TablaDeFinales.CacheMB = MAX(MB_TABLAS_CACHE_MIN, atoll(parametro));
+		/* Compruebo diferencia de cache */
+		if (Temp == (int)TablaDeFinales.CacheMB)
+			TablaDeFinales.CacheNueva = false;
+		else
+			TablaDeFinales.CacheNueva = true;
+		/* Esta fuera de lo permitido */
+		if (TablaDeFinales.CacheMB > MB_TABLAS_CACHE_MAX) TablaDeFinales.CacheMB = MB_TABLAS_CACHE;
+	}
+#endif
+#ifdef USAR_NNUE
+	else if (strncmp(parametro, "setoption name NnueUse value ", 29) == 0)
+	{
+		parametro += 29;
+		if (strcmp(parametro, "true") == 0)
+		{
+			if (Nnue.Dll_Cargada == true)
+				Nnue.Usar = true;
+		}
+		else if (strcmp(parametro, "false") == 0)
+			Nnue.Usar = false;
+	}
+	else if (strncmp(parametro, "setoption name NnuePath value ", 30) == 0)
+	{
+		parametro += 30;
+		if (strcmp(parametro, Nnue.Directorio) == 0)
+			Nnue.DirectorioNuevo = false;
+		else
+			Nnue.DirectorioNuevo = true;
+		if (Nnue.DirectorioNuevo == true)
+		{
+			memset(Nnue.Directorio, 0, MAX_DIR * sizeof(char));
+			strcat(Nnue.Directorio, parametro);
+			CargarNnue();
+		}
+	}
+	else if (strncmp(parametro, "setoption name NnueTechnology value ", 36) == 0)
+	{
+		parametro += 36;
+		if (strcmp(parametro, "AVX2") == 0)
+		{
+			Nnue.Tecnologia = 4;
+			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
+			Nnue.Dll_Cargada = Cargar_nnue_dll();
+			if (Nnue.Dll_Cargada == true) CargarNnue();
+		}
+		else if (strcmp(parametro, "SSE4.1") == 0)
+		{
+			Nnue.Tecnologia = 3;
+			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
+			Nnue.Dll_Cargada = Cargar_nnue_dll();
+			if (Nnue.Dll_Cargada == true) CargarNnue();
+		}
+		else if (strcmp(parametro, "SSE3") == 0)
+		{
+			Nnue.Tecnologia = 2;
+			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
+			Nnue.Dll_Cargada = Cargar_nnue_dll();
+			if (Nnue.Dll_Cargada == true) CargarNnue();
+		}
+		else if (strcmp(parametro, "SSE2") == 0)
+		{
+			Nnue.Tecnologia = 1;
+			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
+			Nnue.Dll_Cargada = Cargar_nnue_dll();
+			if (Nnue.Dll_Cargada == true) CargarNnue();
+		}
+	}
+#endif
+#ifdef USAR_SQLITE
+	else if (strncmp(parametro, "setoption name UCI_Chess960 value ", 34) == 0)
+	{
+		parametro += 34;
+		if (strcmp(parametro, "true") == 0)
+		{
+			TipoJuego.Ajedrez960 = true;
+#ifdef USAR_SQLITE
+			/* Libro de aperturas */
+			LibroSql.AperturaEstandar = false;
+			memset(LibroSql.SqlTabla, 0, 9 * sizeof(char));
+			memset(LibroSql.Variante, 0, 9 * sizeof(char));
+			strcpy(LibroSql.SqlTabla, "Chess960");
+#endif
+		}
+		else if (strcmp(parametro, "false") == 0)
+		{
+			TipoJuego.Ajedrez960 = false;
+#ifdef USAR_SQLITE
+			/* Libro de aperturas */
+			LibroSql.AperturaEstandar = true;
+			memset(LibroSql.SqlTabla, 0, 9 * sizeof(char));
+			memset(LibroSql.Variante, 0, 9 * sizeof(char));
+			strcpy(LibroSql.SqlTabla, "Book");
+#endif
+		}
+	}
+	else if (strncmp(parametro, "setoption name UCI_Chess960CastlingSign value ", 46) == 0)
+	{
+		parametro += 46;
+		if (strcmp(parametro, "UCI") == 0)
+		{
+			TipoJuego.Ajedrez960Enroque = false;
+		}
+		else if (strcmp(parametro, "O-O/O-O-O") == 0)
+		{
+			TipoJuego.Ajedrez960Enroque = true;
+		}
+	}
+#endif
 	else if (strncmp(parametro, "position", 8) == 0)
 	{
 		parametro += 9;	/* position */
@@ -441,7 +683,7 @@ void Position_Fen_Startpos(char *ptr)
 
 		if (!CargarFen(fen))
 		{
-			printf("FEN format incorrect.\n");
+			printf(""INFO_STRING"FEN format incorrect.\n");
 			fflush(stdout);
 			memset(buffer, 0, MAX_DIR * sizeof(char));
 			strcpy(buffer, START_POS);
@@ -771,421 +1013,27 @@ void IniciarConfiguracion()
 	LibroSql.AperturaEstandar = true;
 	strcpy(LibroSql.SqlTabla, "Book");
 #endif
-#ifdef USAR_TBPROBE
-	Gaviota.Usar = false;										/* Usar tablas de gaviota */
-	Gaviota.Dll_Cargada = false;								/* Si la .dll esta cargada */
-	memset(Gaviota.Directorio, 0, MAX_DIR * sizeof(char));		/* Limpiamos la ruta */
-	Gaviota.DirectorioNuevo = false;							/* Indica un cambio de directorio, para un re-load en caso de que si. */
-
-	Gaviota.Informacion = true;									/* Muestra informacion 0 = non-verbose, 1 = verbose */
-	Gaviota.Compresion = 4;										/* Compresion solo .cp4 */
-	Gaviota.Limite = 5;											/* Numero de piezas maximas para empezar a buscar. */
-	Gaviota.CacheMB = MB_GAVIOTA_CACHE;							/* Cache para las bases de datos */
-	Gaviota.CacheNueva = false;									/* Si hay un cambio de valor en la cache, para un re-load */
-	Gaviota.Fraccion = 0;										/* 	wdl_fraction:	0 = Solo DTM	128 = Solo WDL
-																	fraction, over 128, that will be dedicated to wdl information.
-																	In other words, 96 means 3/4 of the cache will be dedicated to
-																	win-draw-loss info, and 1/4 dedicated to distance to mate
-																	information.
-																*/
-#endif
-#ifdef USAR_TBSYZYGY
-	Syzygy.Usar = false;
-	Syzygy.Dll_Cargada = false;
-	Syzygy.Limite = 5;
-	memset(Syzygy.Directorio, 0, MAX_DIR * sizeof(char));
-	Syzygy.DirectorioNuevo = false;
+#ifdef USAR_TABLAS_DE_FINALES
+	TablaDeFinales.Usar = false;
+	TablaDeFinales.UsarNuevo = false;
+	TablaDeFinales.Acierto = 0;
+	TablaDeFinales.Dll_CargadaSg = false;
+	TablaDeFinales.Dll_CargadaGv = false;
+	TablaDeFinales.Dll_CargadaBb = false;
+	memset(TablaDeFinales.Directorio, 0, MAX_DIR * sizeof(char));
+	TablaDeFinales.DirectorioNuevo = false;
+	TablaDeFinales.Limite = 5;
+	TablaDeFinales.Piezas = 5;
+	TablaDeFinales.CacheMB = MB_TABLAS_CACHE;
+	TablaDeFinales.CacheNueva = false;
 #endif
 #ifdef USAR_NNUE
-	Nnue.Usar = true;
+	Nnue.Usar = false;
 	Nnue.Dll_Cargada = false;
-	Nnue.Tecnologia = 2;										/* Por defecto AVX */
+	Nnue.Tecnologia = 1;										/* Por defecto SSE2 */
 	memset(Nnue.Directorio, 0, MAX_DIR * sizeof(char));
 	strcpy(Nnue.Directorio, "red_neuronal.nnue");
 	Nnue.DirectorioNuevo = false;
-#endif
-}
-
-void Setoption(char *ptr)
-{
-	char contenedor[MAX_DIR];
-	char nombre[MAX_DIR];
-	char valor[MAX_DIR];
-
-	memset(contenedor, '\0', MAX_DIR * sizeof(char));
-	memset(nombre, '\0', MAX_DIR * sizeof(char));
-	memset(valor, '\0', MAX_DIR * sizeof(char));
-
-	sscanf(ptr, "%255s %5s %255s", nombre, contenedor, valor);
-
-
-	/********************************************************************************
-							HASH TABLE
-	********************************************************************************/
-#ifdef USAR_HASH_TB
-	if (strcmp(nombre, "Hash") == 0)
-	{
-#ifdef USAR_HASH_TB
-			TT_Opciones.tt_Mb = MAX(MB_HASH_TABLE_MIN, (int)atoll(valor));
-			if (TT_Opciones.tt_Mb > MB_HASH_TABLE_MAX) TT_Opciones.tt_Mb = MB_HASH_TABLE;
-			CrearTransposicion(TT_Opciones.tt_Mb);
-#endif
-	}
-#endif
-	/*************************************************************************
-								MostrarVp
-	*************************************************************************/
-	if (strcmp(nombre, "ShowPv") == 0)
-	{
-		if (strcmp(valor, "None") == 0)
-		{
-			TipoJuego.MostrarVp = 0;
-		}
-		else if (strcmp(valor, "Middle") == 0)
-		{
-			TipoJuego.MostrarVp = 1;
-		}
-		else if (strcmp(valor, "Full") == 0)
-		{
-			TipoJuego.MostrarVp = 2;
-		}
-	}
-	/********************************************************************************
-							LIBRO DE APERTURAS
-	********************************************************************************/
-#ifdef USAR_SQLITE
-	if (LibroSql.Dll_Cargada == true)
-	{
-		if (strcmp(nombre, "OwnBook") == 0)
-		{
-			if (strcmp(valor, "true") == 0)
-			{
-				LibroSql.UsarLibro = true;
-			}
-			else if (strcmp(valor, "false") == 0)
-			{
-				LibroSql.UsarLibro = false;
-			}
-		}
-		/*				LIMITE				*/
-		if (strcmp(nombre, "OwnBookLimit") == 0)
-		{
-			LibroSql.LimiteJugadas = MAX(2, (int)atoll(valor));
-			if (LibroSql.LimiteJugadas > 10) LibroSql.LimiteJugadas = 8;
-		}
-	}
-#endif
-
-	/*************************************************************************
-	TABLE BASES GAVIOTA
-	*************************************************************************/
-#ifdef USAR_TBPROBE
-	if (Gaviota.Dll_Cargada == true)
-	{
-		/*				USAR			*/
-		if (strcmp(nombre, "GaviotaUse") == 0)
-		{
-			if (strcmp(valor, "true") == 0)
-			{
-#ifdef USAR_TBSYZYGY
-				if (Syzygy.Usar == false)
-#endif
-				Gaviota.Usar = true;
-			}
-			else if (strcmp(valor, "false") == 0)
-			{
-				Gaviota.Usar = false;
-			}
-		}
-		/*				RUTA			*/
-		if (strcmp(nombre, "GaviotaPath") == 0)
-		{
-			if (strcmp(valor, Gaviota.Directorio) == 0)
-				Gaviota.DirectorioNuevo = false;
-			else
-				Gaviota.DirectorioNuevo = true;
-
-			if (Gaviota.DirectorioNuevo == true)
-			{
-				if (Gaviota.paths != NULL)
-					TBpaths_done(Gaviota.paths);
-				memset(Gaviota.Directorio, 0, MAX_DIR * sizeof(char));
-				strcat(Gaviota.Directorio, valor);
-				CargarGaviotaTB();
-			}
-		}
-		/*				CACHE			*/
-		if (strcmp(nombre, "GaviotaCache") == 0)
-		{
-			int Temp = (int)Gaviota.CacheMB;
-			Gaviota.CacheMB = MAX(MB_GAVIOTA_CACHE_MIN, atoll(valor));
-			/* Compruebo diferencia de cache */
-			if (Temp == (int)Gaviota.CacheMB)
-				Gaviota.CacheNueva = false;
-			else
-				Gaviota.CacheNueva = true;
-			/* Esta fuera de lo permitido */
-			if (Gaviota.CacheMB > MB_GAVIOTA_CACHE_MAX)	Gaviota.CacheMB = MB_GAVIOTA_CACHE;
-
-			CacheGaviotaTB();
-		}
-		/*			MAN - Limite			*/
-		if (strcmp(nombre, "GaviotaProbeLimit") == 0)
-		{
-			Gaviota.Limite = MAX(3, (int)atoll(valor));
-			if (Gaviota.Limite > 5) Gaviota.Limite = 5;
-		}
-	}
-#endif
-
-	/*************************************************************************
-	TABLE BASES SYZYGY
-	*************************************************************************/
-#ifdef USAR_TBSYZYGY
-	if (Syzygy.Dll_Cargada == true)
-	{
-		/*				USAR			*/
-		if (strcmp(nombre, "SyzygyUse") == 0)
-		{
-			if (strcmp(valor, "true") == 0)
-			{
-#ifdef USAR_TBPROBE
-				if (Gaviota.Usar == false)
-#endif
-					Syzygy.Usar = true;
-			}
-			else if (strcmp(valor, "false") == 0)
-			{
-				Syzygy.Usar = false;
-			}
-		}
-		if (strcmp(nombre, "SyzygyLimit") == 0)
-		{
-			Syzygy.Limite = MAX(3, (int)atoll(valor));
-			if (Syzygy.Limite > 7) Syzygy.Limite = 5;
-		}
-		/*				RUTA			*/
-		if (strcmp(nombre, "SyzygyPath") == 0)
-		{
-			if (strcmp(valor, Syzygy.Directorio) == 0)
-				Syzygy.DirectorioNuevo = false;
-			else
-				Syzygy.DirectorioNuevo = true;
-
-			if (Syzygy.DirectorioNuevo == true)
-			{
-				memset(Syzygy.Directorio, 0, MAX_DIR * sizeof(char));
-				strcat(Syzygy.Directorio, valor);
-				CargarSyzygy();
-			}
-		}
-	}
-#endif
-
-	/*************************************************************************
-	NNUE
-	*************************************************************************/
-#ifdef USAR_NNUE
-	if (Nnue.Dll_Cargada == true)
-	{
-		/*				USAR			*/
-		if (strcmp(nombre, "NnueUse") == 0)
-		{
-			if (strcmp(valor, "true") == 0)
-			{
-				Nnue.Usar = true;
-			}
-			else if (strcmp(valor, "false") == 0)
-			{
-				Nnue.Usar = false;
-			}
-		}
-		/*				RUTA			*/
-		if (strcmp(nombre, "NnuePath") == 0)
-		{
-			if (strcmp(valor, Nnue.Directorio) == 0)
-				Nnue.DirectorioNuevo = false;
-			else
-				Nnue.DirectorioNuevo = true;
-
-			if (Nnue.DirectorioNuevo == true)
-			{
-				memset(Nnue.Directorio, 0, MAX_DIR * sizeof(char));
-				strcat(Nnue.Directorio, valor);
-				CargarNnue();
-			}
-		}
-	}
-	if (strcmp(nombre, "NnueTechnology") == 0)
-	{
-		if (strcmp(valor, "AVX2") == 0)
-		{
-			Nnue.Tecnologia = 2;
-			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
-		}
-		else if (strcmp(valor, "SSE4.1") == 0)
-		{
-			Nnue.Tecnologia = 1;
-			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
-		}
-		else if (strcmp(valor, "SSE3") == 0)
-		{
-			Nnue.Tecnologia = 0;
-			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
-		}
-	}
-#endif
-	/*************************************************************************
-							CHES960
-	*************************************************************************/
-#ifdef USAR_AJEDREZ960
-	if (strcmp(nombre, "UCI_Chess960") == 0)
-	{
-		if (strcmp(valor, "true") == 0)
-		{
-			TipoJuego.Ajedrez960 = true;
-#ifdef USAR_SQLITE
-			/* Libro de aperturas */
-			LibroSql.AperturaEstandar = false;
-			memset(LibroSql.SqlTabla, 0, 9 * sizeof(char));
-			memset(LibroSql.Variante, 0, 9 * sizeof(char));
-			strcpy(LibroSql.SqlTabla, "Chess960");
-#endif
-		}
-		else if (strcmp(valor, "false") == 0)
-		{
-			TipoJuego.Ajedrez960 = false;
-#ifdef USAR_SQLITE
-			/* Libro de aperturas */
-			LibroSql.AperturaEstandar = true;
-			memset(LibroSql.SqlTabla, 0, 9 * sizeof(char));
-			memset(LibroSql.Variante, 0, 9 * sizeof(char));
-			strcpy(LibroSql.SqlTabla, "Book");
-#endif
-		}
-	}
-
-	if (strcmp(nombre, "UCI_Chess960CastlingSign") == 0)
-	{
-		if (strcmp(valor, "UCI") == 0)
-		{
-			TipoJuego.Ajedrez960Enroque = false;
-		}
-		else if (strcmp(valor, "O-O/O-O-O") == 0)
-		{
-			TipoJuego.Ajedrez960Enroque = true;
-		}
-	}
-#endif
-}
-
-void CacheGaviotaTB()
-{
-#ifdef USAR_TBPROBE
-	U64 CacheMB = Gaviota.CacheMB * (U64)1024 * (U64)1024;
-	if (Gaviota.CacheNueva == true || TBcache_is_on() == false)
-	{
-		Gaviota.CacheNueva = false;
-		TBcache_init(CacheMB, Gaviota.Fraccion);
-		if (TBcache_is_on())
-		{
-			printf("Gaviota state cache: Ok\n");
-			fflush(stdout);
-		}
-		else
-		{
-			printf("Gaviota state cache: Failed\n");
-			fflush(stdout);
-		}
-	}
-#endif
-}
-void CargarGaviotaTB()
-{
-#ifdef USAR_TBPROBE
-	/* Se puede usar las tablas de finales de gaviota */
-	if (Gaviota.Dll_Cargada == true)
-	{
-		char *initinfo = NULL;
-		if (Gaviota.Directorio[0] != '\0')
-		{
-			if (TBis_initialized() == false)
-			{
-				Gaviota.paths = TBpaths_init();
-				Gaviota.paths = TBpaths_add(Gaviota.paths, Gaviota.Directorio);
-				initinfo = TBinit(Gaviota.Informacion, Gaviota.Compresion, Gaviota.paths);
-			}
-			else
-			{
-				if (Gaviota.DirectorioNuevo == true)
-				{
-					Gaviota.DirectorioNuevo = false;
-					Gaviota.paths = TBpaths_init();
-					Gaviota.paths = TBpaths_add(Gaviota.paths, Gaviota.Directorio);
-					initinfo = TBrestart(Gaviota.Informacion, Gaviota.Compresion, Gaviota.paths);
-				}
-			}
-
-			Gaviota.Tablas_Disponibles = TBavailability();
-
-			if (initinfo != NULL)
-			{
-				printf(""STRING_FORMAT"\n", initinfo);
-				fflush(stdout);
-			}
-			if (Gaviota.Tablas_Disponibles != 0 && TBis_initialized())
-			{
-				printf("Gaviota initialized: Ok\n");
-				fflush(stdout);
-			}
-			else
-			{
-				printf("Gaviota initialized: Failed\n");
-				fflush(stdout);
-			}
-
-			/* Cargamos la cache */
-			CacheGaviotaTB();
-		}
-	}
-#endif
-}
-void CargarNnue()
-{
-#ifdef USAR_NNUE
-	/* Se puede usar las tablas de finales de gaviota */
-	if (Nnue.Dll_Cargada == true && Nnue.Directorio[0] != '\0')
-	{
-		/* Si es posible cargar la DLL */
-		Nnue.DirectorioNuevo = false;
-		if (NNUE_init(Nnue.Directorio) == false)
-		{
-			Nnue.Usar = false;
-			printf("Loading NNUE: "STRING_FORMAT"\n", Nnue.Directorio);
-			printf("NNUE file not found, Unsupported or NnueTechnology Unsupported.\n");
-			fflush(stdout);
-		}
-	}
-#endif
-}
-void CargarSyzygy()
-{
-#ifdef USAR_TBSYZYGY
-	/* Se puede usar las tablas de finales de gaviota */
-	if (Syzygy.Dll_Cargada == true && Syzygy.Directorio[0] != '\0')
-	{
-		/* Si es posible cargar la DLL */
-		Syzygy.DirectorioNuevo = false;
-		SG_inits(Syzygy.Directorio);
-		if (*SG_man == 0)
-			printf("Syzygy no load.\n");
-	}
 #endif
 }
 
@@ -1335,7 +1183,7 @@ void Movimiento(char *ptr, int *Ok, int Ultimo)
 				Legal = HacerMovimiento(ListaMovimiento[j].Movimiento, Ultimo);
 				if (Legal == false)
 				{
-					printf("Illegal move: "STRING_FORMAT"\n", ptr);
+					printf(""INFO_STRING"Illegal move: "STRING_FORMAT"\n", ptr);
 					TipoJuego.JugadaIlegal = true;
 					fflush(stdout);
 					break;
@@ -1357,7 +1205,7 @@ void Movimiento(char *ptr, int *Ok, int Ultimo)
 				Legal = HacerMovimiento(ListaMovimiento[j].Movimiento, Ultimo);
 				if (Legal == false)
 				{
-					printf("Illegal move: "STRING_FORMAT"\n", ptr);
+					printf(""INFO_STRING"Illegal move: "STRING_FORMAT"\n", ptr);
 					TipoJuego.JugadaIlegal = true;
 					fflush(stdout);
 					break;
