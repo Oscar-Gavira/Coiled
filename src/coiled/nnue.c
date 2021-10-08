@@ -41,13 +41,16 @@ int Cargar_nnue_dll()
 
 	switch (Nnue.Tecnologia)
 	{
-	case 0:
-		strcpy(NNUE_NOMBRE, "nnue_sse3.dll");
-		break;
 	case 1:
-		strcpy(NNUE_NOMBRE, "nnue_sse4.1.dll");
+		strcpy(NNUE_NOMBRE, "nnue_sse2.dll");
 		break;
 	case 2:
+		strcpy(NNUE_NOMBRE, "nnue_sse3.dll");
+		break;
+	case 3:
+		strcpy(NNUE_NOMBRE, "nnue_sse4.1.dll");
+		break;
+	case 4:
 		strcpy(NNUE_NOMBRE, "nnue_avx2.dll");
 		break;
 	default:
@@ -71,8 +74,47 @@ int Cargar_nnue_dll()
 	}
 	else
 	{
+		printf(""INFO_STRING""STRING_FORMAT" not found. Unable to use Nnue.\n", NNUE_NOMBRE);
+
+		printf(""INFO_STRING"Your CPU does not support NnueTechnology ");
+		switch (Nnue.Tecnologia)
+		{
+		case 1:
+			printf("SSE2.");
+			break;
+		case 2:
+			printf("SSE3.");
+			break;
+		case 3:
+			printf("SSE4.1.");
+			break;
+		case 4:
+			printf("AVX2.");
+			break;
+		default:
+			break;
+		}
+		printf(" Try another NnueTechnology.\n");
+		fflush(stdout);
 		Nnue.Usar = false;
 		return false;
+	}
+}
+
+void CargarNnue()
+{
+	/* Se puede usar las tablas de finales de gaviota */
+	if (Nnue.Dll_Cargada == true && Nnue.Directorio[0] != '\0')
+	{
+		/* Si es posible cargar la DLL */
+		Nnue.DirectorioNuevo = false;
+		if (NNUE_init(Nnue.Directorio) == false)
+		{
+			Nnue.Usar = false;
+			printf(""INFO_STRING"Loading NNUE: "STRING_FORMAT"\n", Nnue.Directorio);
+			printf(""INFO_STRING"NNUE file not found, Unsupported or NnueTechnology Unsupported.\n");
+			fflush(stdout);
+		}
 	}
 }
 
