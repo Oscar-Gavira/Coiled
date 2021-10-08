@@ -19,13 +19,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Hash.h"
 
-#ifdef USAR_HASH_TB
 
 short GuardarFlag(int d, int e, int f)
 {
-	// 0000 0000 0111 1111 */		/*EDAD -  7 bit*/   Valor máximo 127
-	// 0001 1111 1000 0000 */		/*DEPTH - 6 bit*/   Valor máximo 63
-	// 0110 0000 0000 0000 */		/*FLAG -  2 bit*/   Valor máximo 3
+	// 0000 0000 0111 1111 */		/*EDAD -  7 bit*/   Valor maximo 127
+	// 0001 1111 1000 0000 */		/*DEPTH - 6 bit*/   Valor maximo 63
+	// 0110 0000 0000 0000 */		/*FLAG -  2 bit*/   Valor maximo 3
 
 	if (d > (MAX_PLY / 2) - 1)		/* Evitamos superar los 6 bit */
 		d = (MAX_PLY / 2) - 1;
@@ -50,7 +49,7 @@ void ObtenerKey()
 
 	TableroGlobal.Hash = 0;
 
-	/* Hash posición de las piezas */
+	/* Hash posicion de las piezas */
 	for (i = 0; i < 64; ++i)
 	{
 		if (TableroGlobal.Tablero[i] != CasillaVacia)
@@ -73,7 +72,7 @@ void ObtenerKey()
 	HASH_LADO;
 }
 
-/* Creamos la tabla de hash aun tamaña especifico */
+/* Creamos la tabla de hash aun tamana especifico */
 void CrearTransposicion(U64 MB)
 {
 	if (MB < MB_HASH_TABLE_MIN)
@@ -103,7 +102,7 @@ void CrearTransposicion(U64 MB)
 #if defined(USAR_HASH_TB)
 	if (TT_Datos == NULL )
 	{
-		printf("Insufficient memory for hash table.\n");
+		printf(""INFO_STRING"Insufficient memory for hash table.\n");
 		fflush(stdout);
 
 		Salir = true;
@@ -141,7 +140,7 @@ int PodaHash(int *hFlag, int *beta, int *alpha, int *hPuntos)
 	}
 	return false;
 }
-/* Obtengo si la posición ya a sido analizada y que valores tenia */
+/* Obtengo si la posicion ya a sido analizada y que valores tenia */
 int RecuperarPosicion(int *hPuntos, int *hEv, int *hMov, int *hFlag)
 {
 	U64 idx = (U64)(TableroGlobal.Hash % TT_Opciones.tt_Entradas);
@@ -161,7 +160,7 @@ int RecuperarPosicion(int *hPuntos, int *hEv, int *hMov, int *hFlag)
 
 	return false;
 }
-/* Guardo la posición analizada */
+/* Guardo la posicion analizada */
 void AlmacenarPosicion(int depth, int puntos, int hEv, int hFlag, int hMov)
 {
 	U64 idx = (U64)(TableroGlobal.Hash % TT_Opciones.tt_Entradas);
@@ -191,7 +190,7 @@ void AlmacenarPosicion(int depth, int puntos, int hEv, int hFlag, int hMov)
 		}
 		else
 		{
-			/* De una interacción anterior, obtenemos el mas vieja. */
+			/* De una interaccion anterior, obtenemos el mas vieja. */
 			if ((short)EDAD(TT_Datos[idx].Celdas[i].Flag) < hEdad)
 			{
 				TT_Opciones.tt_Completo++;
@@ -243,7 +242,7 @@ int RecuperarMovimientoHash()
 	return NO_MOVIMIENTO;
 }
 
-/* Vació la tabla hash */
+/* Vacio la tabla hash */
 void LimpiarTransposicion()
 {
 	U64 i = 0;
@@ -278,5 +277,3 @@ void LiberarMemoria()
 	if (TT_Datos != NULL)
 		free(TT_Datos);
 }
-
-#endif
