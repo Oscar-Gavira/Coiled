@@ -39,7 +39,7 @@ typedef struct tag_Divide
 	char D_Jugada[6];					/* Almacenamos las coordenadas de cada jugada realizada (Para el Divide) */
 } _ST_Divide;
 
-void Perft(int div);																		/* Llamada principal de la función Perft */
-int MiniMax(int depth, _ST_Perft *P_Divide, int *P_Mov, U64 *PosicionesPorJugada);			/* Método recursivo para la función Perft */
+void Perft(int div);																		/* Llamada principal de la funcion Perft */
+int MiniMax(int depth, _ST_Perft *P_Divide, int *P_Mov, U64 *PosicionesPorJugada);			/* Metodo recursivo para la funcion Perft */
 
 #endif
