@@ -22,23 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Externo.h"
 
-#ifdef USAR_TBSYZYGY
-
-typedef struct tag_Syzygy
-{
-	int Usar;
-	U64 Acierto;
-	int Dll_Cargada;
-	char Directorio[MAX_DIR];
-	int DirectorioNuevo;
-	int Limite;
-} _ST_Syzygy;
-
-_ST_Syzygy Syzygy;
-
-#define SG_LOSS                     0 
-#define SG_DRAW                     2
-#define SG_WIN                      4
+#if defined(USAR_TABLAS_DE_FINALES) && defined(ARC_64BIT)
 
 #define SG_RESULT_WDL_MASK          0x0000000F
 #define SG_RESULT_TO_MASK           0x000003F0
@@ -71,8 +55,8 @@ _ST_Syzygy Syzygy;
      (((_wdl) << SG_RESULT_WDL_SHIFT) & SG_RESULT_WDL_MASK))
 
 #define SG_RESULT_FAILED            0xFFFFFFFF
-#define SG_RESULT_CHECKMATE         SG_SET_WDL(0, SG_WIN)
-#define SG_RESULT_STALEMATE         SG_SET_WDL(0, SG_DRAW)
+#define SG_RESULT_CHECKMATE         SG_SET_WDL(0, TB_WIN)
+#define SG_RESULT_STALEMATE         SG_SET_WDL(0, TB_DRAW)
 
 /**************************************************************************************
 METODOS DISPONIBLE DE LA DLL
@@ -108,13 +92,14 @@ typedef unsigned (CDECL *SG_PROBE_ROOT) (
 SG_INITS SG_inits;							/* Inicializa la tabla de finales */
 SG_FREE SG_free;							/* Libera la tabla de finales */
 SG_PROBE_ROOT SG_probe_root;				/* Acceso a las tablas de finales en root. */
-SG_PROBE_WDL SG_probe_wdl;					/* Acceso a las tablas de finales en la búsqueda. */
+SG_PROBE_WDL SG_probe_wdl;					/* Acceso a las tablas de finales en la busqueda. */
 SG_LARGEST SG_man;							/* Indica la tablas disponibles. 3, 4, 5, 6 o 7 piezas. */
 
 /**************************************************************************************
-Métodos
+Metodos
 **************************************************************************************/
 int Cargar_Syzygy_dll();
+void CargarSyzygy();
 int Descargar_Syzygy_dll();
 unsigned ProbarSyzygy(int WDL, int *mov);
 void Iniciar_Mascara();
