@@ -21,8 +21,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define FEN_H
 
 /*******************************************************************************
-								Métodos
+								Metodos
 *******************************************************************************/
-int CargarFen(char *epd);				/* Cargamos una posición FEN */
+int CargarFen(char *epd);				/* Cargamos una posicion FEN */
 
 #endif
