@@ -19,7 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "tbprobe.h"
 
-#ifdef USAR_TBPROBE
+#ifdef USAR_TABLAS_DE_FINALES
 
 HMODULE TB_hmod = NULL;
 #define TBNOCUADRO (64)
@@ -55,7 +55,11 @@ int TBflip[64] =
 	 8,  9, 10, 11, 12, 13, 14, 15,
 	 0,  1,  2,  3,  4,  5,  6,  7};
 
+#ifdef ARC_64BIT
 	char GTB_NOMBRE[] = { "gtbprobe_x64.dll" };
+#else
+	char GTB_NOMBRE[] = { "gtbprobe_x86.dll" };
+#endif
 
 int Cargar_gaviota_dll()
 {
@@ -131,8 +135,76 @@ int Cargar_gaviota_dll()
 	}
 	else
 	{
-		Gaviota.Usar = false;
+		printf(""INFO_STRING""STRING_FORMAT" not found. Unable to use Gaviota end table.\n", GTB_NOMBRE);
+		fflush(stdout);
+		TablaDeFinales.Usar = 0;
 		return false;
+	}
+}
+
+void CargarGaviotaTB()
+{
+	/* Se puede usar las tablas de finales de gaviota */
+	if (TablaDeFinales.Dll_CargadaGv == true && TablaDeFinales.Directorio[0] != '\0')
+	{
+		char* initinfo = NULL;
+		if (TBis_initialized() == false)
+		{
+			TablaDeFinales.paths = TBpaths_init();
+			TablaDeFinales.paths = TBpaths_add(TablaDeFinales.paths, TablaDeFinales.Directorio);
+			initinfo = TBinit(false, 4, TablaDeFinales.paths); /* 4 = CP4*/
+		}
+		else
+		{
+			if (TablaDeFinales.DirectorioNuevo == true)
+			{
+				TablaDeFinales.DirectorioNuevo = false;
+				TablaDeFinales.paths = TBpaths_init();
+				TablaDeFinales.paths = TBpaths_add(TablaDeFinales.paths, TablaDeFinales.Directorio);
+				initinfo = TBrestart(false, 4, TablaDeFinales.paths);
+			}
+		}
+
+		TablaDeFinales.Piezas = TBavailability();
+
+		if (initinfo != NULL)
+		{
+			printf(""STRING_FORMAT"\n", initinfo);
+			fflush(stdout);
+		}
+		if (TablaDeFinales.Piezas != 0 && TBis_initialized())
+		{
+			printf(""INFO_STRING"Gaviota initialized: Ok\n");
+			fflush(stdout);
+		}
+		else
+		{
+			printf(""INFO_STRING"Gaviota initialized: Failed\n");
+			fflush(stdout);
+		}
+
+		/* Cargamos la cache */
+		CacheGaviotaTB();
+	}
+}
+
+void CacheGaviotaTB()
+{
+	U64 CacheMB = TablaDeFinales.CacheMB * (U64)1024 * (U64)1024;
+	if (TablaDeFinales.CacheNueva == true || TBcache_is_on() == false)
+	{
+		TablaDeFinales.CacheNueva = false;
+		TBcache_init(CacheMB, 0); /* 0 = DTM 100% */
+		if (TBcache_is_on())
+		{
+			printf(""INFO_STRING"Gaviota state cache: Ok\n");
+			fflush(stdout);
+		}
+		else
+		{
+			printf(""INFO_STRING"Gaviota state cache: Failed\n");
+			fflush(stdout);
+		}
 	}
 }
 
@@ -145,7 +217,7 @@ int Descargar_gaviota_dll()
 
 	TBcache_done();
 	TBdone();
-	TBpaths_done(Gaviota.paths);
+	TBpaths_done(TablaDeFinales.paths);
 	FreeLibrary(TB_hmod);
 
 	TB_hmod = NULL;
@@ -163,7 +235,7 @@ int Descargar_gaviota_dll()
 	TBpaths_add = NULL;
 	TBpaths_done = NULL;
 
-	Gaviota.Dll_Cargada = false;
+	TablaDeFinales.Dll_CargadaGv = false;
 	return true;
 }
 
@@ -175,15 +247,15 @@ unsigned Probar_gaviota(int *puntos, int *ply)
 	int NpiezasN = 0;
 
 	unsigned int stm;												/* Quien mueve */
-	unsigned int epsquare;											/* Posición de peón al paso */
+	unsigned int epsquare;											/* Posicion de peon al paso */
 	unsigned int castling;											/* Enroques permitidos, 0 => no enroques */
 	unsigned int ws[17];											/* Lista de cuadrados de las blancas */
 	unsigned int bs[17];											/* Lista de cuadrados de las negras */
 	unsigned char wp[17];											/* Que piezas hay en el cuadrado. Blancas. */
 	unsigned char bp[17];											/* Que piezas hay en el cuadrado. Negras. */
 	unsigned pliestomate;											/* Distancia al mate */
-	int TBavailable;												/* Existe la información en la tabla de finales */
-	unsigned info = TBUNKNOWN;										/* información */
+	int TBavailable;												/* Existe la informacion en la tabla de finales */
+	unsigned info = TBUNKNOWN;										/* informacion */
 
 	if (TableroGlobal.EnroqueB == Corto)
 	{
