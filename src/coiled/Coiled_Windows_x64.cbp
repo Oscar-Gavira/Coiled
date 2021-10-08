@@ -9,7 +9,7 @@
 		<Build>
 			<Target title="Debug">
 				<Option platforms="Windows;" />
-				<Option output="bin/Debug/Coiled_08_x64" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/Coiled_10_x64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gnu_gcc_compiler_x64" />
@@ -32,7 +32,7 @@
 					<Add option="-Wall" />
 					<Add option="-Wold-style-cast" />
 					<Add option="-O2" />
-					<Add option="-std=c11" />
+					<Add option="-std=c99" />
 					<Add option="-march=x86-64" />
 					<Add option="-mtune=generic" />
 				</Compiler>
@@ -42,7 +42,7 @@
 			</Target>
 			<Target title="Release">
 				<Option platforms="Windows;" />
-				<Option output="bin/Release/Coiled_08_x64" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/Coiled_10_x64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gnu_gcc_compiler_x64" />
@@ -65,6 +65,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="AlphaBeta.h" />
+		<Unit filename="Cpu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Cpu.h" />
 		<Unit filename="Definiciones.h" />
 		<Unit filename="Estructuras.h" />
 		<Unit filename="Evaluacion.c">
@@ -111,6 +115,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="Utilidades.h" />
+		<Unit filename="egbb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="egbb.h" />
 		<Unit filename="nnue.c">
 			<Option compilerVar="CC" />
 		</Unit>
