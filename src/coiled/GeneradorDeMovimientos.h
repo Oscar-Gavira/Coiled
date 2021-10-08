@@ -25,22 +25,22 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define MargenIzquierdo(x)	((x) - COLUMNA((x)))										/* Obtenemos el margen izquierdo del tablero */
 
 /*******************************************************************************
-									Métodos
+									Metodos
 *******************************************************************************/
-void ObtenerMovimientoPeon(int Inicio, int TipoMov, _ST_Movimiento *M);					/* Obtener movimientos Peón */
+void ObtenerMovimientoPeon(int Inicio, int TipoMov, _ST_Movimiento *M);					/* Obtener movimientos Peon */
 void ObtenerMovimientoTorre(int Inicio, int TipoMov, _ST_Movimiento *M);				/* Obtener movimientos Torre */
 void ObtenerMovimientoCaballo(int Inicio, int TipoMov, _ST_Movimiento *M);				/* Obtener movimientos Caballo */
 void ObtenerMovimientoAlfil(int Inicio, int TipoMov, _ST_Movimiento *M);				/* Obtener movimientos Alfil */
 void ObtenerMovimientoRey(int Inicio, int TipoMov, _ST_Movimiento *M);					/* Obtener movimientos Rey */
-void AddMoveCoronacion(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M);			/* Añadimos movimiento coronación */
-void AddMovePosicionFichaAlPaso(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M);	/* Añadimos movimiento al paso */
-void AddMoveCapturaAlPaso(int Inicio, int Fin, _ST_Movimiento *M);						/* Añadimos movimiento captura al paso */
-void AddMoveEnroque(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M);				/* Añadimos movimiento enroque */
-void AddMoveRey(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M);		            /* Añadimos movimiento rey */
-void AddMoveNormal(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M);				/* Añadimos movimiento normales */
+void AddMoveCoronacion(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M);			/* Anadimos movimiento coronacion */
+void AddMovePosicionFichaAlPaso(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M);	/* Anadimos movimiento al paso */
+void AddMoveCapturaAlPaso(int Inicio, int Fin, _ST_Movimiento *M);						/* Anadimos movimiento captura al paso */
+void AddMoveEnroque(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M);				/* Anadimos movimiento enroque */
+void AddMoveRey(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M);		            /* Anadimos movimiento rey */
+void AddMoveNormal(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M);				/* Anadimos movimiento normales */
 int Jaque2(int PosicionRey);															/* Verifica jaque en el movimiento enroque */
-int JaqueBlancas(int PosicionRey);														/* Indica si las blancas están en jaque */
-int JaqueNegras(int PosicionRey);														/* Indica si las negras están en jaque */
+int JaqueBlancas(int PosicionRey);														/* Indica si las blancas estan en jaque */
+int JaqueNegras(int PosicionRey);														/* Indica si las negras estan en jaque */
 int GenerarMovimientos(int TipoMov, _ST_Movimiento *M);									/* Generamos todos los movimientos posibles.
 																						   TipoMov = Todos o Capturas y coronaciones */
 void HacerMovimientoNormal(int M);
