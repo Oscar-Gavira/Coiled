@@ -37,7 +37,7 @@ int MovimientoTranquilo(int *M)
 	/*
 	https://www.chessprogramming.org/Quiet_Moves
 	Movimientos tranquilo, son todos los movimientos que no alteren material, por tanto, no se presentaron capturas ni promociones.
-	También se puede excluir movimientos que presentan las amenazas inminentes, tales como jaque.
+	Tambien se puede excluir movimientos que presentan las amenazas inminentes, tales como jaque.
 	*/
 
 	if (CAPTURADA(*M) != MFLAGCAP)
@@ -69,7 +69,7 @@ int MovimientoKiller(int *ply, int *M)
 	}
 }
 
-/* Inicializar Histórico y killer heurístico */
+/* Inicializar Historico y killer heuristico */
 void HistoricoIniciar()
 {
 	memset(Historico, 0, 64 * 64 * sizeof(S64));
@@ -81,7 +81,7 @@ void HistoricoIniciar()
 	Min_Historico = 0;
 }
 
-/* Actualizamos histórico y killer */
+/* Actualizamos historico y killer */
 void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmov)
 {
 	int i = 0;
@@ -190,15 +190,15 @@ int HistoricoMovimientoRefutacion()
 	return NO_MOVIMIENTO;
 }
 
-/* Histórico. Para la ordenación de movimientos. Devuelve del -102 al 100. Porcentaje en vez de valor*/
+/* Historico. Para la ordenacion de movimientos. Devuelve del -102 al 100. Porcentaje en vez de valor*/
 int HistoricoValor(int *M)
 {
 	S64 v = Historico[CUADRADO_ORIGEN(*M)][CUADRADO_DESTINO(*M)];
 
 	if (v > 0 && Max_Historico != 0)
-		return (int)((S64)((S64)100 * v) / Max_Historico) + 1;	/* Los decimales 0,02 se convierten en 1. Valor máximo 101 */
+		return (int)((S64)((S64)100 * v) / Max_Historico) + 1;	/* Los decimales 0,02 se convierten en 1. Valor maximo 101 */
 	else if (v < 0 && Min_Historico != 0)
-		return (int)((S64)((S64 )-100 * v) / Min_Historico) + -1;	/* Los decimales -0,01 se convierten en -1. Valor máximo -101 */
+		return (int)((S64)((S64 )-100 * v) / Min_Historico) + -1;	/* Los decimales -0,01 se convierten en -1. Valor maximo -101 */
 	else
 		return 0;
 }
