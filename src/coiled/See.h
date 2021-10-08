@@ -21,17 +21,17 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define SEE_H
 
 /* Valor de las piezas para see */
-#define SeePeonValor		(100)								/* Valor del peón */
+#define SeePeonValor		(100)								/* Valor del peon */
 #define SeeCaballoValor		(325)								/* Valor del caballo */
 #define SeeAlfilValor		(325)								/* Valor del alfil */
 #define SeeTorreValor		(500)								/* Valor de la torre */
 #define SeeDamaValor		(1000)								/* Valor de la dama */
 #define SeeReyValor			(10000)								/* Valor del rey */
 
-int See(int *M, int turno);										/* Iniciamos la función See */
+int See(int *M, int turno);										/* Iniciamos la funcion See */
 int ObtenerAtaquesMenores(int Cs, int turno);					/* Obtenemos piezas atacantes de menor a mayor */
-int SeePeonesB(int Cs);											/* Buscamos defensa/ataque de peón blanco. */
-int SeePeonesN(int Cs);											/* Buscamos defensa/ataque de peón negro. */
+int SeePeonesB(int Cs);											/* Buscamos defensa/ataque de peon blanco. */
+int SeePeonesN(int Cs);											/* Buscamos defensa/ataque de peon negro. */
 int SeeCaballoB(int Cs);										/* Buscamos defensa/ataque de caballo blanco. */
 int SeeCaballoN(int Cs);										/* Buscamos defensa/ataque de caballo negro. */
 int SeeAlfilB(int Cs);											/* Buscamos defensa/ataque de alfil blanco. */
