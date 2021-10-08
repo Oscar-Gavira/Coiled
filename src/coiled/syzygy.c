@@ -19,7 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "syzygy.h"
 
-#ifdef USAR_TBSYZYGY
+#if defined(USAR_TABLAS_DE_FINALES) && defined(ARC_64BIT)
 
 HMODULE SG_hmod = NULL;
 
@@ -59,8 +59,25 @@ int Cargar_Syzygy_dll()
 	}
 	else
 	{
-		Syzygy.Usar = false;
+		printf(""INFO_STRING""STRING_FORMAT" not found. Unable to use Syzygy end table.\n", SG_NOMBRE);
+		fflush(stdout);
+		TablaDeFinales.Usar = 0;
 		return false;
+	}
+}
+
+void CargarSyzygy()
+{
+	/* Se puede usar las tablas de finales de gaviota */
+	if (TablaDeFinales.Dll_CargadaSg == true && TablaDeFinales.Directorio[0] != '\0')
+	{
+		/* Si es posible cargar la DLL */
+		TablaDeFinales.DirectorioNuevo = false;
+		SG_inits(TablaDeFinales.Directorio);
+		if (*SG_man == 0)
+			printf(""INFO_STRING"Syzygy initialized: FAIL.\n");
+		else
+			printf(""INFO_STRING"Syzygy initialized: OK\n");
 	}
 }
 
@@ -81,7 +98,7 @@ int Descargar_Syzygy_dll()
 	SG_probe_wdl = NULL;
 	SG_man = NULL;
 
-	Syzygy.Dll_Cargada = false;
+	TablaDeFinales.Dll_CargadaSg = false;
 	return true;
 }
 
@@ -91,7 +108,6 @@ void Iniciar_Mascara()
 	{
 		SG_Mascara[i] = 0ULL;
 	}
-
 	for (int i = 0; i < 64; i++)
 	{
 		SG_Mascara[(i) ^ 0x38] |= 1ULL << i;
