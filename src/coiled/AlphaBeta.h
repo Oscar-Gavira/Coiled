@@ -20,7 +20,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #ifndef ALPHABETA_H
 #define ALPHABETA_H
 
-#include "Externo.h"
 #include "Historico.h"
 #include "Hash.h"
 #include "See.h"
@@ -29,25 +28,25 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include "GeneradorDeMovimientos.h"
 #include "Fen.h"
 
-#if defined(USAR_TBPROBE)
+#ifdef USAR_TABLAS_DE_FINALES
 	#include "tbprobe.h"
-#endif
-#if defined(USAR_TBSYZYGY)
 	#include "syzygy.h"
+	#include "egbb.h"
 #endif
+
 /******************************************************************************
-							Métodos
+							Metodos
 ******************************************************************************/
 int AspirationWindows(int depth, int en_jaque, int PuntuacionAnterior);							/* Rutina Aspiration Windows */
 int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int SingularMov);		/* Rutina AlphaBeta	Vp */
 int AlphaBetaQs(int alpha, int beta);															/* Rutina AlphaBeta	Quiescence */
 void ActualizarVp(int M);																		/* Actualiza la variante principal triangular durante la busqueda. */
-void ActualizarVpRoot();																		/* Actualiza la variante principal de una búsqueda terminada de root */
+void ActualizarVpRoot();																		/* Actualiza la variante principal de una busqueda terminada de root */
 void ImprimirVp(int M_Depth, int puntos, int lowerbound);										/* Imprimimos la variante principal, entre otros datos */
-void ExtraInfo(int *M, int *currmovenumber);													/* Información extra. */
+void ExtraInfo(int *M, int *currmovenumber);													/* Informacion extra. */
 void ImprimirMejorJugada(int Jugada, int J_Adv);												/* Imprimimos la mejor jugada y ponder */
 void ComprobarTiempo();																			/* Comprobamos tiempo y entradas */
 int FigurasAdversarioNull(int turno);															/* Comprueba si se puede hacer Movimiento nulo */
-int EsPuntuacionMate(int puntos);																/* Obtenemos si la puntuación esta dentro del margen de mate */
-int EsTablaRepeticion();																		/* Obtenemos si es tablas por repetición */
+int EsPuntuacionMate(int puntos);																/* Obtenemos si la puntuacion esta dentro del margen de mate */
+int EsTablaRepeticion();																		/* Obtenemos si es tablas por repeticion */
 #endif
