@@ -46,7 +46,7 @@ int GenerarMovimientos(int TipoMov, _ST_Movimiento *M)
 				switch (TableroGlobal.Tablero[X])							/* Que pieza es? */
 				{
 					case PeonB:
-						ObtenerMovimientoPeon(X, TipoMov, M);				/* Obtenemos los movimientos del peón */
+						ObtenerMovimientoPeon(X, TipoMov, M);				/* Obtenemos los movimientos del peon */
 						break;
 
 					case CaballoB:
@@ -88,7 +88,7 @@ int GenerarMovimientos(int TipoMov, _ST_Movimiento *M)
 				switch (TableroGlobal.Tablero[X])							/* Que pieza es? */
 				{
 					case PeonN:
-						ObtenerMovimientoPeon(X, TipoMov, M);				/* Obtenemos los movimientos del peón */
+						ObtenerMovimientoPeon(X, TipoMov, M);				/* Obtenemos los movimientos del peon */
 						break;
 
 					case CaballoN:
@@ -127,8 +127,8 @@ int GenerarMovimientos(int TipoMov, _ST_Movimiento *M)
 	return IndiceMovimiento;													/* Devolvemos el numero de jugadas obtenidas */
 }
 
-/* Obtenemos los movimiento del peón */
-void ObtenerMovimientoPeon(int Inicio, int TipoMov, _ST_Movimiento *M)			/* Obtenemos los movimientos del peón */
+/* Obtenemos los movimiento del peon */
+void ObtenerMovimientoPeon(int Inicio, int TipoMov, _ST_Movimiento *M)			/* Obtenemos los movimientos del peon */
 {
 	switch (TableroGlobal.MueveBlancas)
 	{
@@ -147,7 +147,7 @@ void ObtenerMovimientoPeon(int Inicio, int TipoMov, _ST_Movimiento *M)			/* Obte
 					AddMoveCapturaAlPaso(Inicio, Inicio - 9, M);
 				}
             }
-			/* Come en diagonal Derecha y Coronación */
+			/* Come en diagonal Derecha y Coronacion */
             if (Inicio - 7 > -1 && TableroGlobal.TableroColor[Inicio] == TableroGlobal.TableroColor[Inicio - 7] && TableroGlobal.Tablero[Inicio - 7] > CasillaVacia)
             {
                 if (Inicio - 7 < 8)
@@ -159,7 +159,7 @@ void ObtenerMovimientoPeon(int Inicio, int TipoMov, _ST_Movimiento *M)			/* Obte
 					AddMoveNormal(Inicio, Inicio - 7, TipoMov, M);
 				}
             }
-            /* Come en diagonal Izquierda y Coronación */
+            /* Come en diagonal Izquierda y Coronacion */
             if (Inicio - 9 > -1 && TableroGlobal.TableroColor[Inicio] == TableroGlobal.TableroColor[Inicio - 9] && TableroGlobal.Tablero[Inicio - 9] > CasillaVacia)
             {
                 if (Inicio - 9 < 8)
@@ -205,7 +205,7 @@ void ObtenerMovimientoPeon(int Inicio, int TipoMov, _ST_Movimiento *M)			/* Obte
 					AddMoveCapturaAlPaso(Inicio, Inicio + 9, M);
 				}
             }
-			/* Come en diagonal Derecha y Coronación */
+			/* Come en diagonal Derecha y Coronacion */
             if (Inicio + 7 < 64 && TableroGlobal.TableroColor[Inicio] == TableroGlobal.TableroColor[Inicio + 7] && TableroGlobal.Tablero[Inicio + 7] < CasillaVacia)
             {
                 if (Inicio + 7 > 55)
@@ -217,7 +217,7 @@ void ObtenerMovimientoPeon(int Inicio, int TipoMov, _ST_Movimiento *M)			/* Obte
 					AddMoveNormal(Inicio, Inicio + 7, TipoMov, M);
 				}
             }
-            /* Come en diagonal Izquierda y Coronación */
+            /* Come en diagonal Izquierda y Coronacion */
             if (Inicio + 9 < 64 && TableroGlobal.TableroColor[Inicio] == TableroGlobal.TableroColor[Inicio + 9] && TableroGlobal.Tablero[Inicio + 9] < CasillaVacia)
             {
                 if (Inicio + 9 > 55)
@@ -229,7 +229,7 @@ void ObtenerMovimientoPeon(int Inicio, int TipoMov, _ST_Movimiento *M)			/* Obte
 					AddMoveNormal(Inicio, Inicio + 9, TipoMov, M);
 				}
             }
-            /* Movimiento normal y coronación */
+            /* Movimiento normal y coronacion */
             if (Inicio + 8 < 64 && TableroGlobal.Tablero[Inicio + 8] == CasillaVacia)
             {
                 if (Inicio + 8 > 55)
@@ -1015,7 +1015,7 @@ void ObtenerMovimientoRey(int Inicio, int TipoMov, _ST_Movimiento *M)
 	}
 }
 
-/* Añadimos el movimiento a la lista, de tipo coronación */
+/* Anadimos el movimiento a la lista, de tipo coronacion */
 void AddMoveCoronacion(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M)
 {
 	/* Generamos todas las posibles coronaciones Caballo, Alfil, Torre y Dama. */
@@ -1077,7 +1077,7 @@ void AddMoveCoronacion(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M)
 	}
 }
 
-/* Añadimos el movimiento a la lista, de tipo al paso */
+/* Anadimos el movimiento a la lista, de tipo al paso */
 void AddMovePosicionFichaAlPaso(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M)
 {
 	/* Solo Capturas y coronaciones - Lista de jugadas Quies */
@@ -1089,13 +1089,13 @@ void AddMovePosicionFichaAlPaso(int Inicio, int Fin, int TipoMov, _ST_Movimiento
 	M[IndiceMovimiento++].Movimiento = MOVIMIENTO(Inicio, Fin, TableroGlobal.Tablero[Inicio], MFLAGCAP, MFLAGPROM, MFLAGPS);
 }
 
-/* Añadimos el movimiento a la lista, de tipo captura al paso */
+/* Anadimos el movimiento a la lista, de tipo captura al paso */
 void AddMoveCapturaAlPaso(int Inicio, int Fin, _ST_Movimiento *M)
 {
 	M[IndiceMovimiento++].Movimiento = MOVIMIENTO(Inicio, Fin, TableroGlobal.Tablero[Inicio], MFLAGCAP, MFLAGPROM, MFLAGEP);
 }
 
-/* Añadimos el movimiento a la lista, de tipo enroque */
+/* Anadimos el movimiento a la lista, de tipo enroque */
 void AddMoveEnroque(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M)
 {
 	/* Solo Capturas y coronaciones - Lista de jugadas Quies */
@@ -1107,7 +1107,7 @@ void AddMoveEnroque(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M)
 	M[IndiceMovimiento++].Movimiento = MOVIMIENTO(Inicio, Fin, TableroGlobal.Tablero[Inicio], MFLAGCAP, MFLAGPROM, MFLAGCA);
 }
 
-/* Añadimos el movimiento a la lista, movimiento del rey rey */
+/* Anadimos el movimiento a la lista, movimiento del rey rey */
 void AddMoveRey(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M)
 {
 	int Captura = (TableroGlobal.Tablero[Fin] == CasillaVacia ? MFLAGCAP : TableroGlobal.Tablero[Fin]);
@@ -1121,7 +1121,7 @@ void AddMoveRey(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M)
 	M[IndiceMovimiento++].Movimiento = MOVIMIENTO(Inicio, Fin, TableroGlobal.Tablero[Inicio], Captura, MFLAGPROM, 0);
 }
 
-/* Añadimos el movimiento a la lista, movimientos normales */
+/* Anadimos el movimiento a la lista, movimientos normales */
 void AddMoveNormal(int Inicio, int Fin, int TipoMov, _ST_Movimiento *M)
 {
 	int Captura = (TableroGlobal.Tablero[Fin] == CasillaVacia ? MFLAGCAP : TableroGlobal.Tablero[Fin]);
@@ -1153,7 +1153,7 @@ int Jaque(int Mueve_Blancas)
 	}
 }
 
-/* Esta función es para comprobar si el enroque esta permitido, comprobando las dos casillas siguiente al rey f1/g1, f8/g8 y c1/d1, c8/d8 */
+/* Esta funcion es para comprobar si el enroque esta permitido, comprobando las dos casillas siguiente al rey f1/g1, f8/g8 y c1/d1, c8/d8 */
 int Jaque2(int PosicionRey)
 {
 	switch (TableroGlobal.MueveBlancas)
@@ -1171,7 +1171,7 @@ int Jaque2(int PosicionRey)
 	}
 }
 
-/* Devuelve true si la posición del rey esta en jaque (Utilizado en Jaque y Jaque2) */
+/* Devuelve true si la posicion del rey esta en jaque (Utilizado en Jaque y Jaque2) */
 int JaqueBlancas(int PosicionRey)
 {
 	int T = 0; /* Vertical */
@@ -1406,7 +1406,7 @@ int JaqueBlancas(int PosicionRey)
 	return false;
 }
 
-/* Devuelve true si la posición del rey esta en jaque (Utilizado en Jaque y Jaque2) */
+/* Devuelve true si la posicion del rey esta en jaque (Utilizado en Jaque y Jaque2) */
 int JaqueNegras(int PosicionRey)
 {
 	int T = 0; /* Vertical */
@@ -1633,7 +1633,7 @@ int HacerMovimiento(int M, int Verificar)
 	int Fin = CUADRADO_DESTINO(M);
 	int _PiezaMovida = PIEZAMOVIDA(M);
 
-	/* Almacenamos el estado del tablero, antes de hacer el movimiento. Para podes des-hacerlo después. */
+	/* Almacenamos el estado del tablero, antes de hacer el movimiento. Para podes des-hacerlo despues. */
 	#ifdef USAR_HASH_TB
 	TableroGlobal.Estado[TableroGlobal.Ply].Hash = TableroGlobal.Hash;
 	#endif
@@ -1648,7 +1648,7 @@ int HacerMovimiento(int M, int Verificar)
 	TableroGlobal.Historico[TableroGlobal.Hply++] = TableroGlobal.Hash;
 #endif
 
-	if (GENERA_ALPASO(M) == MFLAGPS)														/* Movimiento peón dos a delante */
+	if (GENERA_ALPASO(M) == MFLAGPS)														/* Movimiento peon dos a delante */
 	{
 #ifdef USAR_HASH_TB
 		HASH_EP(Fin);
@@ -1700,7 +1700,7 @@ void HacerMovimientoNormal(int M)
 	HASH_PIEZA(TableroGlobal.Tablero[Inicio], Inicio);
 	/* Quitamos la pieza capturada */
 	if (PiezaCapturada != MFLAGCAP) HASH_PIEZA(PiezaCapturada, Fin);
-	/* Añadimos la pieza */
+	/* Anadimos la pieza */
 	HASH_PIEZA(TableroGlobal.Tablero[Inicio], Fin);
 #endif
 
@@ -1886,13 +1886,13 @@ void HacerMovimientoEnroque(int M)
 				TableroGlobal.Tablero[TableroGlobal.Ajedrez960.TorreBlancaH] = CasillaVacia;											/* Vaciamos la casilla de la torre */
 				TableroGlobal.Tablero[Inicio] = CasillaVacia;
 
-				TableroGlobal.Tablero[61] = TorreB;																			/* Cambiamos la torre de posición */
+				TableroGlobal.Tablero[61] = TorreB;																			/* Cambiamos la torre de posicion */
 				TableroGlobal.EnroqueB = Enroque;																			/* Actualizamos el estado del enroque */
 
 				/* Movimiento del rey */
 				TableroGlobal.Tablero[62] = ReyB;
-				TableroGlobal.PosicionReyB = 62;											/* Actualizamos la posición del rey */
-			}																		/* Enroque Largo - Posición del rey o donde se ha desplazado. */
+				TableroGlobal.PosicionReyB = 62;											/* Actualizamos la posicion del rey */
+			}																		/* Enroque Largo - Posicion del rey o donde se ha desplazado. */
 			if (Inicio > Fin) /* Enroque largo */
 			{
 #ifdef USAR_HASH_TB
@@ -1911,12 +1911,12 @@ void HacerMovimientoEnroque(int M)
 				TableroGlobal.Tablero[TableroGlobal.Ajedrez960.TorreBlancaA] = CasillaVacia;											/* Vaciamos la casilla de la torre */
 				TableroGlobal.Tablero[Inicio] = CasillaVacia;
 
-				TableroGlobal.Tablero[59] = TorreB;						/* Cambiamos la torre de posición */
+				TableroGlobal.Tablero[59] = TorreB;						/* Cambiamos la torre de posicion */
 				TableroGlobal.EnroqueB = Enroque;										/* Actualizamos el estado del enroque */
 
 				/* Movimiento del rey */
 				TableroGlobal.Tablero[58] = ReyB;
-				TableroGlobal.PosicionReyB = 58;											/* Actualizamos la posición del rey */
+				TableroGlobal.PosicionReyB = 58;											/* Actualizamos la posicion del rey */
 			}
 		}
 		/* Enroque de las negras */
@@ -1946,13 +1946,13 @@ void HacerMovimientoEnroque(int M)
 				TableroGlobal.Tablero[TableroGlobal.Ajedrez960.TorreNegraH] = CasillaVacia;											/* Vaciamos la casilla de la torre */
 				TableroGlobal.Tablero[Inicio] = CasillaVacia;
 
-				TableroGlobal.Tablero[5] = TorreN;						/* Cambiamos la torre de posición */
+				TableroGlobal.Tablero[5] = TorreN;						/* Cambiamos la torre de posicion */
 				TableroGlobal.EnroqueN = Enroque;										/* Actualizamos el estado del enroque */
 
 				/* Movimiento del rey */
 				TableroGlobal.Tablero[6] = ReyN;
-				TableroGlobal.PosicionReyN = 6;											/* Actualizamos la posición del rey */
-			}																		/* Enroque Largo - Posición del rey o donde se ha desplazado. */
+				TableroGlobal.PosicionReyN = 6;											/* Actualizamos la posicion del rey */
+			}																		/* Enroque Largo - Posicion del rey o donde se ha desplazado. */
 
 			if (Inicio > Fin) /* Enroque largo */
 			{
@@ -1972,12 +1972,12 @@ void HacerMovimientoEnroque(int M)
 				TableroGlobal.Tablero[TableroGlobal.Ajedrez960.TorreNegraA] = CasillaVacia;											/* Vaciamos la casilla de la torre */
 				TableroGlobal.Tablero[Inicio] = CasillaVacia;
 
-				TableroGlobal.Tablero[3] = TorreN;										/* Cambiamos la torre de posición */
+				TableroGlobal.Tablero[3] = TorreN;										/* Cambiamos la torre de posicion */
 				TableroGlobal.EnroqueN = Enroque;										/* Actualizamos el estado del enroque */
 
 				/* Movimiento del rey */
 				TableroGlobal.Tablero[2] = ReyN;
-				TableroGlobal.PosicionReyN = 2;											/* Actualizamos la posición del rey */
+				TableroGlobal.PosicionReyN = 2;											/* Actualizamos la posicion del rey */
 			}
 		}
 	}
@@ -2091,11 +2091,11 @@ void HacerMovimientoCoronacion(int M)
 	}
 
 	#ifdef USAR_HASH_TB
-	/* Quitamos el peón */
+	/* Quitamos el peon */
 	HASH_PIEZA(TableroGlobal.Tablero[Inicio], Inicio);
 	/* Quitamos la pieza capturada */
 	if (PiezaCapturada != MFLAGCAP) HASH_PIEZA(PiezaCapturada, Fin);
-	/* Añadimos la pieza coronada */
+	/* Anadimos la pieza coronada */
 	HASH_PIEZA(coronacion, Fin);
 #endif
 
@@ -2254,7 +2254,7 @@ void DeshacerMovimiento()
 	}
 	else
 	{
-		if (ENROQUE(M) != MFLAGCA)															/* Enroque. Cambiamos la posición de la torre. */
+		if (ENROQUE(M) != MFLAGCA)															/* Enroque. Cambiamos la posicion de la torre. */
 		{
 			TableroGlobal.Tablero[Inicio] = TableroGlobal.Tablero[Fin];
 			TableroGlobal.Tablero[Fin] = CasillaVacia;
@@ -2262,15 +2262,15 @@ void DeshacerMovimiento()
 	}
 
 	/* Capturas*/
-	if (CAPTURA_ALPASO(M) == MFLAGEP && TableroGlobal.Estado[TableroGlobal.Ply-1].FichaAlPasoPosicion != 0)	/* Al paso. Restauramos el peón. */
+	if (CAPTURA_ALPASO(M) == MFLAGEP && TableroGlobal.Estado[TableroGlobal.Ply-1].FichaAlPasoPosicion != 0)	/* Al paso. Restauramos el peon. */
 	{
 		TableroGlobal.Tablero[TableroGlobal.Estado[TableroGlobal.Ply-1].FichaAlPasoPosicion] = PiezaMovida < CasillaVacia ? PeonN : PeonB;
-		(PiezaMovida < CasillaVacia) ? Negras.PeonTotales++ : Blancas.PeonTotales++;								/* Devolvemos el peón a totales */
+		(PiezaMovida < CasillaVacia) ? Negras.PeonTotales++ : Blancas.PeonTotales++;								/* Devolvemos el peon a totales */
 	}
 	else if (PiezaCapturada != MFLAGCAP)																				/* Capturas */
 	{
 		TableroGlobal.Tablero[Fin] = PiezaCapturada;														/* Restablecemos la pieza capturada */
-		switch (PiezaCapturada)																				/* Devolvemos el peón a totales */
+		switch (PiezaCapturada)																				/* Devolvemos el peon a totales */
 		{
 			case PeonB:
 				Blancas.PeonTotales++;
@@ -2310,11 +2310,11 @@ void DeshacerMovimiento()
 		}
 	}
 
-	/* Coronación */
-	if (CORONACION(M) != MFLAGPROM)																					/* Coronación. Cambiamos la pieza por un peón. */
+	/* Coronacion */
+	if (CORONACION(M) != MFLAGPROM)																					/* Coronacion. Cambiamos la pieza por un peon. */
 	{
-		TableroGlobal.Tablero[Inicio] = (PiezaMovida < CasillaVacia) ? PeonB : PeonN;								/* Restablecemos el peón */
-		(PiezaMovida < CasillaVacia) ? Blancas.PeonTotales++ : Negras.PeonTotales++;								/* Devolvemos el peón a totales */
+		TableroGlobal.Tablero[Inicio] = (PiezaMovida < CasillaVacia) ? PeonB : PeonN;								/* Restablecemos el peon */
+		(PiezaMovida < CasillaVacia) ? Blancas.PeonTotales++ : Negras.PeonTotales++;								/* Devolvemos el peon a totales */
 		switch (CORONACION(M))																						/* Quitamos la pieza coronada de totales */
 		{
 			case CaballoB:
@@ -2371,7 +2371,7 @@ void DeshacerMovimiento()
 /* Hacemos movimiento nulo */
 void HacerMovimientoNull()
 {
-	/* Almacenamos el estado del tablero, antes de hacer el movimiento. Para podes des-hacerlo después. */
+	/* Almacenamos el estado del tablero, antes de hacer el movimiento. Para podes des-hacerlo despues. */
 	#ifdef USAR_HASH_TB
 	TableroGlobal.Estado[TableroGlobal.Ply].Hash = TableroGlobal.Hash;
 	#endif
