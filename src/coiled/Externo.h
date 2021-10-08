@@ -27,30 +27,34 @@ extern void Inicializar_See();							    /* Inicializa valores MVV/LVA. */
 /*******************************************************************************
 								Variables globales
 *******************************************************************************/
-extern _ST_TableroX64 TableroGlobal;						/* Tablero de la posición actual. */
-extern _ST_TipoJuego TipoJuego;							    /* Información de la partida por tiempo o por profundidad fija */
-extern int Salir;										    /* Para salir de la aplicación */
-extern _ST_Puntos Blancas;									/* Almacena la puntuación de las blancas */
-extern _ST_Puntos Negras;									/* Almacena la puntuación de las negras */
+extern _ST_TableroX64 TableroGlobal;						/* Tablero de la posicion actual. */
+extern _ST_TipoJuego TipoJuego;							    /* Informacion de la partida por tiempo o por profundidad fija */
+extern int Salir;										    /* Para salir de la aplicacion */
+extern _ST_Puntos Blancas;									/* Almacena la puntuacion de las blancas */
+extern _ST_Puntos Negras;									/* Almacena la puntuacion de las negras */
+#ifdef USAR_TABLAS_DE_FINALES
+    extern _ST_TablaDeFinales TablaDeFinales;
+#endif
 extern U64 zobrist_Tablero[14][64];                         /* Almacena las llaves zobrist */
 
 /************************************************************************************
-                    Métodos externos Inicio.c
+                    Metodos externos Inicio.c
 ************************************************************************************/
 extern void Movimiento(char *ptr, int *Ok, int Ultimo);	    /* Realiza un movimiento y comprobamos si es legal. */
-extern void Position_Fen_Startpos(char *ptr);			    /* Carga una posición FEN */
+extern void Position_Fen_Startpos(char *ptr);			    /* Carga una posicion FEN */
 
 /************************************************************************************
-                    Métodos externos AlphaBeta.c
+                    Metodos externos AlphaBeta.c
 ************************************************************************************/
-extern void A_Inicio(int full);							    /* Reinicia variables utilizados en el árbol AlphaBeta */
-extern void Buscar();									    /* Inicializa la búsqueda AlphaBeta */
-extern void Iniciar_AlphaBeta();                            /* Inicia un vector para las reducciones en la búsqueda */
+extern void A_Inicio(int full);							    /* Reinicia variables utilizados en el arbol AlphaBeta */
+extern void Buscar();									    /* Inicializa la busqueda AlphaBeta */
+extern void Iniciar_AlphaBeta();                            /* Inicia un vector para las reducciones en la busqueda */
 
 /************************************************************************************
-                    Métodos externos Evaluacion.c
+                    Metodos externos Evaluacion.c
 ************************************************************************************/
-extern int Evaluar();						                /* Evaluación del tablero */
-extern int EvaluarTablas();                                 /* Comprueba si la posición actual es tablas por falta de material. */
+extern int Evaluar();						                /* Evaluacion del tablero */
+extern int EvaluarTablas();                                 /* Comprueba si la posicion actual es tablas por falta de material. */
 extern void LimpiarPuntuacion(int todo);                    /* Limpia los puntos */
+extern void CargarEvaluacion();   
 #endif
