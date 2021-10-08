@@ -21,20 +21,26 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define DEFINICIONES_H
 
 #define NOMBRE "Coiled"
-#define VER  "0.9"
+#define VER  "1.0"
 #define AUTOR  "Oscar Gavira"
 
 #define USAR_SQLITE														/* Para compilar el uso de sqlite. Libro de aperturas. */
 #define USAR_AJEDREZ960													/* Para compilar el uso de Ajedrez960. */
 #define ARC_64BIT														/* Para compilar a 64 bit. */
+#define USAR_TABLAS_DE_FINALES											/* Para compilar con las tablas de finales */
 
-/* No activar USAR_TBSYZYGY y USAR_TBPROBE a la vez.  */
 #ifdef ARC_64BIT
-	#define USAR_TBSYZYGY
-	#define USAR_NNUE
-	//#define USAR_TBPROBE
+	#define USAR_NNUE													/* En version de 64 bit activamos la opcion de evaluacion NNUE */
 #endif
 
+//#define DEBUG
+#ifdef DEBUG
+	#define INFO_STRING "info string "
+#else
+	#define INFO_STRING ""
+#endif
+
+#ifdef _WIN32
 #include <stdio.h>														/* Printf, FILE, fclose, fflush, stdout, fgets... */
 #include <time.h>														/* Tiempo */
 #include <string.h>														/* Memset, strcat, strcopy */
@@ -44,8 +50,19 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include <inttypes.h>													/* Los formatos para imprimir un string, int, U32, U64... %d, %s, llu... */
 #include <math.h>														/* log(x) */
 #include <windows.h>													/* Necesario para vincular librerias, SqliIte y TbProbe y EntradaStdIn() */
+#else
+#include <stdio.h>														/* Printf, FILE, fclose, fflush, stdout, fgets... */
+#include <string.h>														/* Memset, strcat, strcopy */
+#include <stdlib.h>														/* atoi, atoll, exit(EXIT_SUCCESS), srand, rand */
+#include <stdint.h>														/* Tipo de variables y valores maximos */
+#include <limits.h>														/* Valores maximos y minimos de cada tipo de variable int, short, char...*/
+#include <inttypes.h>													/* Los formatos para imprimir un string, int, U32, U64... %d, %s, llu... */
+#include <math.h>														/* log(x) */
+#include <unistd.h>														/* Necesario para vincular librerias, SqliIte y TbProbe y EntradaStdIn() */
+#include <sys/time.h>													/* Tiempo */
+#endif
 
-#if defined (_MSC_VER)
+#ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #include <crtdbg.h>
 #pragma warning (disable : 4996)
@@ -62,11 +79,16 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define STRING_FORMAT "%s"
 #define MAX_PLY					(128)									/* Maximos ply */
 #define MB_HASH_TABLE_MAX		(4096)									/* Tamano de la tabla hash maximo */
-#define MB_HASH_TABLE			(128)									/* Tamano de la tabla hash por defecto */
+#define MB_HASH_TABLE			(64)									/* Tamano de la tabla hash por defecto */
 #define MB_HASH_TABLE_MIN		(8)										/* Tamano de la tabla hash minimo */
-#define MB_GAVIOTA_CACHE_MAX	(1024)									/* Tamano maximo de cache, para las tablas de finales de gaviota. */
-#define MB_GAVIOTA_CACHE		(32)									/* Tamano por defecto de cache, para las tablas de finales de gaviota. */
-#define MB_GAVIOTA_CACHE_MIN	(8)										/* Tamano minimo de cache, para las tablas de finales de gaviota. */
+#ifdef USAR_TABLAS_DE_FINALES
+#define MB_TABLAS_CACHE_MAX		(1024)									/* Tamano maximo de cache, para las tablas de finales de gaviota. */
+#define MB_TABLAS_CACHE			(32)									/* Tamano por defecto de cache, para las tablas de finales de gaviota. */
+#define MB_TABLAS_CACHE_MIN		(8)										/* Tamano minimo de cache, para las tablas de finales de gaviota. */
+#define TB_LOSS                     0
+#define TB_DRAW                     2
+#define TB_WIN                      4
+#endif
 
 typedef uint64_t U64;
 typedef int64_t S64;													/* 9.223.372.036.854.775.807 / -9.223.372.036.854.775.806. Para el historico. */
@@ -79,9 +101,14 @@ typedef int64_t S64;													/* 9.223.372.036.854.775.807 / -9.223.372.036.8
 #define MB_HASH_TABLE_MAX		(2048)									/* Tamano de la tabla hash maximo */
 #define MB_HASH_TABLE			(16)									/* Tamano de la tabla hash por defecto */
 #define MB_HASH_TABLE_MIN		(2)										/* Tamano de la tabla hash minimo */
-#define MB_GAVIOTA_CACHE_MAX	(512)									/* Tamano maximo de cache, para las tablas de finales de gaviota. */
-#define MB_GAVIOTA_CACHE		(16)									/* Tamano por defecto de cache, para las tablas de finales de gaviota. */
-#define MB_GAVIOTA_CACHE_MIN	(4)										/* Tamano minimo de cache, para las tablas de finales de gaviota. */
+#ifdef USAR_TABLAS_DE_FINALES
+#define MB_TABLAS_CACHE_MAX		(512)									/* Tamano maximo de cache, para las tablas de finales de gaviota. */
+#define MB_TABLAS_CACHE			(16)									/* Tamano por defecto de cache, para las tablas de finales de gaviota. */
+#define MB_TABLAS_CACHE_MIN		(4)										/* Tamano minimo de cache, para las tablas de finales de gaviota. */
+#define TB_LOSS                     0
+#define TB_DRAW                     2
+#define TB_WIN                      4
+#endif
 
 typedef uint32_t U64;
 typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el historico. (Si alcanza mucha profundidad en la busqueda FALLOS...) */
@@ -169,7 +196,6 @@ typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el histori
 #define Todos (1)				    									/* Generara todas los movimientos posibles */
 #define CapturasCoronacion (2)											/* Generar todas las capturas y coronaciones posibles */
 
-#define VALOR_TB		(25000)
 #define VALOR_MATE		(32000)
 #define MATE(p)			(-VALOR_MATE + p)
 #define MATE_EN(p)		(VALOR_MATE - p)
