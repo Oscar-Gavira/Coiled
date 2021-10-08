@@ -22,7 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include "Utilidades.h"
 #include "GeneradorDeMovimientos.h"
 
-/* Almacena la posición del rey y el movimiento realizado en el SEE */
+/* Almacena la posicion del rey y el movimiento realizado en el SEE */
 typedef struct tag_SeeDeshacerMovimiento
 {
 	int Movimiento;
@@ -76,7 +76,7 @@ int See(int *M, int turno)
 	if (CAPTURA_ALPASO(*M) == MFLAGEP)
 		return 1;
 
-	/* Ordenación. No se ha realizado el movimiento. */
+	/* Ordenacion. No se ha realizado el movimiento. */
 	if (TableroGlobal.Tablero[Fin] == PiezaCapturada)
 	{
 		if (!SeeHacerMovimiento(M))
@@ -211,7 +211,7 @@ int ObtenerAtaquesMenores(int Cs, int turno)
 	return move;
 }
 
-/* Buscamos defensa de peón. */
+/* Buscamos defensa de peon. */
 int SeePeonesN(int Cs)
 {
 	int i;
@@ -242,7 +242,7 @@ int SeePeonesN(int Cs)
 	}
 	return NO_MOVIMIENTO;
 }
-/* Buscamos defensa de peón. */
+/* Buscamos defensa de peon. */
 int SeePeonesB(int Cs)
 {
 	int i;
