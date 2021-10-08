@@ -50,7 +50,7 @@ void Perft(int div)
 		/* Hacemos el movimiento y compruebo su legalidad */
 		if (!HacerMovimiento(ListaMovimiento[i].Movimiento, true))
 		{
-			/* Si no es legal retrocedemos la posición y tomamos otro */
+			/* Si no es legal retrocedemos la posicion y tomamos otro */
 			DeshacerMovimiento();
 			continue;
 		}
