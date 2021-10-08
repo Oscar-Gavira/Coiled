@@ -25,10 +25,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 
-/* Cargamos una posición FEN */
+/* Cargamos una posicion FEN */
 int CargarFen(char *epd)
 {
-	/* Vector de coordenadas para el peón al paso */
+	/* Vector de coordenadas para el peon al paso */
 	char TableroCoordenadasL[] = {
 		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
 		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
@@ -86,7 +86,7 @@ int CargarFen(char *epd)
 			{
 				for (pieza = 0; pieza < *epd - '0'; pieza++)
 				{
-					TableroGlobal.Tablero[i + j] = CasillaVacia;			/* Asignamos Cuadro vació */
+					TableroGlobal.Tablero[i + j] = CasillaVacia;			/* Asignamos Cuadro vacio */
 					j++;
 				}
 			}
@@ -113,7 +113,7 @@ int CargarFen(char *epd)
 #endif
 				switch (pieza)										/* Que pieza es? */
 				{
-					case PeonB:										/* Peón blanco */
+					case PeonB:										/* Peon blanco */
 						Blancas.PeonTotales++; 						/* Incrementamos el numero de peones */
 						break;
 					case CaballoB:									/* Caballo blanco */
@@ -129,10 +129,10 @@ int CargarFen(char *epd)
 						Blancas.DamasTotales++;						/* Incrementamos el numero de damas */
 						break;
 					case ReyB:										/* Rey blanco */
-						TableroGlobal.PosicionReyB = i + j;			/* Almacenamos la posición del rey */
+						TableroGlobal.PosicionReyB = i + j;			/* Almacenamos la posicion del rey */
 						break;
 
-					case PeonN:										/* Peón negro */
+					case PeonN:										/* Peon negro */
 						Negras.PeonTotales++;						/* Incrementamos el numero de peones */
 						break;
 					case CaballoN:									/* Caballo negro */
@@ -148,7 +148,7 @@ int CargarFen(char *epd)
 						Negras.DamasTotales++;						/* Incrementamos el numero de dama */
 						break;
 					case ReyN:										/* Rey negro */
-						TableroGlobal.PosicionReyN = i + j;			/* Almacenamos la posición del rey */
+						TableroGlobal.PosicionReyN = i + j;			/* Almacenamos la posicion del rey */
 						break;
 					default:
 						return false;
