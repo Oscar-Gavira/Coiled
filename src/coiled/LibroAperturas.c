@@ -22,11 +22,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #ifdef USAR_SQLITE
 
 /*
-Las librerías para usar el libro de apertura mediante SqlIte son las oficiales.
+Las librerias para usar el libro de apertura mediante SqlIte son las oficiales.
 Se pueden descargar de:
 https://www.sqlite.org/index.html									Web oficial
-https://www.sqlite.org/2021/sqlite-dll-win32-x86-3360000.zip		versión de 32bit
-https://www.sqlite.org/2021/sqlite-dll-win64-x64-3360000.zip		versión de 64bit
+https://www.sqlite.org/2021/sqlite-dll-win32-x86-3360000.zip		version de 32bit
+https://www.sqlite.org/2021/sqlite-dll-win64-x64-3360000.zip		version de 64bit
 solo renombrar el archivo a:
 sqlite3_x64.dll
 o
@@ -182,7 +182,7 @@ int BuscarJugadaLibro()
 
 	if (error)
 	{
-		printf("Opening book not loaded.\n");
+		printf(""INFO_STRING"Opening book not loaded.\n");
 		fflush(stdout);
 
 		CerrarBaseDeDatos();
@@ -294,9 +294,9 @@ int BuscarJugadaLibro()
 	else
 	{
 		/* Error en el libro de aperturas. */
-		printf("Opening book error.\n");
+		printf(""INFO_STRING"Opening book error.\n");
 		fflush(stdout);
-		printf("Error code: "S32_FORMAT"\n", error);
+		printf(""INFO_STRING"Error code: "S32_FORMAT"\n", error);
 		fflush(stdout);
 
 		CerrarBaseDeDatos();
@@ -406,7 +406,7 @@ void CerrarBaseDeDatos()
 	{
 		if (sqlite3_reset(LibroSql.stmt) != SQLITE_OK)
 		{
-			printf("Error on reboot sqlite3_stmt.\n");
+			printf(""INFO_STRING"Error on reboot sqlite3_stmt.\n");
 			fflush(stdout);
 		}
 	}
@@ -415,7 +415,7 @@ void CerrarBaseDeDatos()
 	{
 		if (sqlite3_close_v2(LibroSql.ConexionBD) != SQLITE_OK)
 		{
-			printf("Error closing database.\n");
+			printf(""INFO_STRING"Error closing database.\n");
 			fflush(stdout);
 		}
 	}
@@ -438,21 +438,21 @@ void VerificarLibroApertura()
 
 	if (LibroSql.AperturaEstandar == true)
 	{
-		printf("Analyzing opening book...\n");
+		printf(""INFO_STRING"Analyzing opening book...\n");
 	}
 	else
 	{
-		printf("Analyzing opening book Chess960...\n");
+		printf(""INFO_STRING"Analyzing opening book Chess960...\n");
 	}
 
 	fflush(stdout);
 
 	error = sqlite3_open_v2("file:Book.db", &LibroSql.ConexionBD, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, NULL);
 
-	/* Si la conexión no se puede realizar */
+	/* Si la conexion no se puede realizar */
 	if(error)
 	{
-		printf("Opening book error.\n");
+		printf(""INFO_STRING"Opening book error.\n");
 		fflush(stdout);
 		CerrarBaseDeDatos();
 		LibroSql.FinVariacion = true;
@@ -478,7 +478,7 @@ void VerificarLibroApertura()
 	/* Si no existe coincidencia */
     if (error == SQLITE_ERROR)
     {
-		printf("Corrupted opening book.\n");
+		printf(""INFO_STRING"Corrupted opening book.\n");
 		fflush(stdout);
 		CerrarBaseDeDatos();
         return;
@@ -576,7 +576,7 @@ void VerificarLibroApertura()
 					memset(LibroSql.Jugada, 0, 5 * sizeof(char));
 					strncpy(LibroSql.Jugada, val, indice * sizeof(char));
 					val+=indice+1;
-					/* Aquí realiza el movimiento, para verificar si es correcto */
+					/* Aqui realiza el movimiento, para verificar si es correcto */
 					if (LibroSql.Jugada[0] != '\0')
 					{
 						Movimiento(LibroSql.Jugada, &Ok, true);
@@ -620,11 +620,11 @@ void VerificarLibroApertura()
 	{
 		if (LibroSql.AperturaEstandar == true)
 		{
-			printf("Opening book correct.\n");
+			printf(""INFO_STRING"Opening book correct.\n");
 		}
 		else
 		{
-			printf("Opening book correct. Chess960.\n");
+			printf(""INFO_STRING"Opening book correct. Chess960.\n");
 		}
 		fflush(stdout);
 		CerrarBaseDeDatos();
@@ -634,18 +634,18 @@ void VerificarLibroApertura()
 	{
 		if (LibroSql.AperturaEstandar == true)
 		{
-			printf("Opening book error.\n");
+			printf(""INFO_STRING"Opening book error.\n");
 		}
 		else
 		{
-			printf("Opening book error. Chess960.\n");
+			printf(""INFO_STRING"Opening book error. Chess960.\n");
 		}
 		fflush(stdout);
-		printf("Incorrect opening in: "STRING_FORMAT"\n", ErrorJugadas);
+		printf(""INFO_STRING"Incorrect opening in: "STRING_FORMAT"\n", ErrorJugadas);
 		fflush(stdout);
-		printf("Move: "STRING_FORMAT"\n", LibroSql.Jugada);
+		printf(""INFO_STRING"Move: "STRING_FORMAT"\n", LibroSql.Jugada);
 		fflush(stdout);
-		printf("Error code: "S32_FORMAT"\n", error);
+		printf(""INFO_STRING"Error code: "S32_FORMAT"\n", error);
 		fflush(stdout);
 		CerrarBaseDeDatos();
 		return;
