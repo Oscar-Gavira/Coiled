@@ -26,9 +26,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #ifdef USAR_HASH_TB
 
 // 16 bit short (2 bytes * 8) = 16 bit */
-// 0000 0000 0111 1111 */		/*EDAD -  7 bit*/   Valor máximo 127
-// 0001 1111 1000 0000 */		/*DEPTH - 6 bit*/   Valor máximo 63
-// 0110 0000 0000 0000 */		/*FLAG -  2 bit*/   Valor máximo 3
+// 0000 0000 0111 1111 */		/*EDAD -  7 bit*/   Valor maximo 127
+// 0001 1111 1000 0000 */		/*DEPTH - 6 bit*/   Valor maximo 63
+// 0110 0000 0000 0000 */		/*FLAG -  2 bit*/   Valor maximo 3
 #define EDAD(e)		((e) & 0x7F)					/* 7bit - rango del 0 al 127 */
 #define DEPTH(d)	(((d)>>7) & 0x3F)				/* 6bit - rango del 0 al 63 */
 #define FLAG(f)		(((f)>>13) & 0x3)				/* 2bit = 1 o 2 o 3 (ALPHA, BETA, EXACT) */
@@ -72,27 +72,27 @@ _ST_TT_Opciones TT_Opciones;
 _ST_TT_Cache *TT_Datos;
 
 /******************************************************************************
-							Métodos
+							Metodos
 ******************************************************************************/
 /* Guarda Depth, Edad y flag en macro en una variable */
 short GuardarFlag(int d, int e, int f);
 /* Obtengo el hash inicial */
 void ObtenerKey();
-/* Creamos la tabla de hash aun tamaña especifico */
+/* Creamos la tabla de hash aun tamana especifico */
 void CrearTransposicion(U64 MB);
-/* Obtengo si la posición ya a sido analizada y que valores tiene */
+/* Obtengo si la posicion ya a sido analizada y que valores tiene */
 int RecuperarPosicion(int *hPuntos, int *hEv, int *hMov, int *hFlag);
 /* Convertimos puntosa la TT */
 void ConvertirValorTT(int *hPuntos);
 /* Se puedo podar mediante TT */
 int PodaHash(int *hFlag, int *beta, int *alpha, int *hPuntos);
-/* Guardo la posición analizada */
+/* Guardo la posicion analizada */
 void AlmacenarPosicion(int depth, int puntos, int hEv, int hFlag, int hMov);
 /* Obtenemos el movimiento si esta almacenado */
 int RecuperarMovimientoHash();
-/* Vació la tabla hash */
+/* Vacio la tabla hash */
 void LimpiarTransposicion();
-/* Obtengo el estado de la tabla (Vacía, Medio llena, LLena) % */
+/* Obtengo el estado de la tabla (Vacia, Medio llena, LLena) % */
 int ObtenerHashCompleto();
 /* Liberamos la tabla hash */
 void LiberarMemoria();
