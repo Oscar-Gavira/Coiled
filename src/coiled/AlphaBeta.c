@@ -76,11 +76,8 @@ void A_Inicio(int full)
 	int y = 0;
 	TipoJuego.Interrumpir = false;
 	TipoJuego.Nodos = 0;
-#ifdef USAR_TBPROBE
-	Gaviota.Acierto = 0;
-#endif
-#ifdef USAR_TBSYZYGY
-	Syzygy.Acierto = 0;
+#ifdef USAR_TABLAS_DE_FINALES
+	TablaDeFinales.Acierto = 0;
 #endif
 	for (i = 0; i < MAX_PLY; i++)
 	{
@@ -147,7 +144,7 @@ void Buscar()
 
 		Puntos = AspirationWindows(TipoJuego.DepthAct, en_jaque, Puntos);
 
-		/* Actualizamos vp_terminada al terminar la interacción con vp_terminada_root, si no se ha interrumpido la búsqueda */
+		/* Actualizamos vp_terminada al terminar la interaccion con vp_terminada_root, si no se ha interrumpido la busqueda */
 		if (TipoJuego.Interrumpir == false)
 		{
 			for (x = 0; vp_terminada_root[x] != NO_MOVIMIENTO; x++)
@@ -305,7 +302,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int Sin
 	int hFlag = TT_DESCONOCIDO;
 	vp_Ev[Ply] = VALOR_TB_VACIO;
 #endif
-#if defined(USAR_TBPROBE) || defined(USAR_TBSYZYGY)
+#ifdef USAR_TABLAS_DE_FINALES
 	int AccederTablasDeFinales = false;
 	int NumeroFichas = 0;
 	unsigned tbResultado = 0;
@@ -335,8 +332,8 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int Sin
 			return Evaluar();
 
 #ifdef USAR_MATE_DISTANCE_PRUNING
-		alpha = alpha > MATE(Ply) ? alpha : MATE(Ply);
-		beta = beta < MATE_EN(Ply+1) ? beta : MATE_EN(Ply+1);
+		alpha = alpha > MATE(Ply+1) ? alpha : MATE(Ply+1);
+		beta = beta < MATE_EN(Ply) ? beta : MATE_EN(Ply);
 		if (alpha >= beta)
 			return alpha;
 #endif
@@ -358,42 +355,41 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int Sin
 	#endif
 	}
 #endif
-#ifdef USAR_TBPROBE
+#ifdef USAR_TABLAS_DE_FINALES
 	/* Comprobamos acceso a las tablas de finales de gaviota, solo en pv */
-	if (Gaviota.Usar == true && Gaviota.Dll_Cargada == true)
+	if (TablaDeFinales.Usar == 2 && !Zw && TablaDeFinales.Dll_CargadaGv == true)
 	{
 		/* Cuantas piezas tenemos */
 		NumeroFichas = Blancas.PeonTotales + Blancas.CaballosTotales + Blancas.AlfilTotales + Blancas.TorresTotales + Blancas.DamasTotales
 			+ Negras.PeonTotales + Negras.CaballosTotales + Negras.AlfilTotales + Negras.TorresTotales + Negras.DamasTotales + 2; /* + 2 son los reyes */
 
-		if ((Gaviota.Tablas_Disponibles & 1) != 0 && NumeroFichas == 3 && Gaviota.Limite >= NumeroFichas) /* Tenemos 3 piezas */
+		if ((TablaDeFinales.Piezas & 1) != 0 && NumeroFichas == 3 && TablaDeFinales.Limite >= NumeroFichas) /* Tenemos 3 piezas */
 		{
 			AccederTablasDeFinales = true;
 		}
-		if ((Gaviota.Tablas_Disponibles & 4) != 0 && NumeroFichas <= 4 && Gaviota.Limite >= NumeroFichas) /* Tenemos 4 piezas */
+		if ((TablaDeFinales.Piezas & 4) != 0 && NumeroFichas <= 4 && TablaDeFinales.Limite >= NumeroFichas) /* Tenemos 4 piezas */
 		{
 			AccederTablasDeFinales = true;
 		}
-		if ((Gaviota.Tablas_Disponibles & 16) != 0 && NumeroFichas <= 5 && Gaviota.Limite >= NumeroFichas) /* Tenemos 5 piezas */
+		if ((TablaDeFinales.Piezas & 16) != 0 && NumeroFichas <= 5 && TablaDeFinales.Limite >= NumeroFichas) /* Tenemos 5 piezas */
 		{
 			AccederTablasDeFinales = true;
 		}
-		/* Búsqueda. Acceso en depth 1 */
+		/* Busqueda. Acceso en depth 1 */
 		if (AccederTablasDeFinales == true && Ply > 1 && depth <= 1)
 		{
 			puntos = 0;
 			if ((tbResultado = Probar_gaviota(&puntos, &Ply)) != TBUNKNOWN)
 			{
-				Gaviota.Acierto++;
+				TablaDeFinales.Acierto++;
 
 				if (puntos > 0)
 					tbResultado = TB_WIN;
 				if (puntos < 0)
 					tbResultado = TB_LOSS;
 
-				hPuntos = puntos < 0 ? -VALOR_TB + Ply
-					: puntos > 0 ? VALOR_TB - Ply : 0;
-
+				hPuntos = puntos < 0 ? beta += 500 + Ply
+					: puntos > 0 ? beta -= 500 + Ply: 0;
 
 				hFlag = tbResultado == TB_LOSS ? TT_ALPHA
 					: tbResultado == TB_WIN ? TT_BETA : TT_EXACTO;
@@ -409,40 +405,40 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int Sin
 			}
 		}
 		/* Root */
-		if (AccederTablasDeFinales == true && Ply == 1 && TipoJuego.DepthAct == depth + 1)
+		if (AccederTablasDeFinales == true && Ply == 1 && depth == 1 && depth == TipoJuego.DepthAct - 1) /* Hay que jugar una interacciÃ³n. Para obtener el movimiento ganador. */
 		{
 			puntos = 0;
 			if (Probar_gaviota(&puntos, &Ply) != TBUNKNOWN)
 			{
-				Gaviota.Acierto++;
+				TablaDeFinales.Acierto++;
 				return puntos;
 			}
 		}
 	}
-#endif
-#ifdef USAR_TBSYZYGY
-	/* Comprobamos acceso a las tablas de finales de gaviota, solo en pv */
-	if (Syzygy.Usar == true && Syzygy.Dll_Cargada == true)
+
+#if defined(USAR_TABLAS_DE_FINALES) && defined(ARC_64BIT)
+	/* Comprobamos acceso a las tablas de finales de Syzygy, solo en pv */
+	if (TablaDeFinales.Usar == 1 && !Zw && TablaDeFinales.Dll_CargadaSg == true)
 	{
 		AccederTablasDeFinales = true;
 
 		NumeroFichas = Blancas.PeonTotales + Blancas.CaballosTotales + Blancas.AlfilTotales + Blancas.TorresTotales + Blancas.DamasTotales
 			+ Negras.PeonTotales + Negras.CaballosTotales + Negras.AlfilTotales + Negras.TorresTotales + Negras.DamasTotales + 2;
 
-		if ((U64)NumeroFichas > *SG_man || NumeroFichas > Syzygy.Limite)
+		if ((U64)NumeroFichas > *SG_man || NumeroFichas > TablaDeFinales.Limite)
 			AccederTablasDeFinales = false;
-		/* Búsqueda. Acceso en depth 1 */
+		/* Busqueda. Acceso en depth 1 */
 		if (AccederTablasDeFinales == true && Ply > 1 && depth <= 1)
 		{
 			if ((tbResultado = ProbarSyzygy(true, &hMov)) != SG_RESULT_FAILED)
 			{
-				Syzygy.Acierto++;
+				TablaDeFinales.Acierto++;
 
-				hPuntos = tbResultado == SG_LOSS ? -VALOR_TB + Ply
-					: tbResultado == SG_WIN ? VALOR_TB - Ply : 0;
+				hPuntos = tbResultado == TB_LOSS ? beta += 500 + Ply
+					: tbResultado == TB_LOSS ? beta -= 500 + Ply : 0;
 
-				hFlag = tbResultado == SG_LOSS ? TT_ALPHA
-					: tbResultado == SG_WIN ? TT_BETA : TT_EXACTO;
+				hFlag = tbResultado == TB_LOSS ? TT_ALPHA
+					: tbResultado == TB_LOSS ? TT_BETA : TT_EXACTO;
 
 				if (hFlag == TT_EXACTO
 					|| (hFlag == TT_BETA && hPuntos >= beta)
@@ -455,16 +451,60 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int Sin
 			}
 		}
 		/* Root */
-		if (AccederTablasDeFinales == true && TipoJuego.DepthAct == depth)
+		if (AccederTablasDeFinales == true && depth == 1 && TipoJuego.DepthAct == depth)
 		{
 			if ((tbResultado = ProbarSyzygy(false, &hMov)) != SG_RESULT_FAILED)
 			{
-				Syzygy.Acierto++;
+				TablaDeFinales.Acierto++;
 				vp_terminada_root[0] = hMov;
 				vp_terminada_root[1] = NO_MOVIMIENTO;
 				selDepth = 1;
 				TipoJuego.DepthAct = TipoJuego.MaxDepth;
 				return 0;
+			}
+		}
+	}
+#endif
+
+	/* Comprobamos acceso a las tablas de finales de BitBases, solo en pv */
+	if (TablaDeFinales.Usar == 3 && !Zw && TablaDeFinales.Dll_CargadaBb == true)
+	{
+		AccederTablasDeFinales = true;
+
+		/* Cuantas piezas tenemos */
+		NumeroFichas = Blancas.PeonTotales + Blancas.CaballosTotales + Blancas.AlfilTotales + Blancas.TorresTotales + Blancas.DamasTotales
+			+ Negras.PeonTotales + Negras.CaballosTotales + Negras.AlfilTotales + Negras.TorresTotales + Negras.DamasTotales + 2; /* + 2 son los reyes */
+
+		//if (NumeroFichas > Egbb.EGBB_man || NumeroFichas > Egbb.Limite)
+		//	AccederTablasDeFinales = false;
+
+		/* Busqueda. Acceso en depth 1 */
+		if (AccederTablasDeFinales == true && Ply > 1 && depth <= 1)
+		{
+			puntos = 0;
+			if (Probar_egbb(&puntos) == 1)
+			{
+				TablaDeFinales.Acierto++;
+
+				if (puntos > 0)
+					tbResultado = TB_WIN;
+				if (puntos < 0)
+					tbResultado = TB_LOSS;
+
+				hPuntos = puntos < 0 ? beta += 500 + Ply
+					: puntos > 0 ? beta -= 500 + Ply : 0;
+
+				hFlag = tbResultado == TB_LOSS ? TT_ALPHA
+					: tbResultado == TB_WIN ? TT_BETA : TT_EXACTO;
+
+				if (hFlag == TT_EXACTO
+					|| (hFlag == TT_BETA && hPuntos >= beta)
+					|| (hFlag == TT_ALPHA && hPuntos <= alpha))
+				{
+					ConvertirValorTT(&hPuntos);
+					AlmacenarPosicion(depth, hPuntos, VALOR_TB_VACIO, hFlag, TableroGlobal.Estado[Ply - 1].Movimiento);
+					return hPuntos;
+				}
 			}
 		}
 	}
@@ -784,10 +824,9 @@ void ImprimirVp(int M_Depth, int puntos, int lowerbound)
 	U64 tiempo = (ObtenerTiempo() - TipoJuego.Inicio);
 	int mate = 0;
 
-#if defined(USAR_TBPROBE) || defined(USAR_TBSYZYGY)
+#ifdef USAR_TABLAS_DE_FINALES
 	U64 tbhits = 0;
 #endif
-
 
 	if (tiempo != 0)
 		tiempo = (tiempo <= (float)TipoJuego.Tiempo / 3.0f);
@@ -824,29 +863,16 @@ void ImprimirVp(int M_Depth, int puntos, int lowerbound)
 	printf("info depth "S32_FORMAT" seldepth "S32_FORMAT"", M_Depth, selDepth);
 	printf(" time "U64_FORMAT" nodes "U64_FORMAT" nps "U64_FORMAT" ", TipoJuego.TiempoTranscurrido, TipoJuego.Nodos, A_Nps);
 
-#if defined(USAR_TBPROBE) || defined(USAR_TBSYZYGY)
-#ifdef USAR_TBPROBE
-	if (Gaviota.Usar == true)
+#ifdef USAR_TABLAS_DE_FINALES
+	if (TablaDeFinales.Usar != 0)
 	{
-		tbhits = Gaviota.Acierto;
+		tbhits = TablaDeFinales.Acierto;
 		#ifdef USAR_HASH_TB
 		printf("tbhits "U64_FORMAT" hashfull "S32_FORMAT" score ", tbhits, ObtenerHashCompleto());
 		#else
 		printf("tbhits "U64_FORMAT" score ", tbhits);
 		#endif
 	}
-#endif
-#ifdef USAR_TBSYZYGY
-	if (Syzygy.Usar == true)
-	{
-		tbhits = Syzygy.Acierto;
-		#ifdef USAR_HASH_TB
-		printf("tbhits "U64_FORMAT" hashfull "S32_FORMAT" score ", tbhits, ObtenerHashCompleto());
-		#else
-		printf("tbhits "U64_FORMAT" score ", tbhits);
-		#endif
-	}
-#endif
 	else
 	{
 		#ifdef USAR_HASH_TB
@@ -933,7 +959,7 @@ void ImprimirVp(int M_Depth, int puntos, int lowerbound)
 
 void ExtraInfo(int *M, int *currmovenumber)
 {
-	/* Imprimimos información adicional */
+	/* Imprimimos informacion adicional */
 	printf("info depth "S32_FORMAT"", TipoJuego.DepthAct);
 	printf(" currmove ");
 	ImprimirMovimientoCoordenadas(CUADRADO_ORIGEN(*M), CUADRADO_DESTINO(*M), CORONACION(*M));
@@ -1104,7 +1130,7 @@ int FigurasAdversarioNull(int turno)
 	return false;
 }
 
-/* Obtenemos si la puntuación esta dentro del margen de mate */
+/* Obtenemos si la puntuacion esta dentro del margen de mate */
 int EsPuntuacionMate(int puntos)
 {
 	if (puntos > MATE_EN( (MAX_PLY*2) ) && puntos != VALOR_MATE)
