@@ -43,7 +43,7 @@ typedef int (CDECL *SQLITE3_OPEN_V2)	(
 	int flags,              /* Flags */
 	const char *zVfs        /* Name of VFS module to use */
 	);
-/* Reinicia - Recarga la nueva información (Unido a tbcahe_restart) */
+/* Reinicia - Recarga la nueva informacion (Unido a tbcahe_restart) */
 typedef int (CDECL *SQLITE_PREPARE_V2) (
 	sqlite3 *db,            /* Database handle */
 	const char *zSql,       /* SQL statement, UTF-8 encoded */
@@ -71,19 +71,19 @@ SQLITE_CLOSE_V2 sqlite3_close_v2;
 typedef struct tag_EstructuraBd
 {
 	sqlite3 *ConexionBD;											/* Puntero para conectar con la base de datos tipo FILE para archivos */
-	sqlite3_stmt *stmt;												/* Para obtener información de la tabla, columnas, filas, datos... (En .net seria un DataSet) */
+	sqlite3_stmt *stmt;												/* Para obtener informacion de la tabla, columnas, filas, datos... (En .net seria un DataSet) */
 
-	int FinVariacion;												/* Si ya no encuentra jugada en el libro. true = dejamos de buscar / false = todavía pueden haber */
+	int FinVariacion;												/* Si ya no encuentra jugada en el libro. true = dejamos de buscar / false = todavia pueden haber */
 	int UsarLibro;													/* Si podemos usar el libro de aperturas o no */
 	int LimiteJugadas;												/* Si podemos usar el libro de aperturas o no */
 
 	char Apertura[MAX_LONG + 1];									/* Almacena los movimientos realizados en la apertura */
-	char Jugada[5];													/* La jugada proporcionada por la Bd según la apertura */
-	char Sql[MAX_DIR];												/* Sentencia Sql según versión */
+	char Jugada[5];													/* La jugada proporcionada por la Bd segun la apertura */
+	char Sql[MAX_DIR];												/* Sentencia Sql segun version */
 
 	char SqlTabla[9];												/* Tablas: Book y Chess960. Nombre de la tabla donde se almacenan las aperturas */
-	char Variante[9];												/* Almacena la posición NRQNBKRB, RNQBBNKR, BQNBRKNR para así buscar el tablero y obtener la apertura Ajedrez960 */
-	int AperturaEstandar;											/*	True = Estándar, False = Ajedrez960. Indica si obtiene la jugada del libro de aperturas estándar o de Ajedrez960 */
+	char Variante[9];												/* Almacena la posicion NRQNBKRB, RNQBBNKR, BQNBRKNR para asi buscar el tablero y obtener la apertura Ajedrez960 */
+	int AperturaEstandar;											/*	True = Estandar, False = Ajedrez960. Indica si obtiene la jugada del libro de aperturas estandar o de Ajedrez960 */
 	int Dll_Cargada;												/* Esta cargada la DLL */
 } _ST_EstructuraBd;
 /******************************************************************************
@@ -92,19 +92,19 @@ typedef struct tag_EstructuraBd
 _ST_EstructuraBd LibroSql;											/* Manejo del libro de aperturas */
 
 /***********************************************************************************
-							Métodos
+							Metodos
 ***********************************************************************************/
-int Cargar_sqlite_dll();											/* Cargamos la librería para manejar el libro de aperturas sqlite */
-int Descargar_sqlite_dll();											/* Descargamos la librería sqlite */
+int Cargar_sqlite_dll();											/* Cargamos la libreria para manejar el libro de aperturas sqlite */
+int Descargar_sqlite_dll();											/* Descargamos la libreria sqlite */
 int ComprobarAccesoLibro();											/* Comprobamos si podemos acceder a la base de datos (Libro de apertura) */
 void ListaJugadas(char *_Jugadas, int longitud);					/* Lista de los movimientos realizados hasta el momento (e2e4 c7c5 g1f3 d7d6 f1b5 b8c6...)
-																	   para realizar la búsqueda en la base de datos con LIKE %	*/
+																	   para realizar la busqueda en la base de datos con LIKE %	*/
 void ObtenerJugadaLibro(char *move);								/* Obtenemos el movimiento a realizar obtenido de la Bd. */
-int BuscarJugadaLibro();											/* Buscamos en la Bd si existe una variación. */
+int BuscarJugadaLibro();											/* Buscamos en la Bd si existe una variacion. */
 void Ajedrez960EnroqueVariante();
-void CerrarBaseDeDatos();											/* Cerramos la conexión con la Bd. */
+void CerrarBaseDeDatos();											/* Cerramos la conexion con la Bd. */
 void VerificarLibroApertura();										/* Rutina para verificar las aperturas de la Bd.
-																	   Analiza una por una todas las aperturas y de cada apertura todas las jugadas que contiene para saber si hay algún movimiento mal. */
+																	   Analiza una por una todas las aperturas y de cada apertura todas las jugadas que contiene para saber si hay algun movimiento mal. */
 #endif
 
 #endif
