@@ -22,7 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Externo.h"
 
-#ifdef USAR_TBPROBE
+#ifdef USAR_TABLAS_DE_FINALES
 
 /**************************************************************************************
 						ENUMERACIONES/ESTRUCTURA
@@ -37,45 +37,20 @@ enum TBvalores														/* Valores devueltos por la tabla de finales */
    TBUNKNOWN = 7													/* No existe en la tabla de finales */
 };
 
-#define TB_LOSS                     0
-#define TB_DRAW                     1
-#define TB_WIN                      2
-
-/**************************************************************************************
-						VARIABLE PARA MANEJAR GTB
-**************************************************************************************/
-typedef struct tag_Gaviota
-{
-	int Usar;														/* Se puede usar la tablas de gaviota (true/false) */
-	U64 Acierto;													/* Cuando buscamos en la tabla y encontramos resultados, se va incrementando */
-	int Dll_Cargada;												/* Esta cargada la DLL */
-	unsigned int Tablas_Disponibles;								/* Que tablas de finales están disponibles */
-	char Directorio[MAX_DIR];										/* Obtenemos las rutas a las tablas de finales */
-	int DirectorioNuevo;											/* Indica si hay cambio de ruta a las tablas de finales */
-	int	Compresion;													/* Compresión de las tablas de finales */
-	int Informacion;												/* Muestra información true/false */
-	U64 CacheMB;													/* 32 MB */
-	int CacheNueva;													/* Indica si hay un cambio en el tamaña de la cache true/false */
-	int Fraccion;													/* Fracción de tipo WDL y DTZ */
-	const char **paths;												/* Rutas para acceder a las tablas de finales */
-	int Limite;														/* Indica a partir de que numero de pieza busca en las tablas de finales */
-} _ST_Gaviota;
-
-_ST_Gaviota Gaviota;
 /**************************************************************************************
 						METODOS DISPONIBLE DE LA DLL
 **************************************************************************************/
-/* Inicia la carga de la información */
+/* Inicia la carga de la informacion */
 typedef char * (CDECL *TBINIT)	(int verbosity, int compression_scheme, const char **paths);
-/* Reinicia - Recarga la nueva información (Unido a tbcahe_restart) */
+/* Reinicia - Recarga la nueva informacion (Unido a tbcahe_restart) */
 typedef char * (CDECL *TBRESTART) (int verbosity, int compression_scheme, const char **paths);
 /* Descarga la tb */
 typedef void (CDECL *TBDONE) (void);
-/* Busca información en la cache y si no encuentra ira al hdd (El común a usar) */
+/* Busca informacion en la cache y si no encuentra ira al hdd (El comun a usar) */
 typedef int (CDECL *TBPROBE_HARD) (unsigned stm, unsigned epsq, unsigned castles, const unsigned *inp_wSQ, const unsigned *inp_bSQ, const unsigned char *inp_wPC, const unsigned char *inp_bPC, unsigned *tbinfo, unsigned *plies);
 typedef int (CDECL *TBPROBE_SOFT) (unsigned stm, unsigned epsq, unsigned castles, const unsigned *inp_wSQ, const unsigned *inp_bSQ, const unsigned char *inp_wPC, const unsigned char *inp_bPC, unsigned *tbinfo, unsigned *plies);
 typedef int (CDECL *TBIS_INITIALIZED) (void);
-/* Obtenemos información acerca de la tablas cargadas */
+/* Obtenemos informacion acerca de la tablas cargadas */
 typedef unsigned int (CDECL *TBAVAILABILITY) (void);
 /* Inicia la cache */
 typedef int (CDECL *TBCACHE_INIT) (size_t cache_mem, int wdl_fraction);
@@ -93,17 +68,19 @@ TBDONE TBdone;									/* Libera la tabla de finales */
 TBPROBE_HARD TBprobe_hard;						/* Acceso a las tablas de finales en root. En HDD. (DTM) */
 TBPROBE_SOFT TBprobe_soft;						/* Acceso a las tablas de finales en root. En Cache. (DTM) */
 TBAVAILABILITY TBavailability;					/* Indica la tablas disponibles */
-TBCACHE_INIT TBcache_init;						/* Inicia la cache y fracción */
+TBCACHE_INIT TBcache_init;						/* Inicia la cache y fraccion */
 TBCACHE_DONE TBcache_done;						/* Borra la cache */
 TBCACHE_IS_ON TBcache_is_on;
 TBPATHS_INIT TBpaths_init;						/* Inicializa las rutas */
-TBPATHS_ADD TBpaths_add;						/* Añade rutas */
+TBPATHS_ADD TBpaths_add;						/* Anade rutas */
 TBPATHS_DONE TBpaths_done;						/* Libera ruta */
 
 /**************************************************************************************
-								Métodos
+								Metodos
 **************************************************************************************/
 int Cargar_gaviota_dll();
+void CargarGaviotaTB();
+void CacheGaviotaTB();
 int Descargar_gaviota_dll();
 unsigned Probar_gaviota(int *puntos, int *ply);
 #endif
