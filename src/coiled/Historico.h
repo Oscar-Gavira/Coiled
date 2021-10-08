@@ -21,14 +21,14 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define HISTORICO_H
 
 /*******************************************************************************
-									Métodos
+									Metodos
 *******************************************************************************/
-void HistoricoIniciar();															/* Inicializar Histórico y killer heurístico */
-void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmov);	/* Actualización histórico para el mejor movimiento y posible killer. */
+void HistoricoIniciar();															/* Inicializar Historico y killer heuristico */
+void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmov);	/* Actualizacion historico para el mejor movimiento y posible killer. */
 int MovimientoTranquilo(int *M);													/* Es un movimiento que no genera cambio de material */
 int MovimientoKiller(int *ply, int *M);												/* Indica si el movimiento es un killer o killer mate */
 int HistoricoEsMovimientoKiller(int *ply, int *M);									/* Indica si el movimiento es un killer */
 int HistoricoEsMovimientoKillerMate(int *ply, int *M);								/* Indica si el movimiento es un killer mate */
-int HistoricoValor(int *M);															/* Histórico valor de los movimientos */
-int HistoricoMovimientoRefutacion();												/* Obtenemos el movimiento refutación */
+int HistoricoValor(int *M);															/* Historico valor de los movimientos */
+int HistoricoMovimientoRefutacion();												/* Obtenemos el movimiento refutacion */
 #endif
