@@ -25,6 +25,25 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Definiciones.h"
 
+#ifdef USAR_TABLAS_DE_FINALES
+typedef struct tag_TablaDeFinales
+{
+	int Usar;														/* 0 = None		1 = Syzygy		2 = Gaviota		3 = BitBases */
+	int UsarNuevo;													/* Indica si hay cambio de tablas de finales */
+	U64 Acierto;													/* Cuando buscamos en la tabla y encontramos resultados, se va incrementando */
+	int Dll_CargadaSg;												/* Esta cargada la DLL Syzygy */
+	int Dll_CargadaGv;												/* Esta cargada la DLL Gaviota */
+	int Dll_CargadaBb;												/* Esta cargada la DLL BitBases */
+	unsigned int Piezas;											/* Que tablas de finales estan disponibles 3 o 4 o 5 o 6 piezas */
+	char Directorio[MAX_DIR];										/* Obtenemos las rutas a las tablas de finales */
+	int DirectorioNuevo;											/* Indica si hay cambio de ruta a las tablas de finales */
+	U64 CacheMB;													/* 32 MB */
+	int CacheNueva;													/* Indica si hay un cambio en el tamana de la cache true/false */
+	int Limite;														/* Indica a partir de que numero de pieza busca en las tablas de finales */
+	const char** paths;												/* Gaviota. Rutas para acceder a las tablas de finales */
+} _ST_TablaDeFinales;
+#endif
+
 typedef struct tag_TipoJuego
 {
 	int Interrumpir;					/* false o true - Cuando se excede el tiempo o se recibe el comando stop */
@@ -32,24 +51,24 @@ typedef struct tag_TipoJuego
 	U64 Inicio;							/* Tiempo inicial. */
 	U64 TiempoTranscurrido;				/* Para detectar si excedemos el tiempo limite por jugada */
 	int Activo;							/* Si el juego es por tiempo o por profundidad (depth) */
-	int Infinito;						/* Activa el modo An·lisis por asÌ decirlo, piensa hasta recibir un stop o una entrada */
-	int MaxDepth;						/* M·xima profundidad. B˙squeda tipo go depth 15*/
+	int Infinito;						/* Activa el modo Analisis por asi decirlo, piensa hasta recibir un stop o una entrada */
+	int MaxDepth;						/* Maxima profundidad. Busqueda tipo go depth 15*/
 	int DepthAct;						/* Depth actual */
 	U64 Nodos;							/* Nodos totales */
-	U64 NJugadasTotales;				/* N∫ de jugadas totales a dividir por el tiempo total del juego */
+	U64 NJugadasTotales;				/* N¬∫ de jugadas totales a dividir por el tiempo total del juego */
 	int MejorJugada;					/* Mejor jugada */
 	int MejorJugadaAdv;					/* Mejor jugada para el adversario */
 	int MostrarVp;						/* Muestra la variante principal de tres formas: 0 = Nada, 1 = Mixto o 2 = Entero */
 	int BuscarMate;						/* Busca hasta localizar un mate en x */
 	int Ajedrez960;						/* Activa/desactiva el modo de juego Ajedrez960 */
-	int Ajedrez960Enroque;				/* Valor de 0 = UCI est·ndar. Valor de 1 O-O/O-O-O GUI Arena */
+	int Ajedrez960Enroque;				/* Valor de 0 = UCI estandar. Valor de 1 O-O/O-O-O GUI Arena */
 	int JugadaIlegal;					/* Se activa si recibimos un movimiento incorrecto position fen rkbbnrqn/pppppppp/8/8/8/8/PPPPPPPP/RKBBNRQN w KQkq - 0 1 moves h1g3 .... f7f8*/
 } _ST_TipoJuego;
 
 typedef struct tag_Movimiento
 {
 	int Movimiento;						/* Movimiento en macro */
-	int Ordenar;						/* Valor numÈrico para ordenar las jugadas */
+	int Ordenar;						/* Valor numerico para ordenar las jugadas */
 } _ST_Movimiento;
 
 /* No se puede poner en #ifdef, ya que se usa para el enroque normal */
@@ -64,16 +83,16 @@ typedef struct tag_DeshacerMovimiento
 {
 	U64 Hash;							/* Hash anterior */
 	int Movimiento;						/* Movimiento en macro */
-    int PosicionReyB;					/* Õndice del vector, posiciÛn del rey Blanco */
-	int PosicionReyN;					/* Õndice del vector, posiciÛn del rey Negro */
+    int PosicionReyB;					/* √çndice del vector, posicion del rey Blanco */
+	int PosicionReyN;					/* √çndice del vector, posicion del rey Negro */
 	int EnroqueB;						/* Enroque permitido con torres */
 	int EnroqueN;						/* Enroque permitido con torres */
-	int FichaAlPasoPosicion;			/* Õndice del vector, pieza al paso. */
+	int FichaAlPasoPosicion;			/* √çndice del vector, pieza al paso. */
 	int Regla_50_Movimiento;			/* Regla 50 movimientos */
 } _ST_DeshacerMovimiento;
 
 /***********************************************************************************
-Tipo para almacenar datos de la evaluaciÛn
+Tipo para almacenar datos de la evaluacion
 ***********************************************************************************/
 typedef struct tag_Valor
 {
@@ -88,31 +107,51 @@ typedef struct tag_Puntos {
 	int AlfilTotales;					/* Alfiles totales. */
 	int TorresTotales;					/* Torres totales. */
 	int DamasTotales;					/* Damas totales. */
+	_Valor Puntos;						/* Puntos totales. pst, movilidad, ataques, pareja de alfiles... */
+
+	int PosicionCaballo[8];				/* Se van anadiendo segun se encuentren. ( Si solo hay dos caballos estaran en [0] y [1] ). Valor = Indice del vector - Utilizado para finales especiales. Valor vacio = -1  */
+	int PosicionAlfil[8];				/* Se van anadiendo segun se encuentren. ( Si solo hay dos alfiles estaran en [0] y [1] ). Valor = Indice del vector. Valor vacio = -1  */
+	int PosicionTorre[8];				/* Se van anadiendo segun se encuentren. ( Si solo hay dos torres estaran en [0] y [1] ). Valor = Indice del vector. Valor vacio = -1  */
+	int PosicionDama[8];				/* Se van anadiendo segun se encuentren. ( Si solo hay dos dama estaran en [0] y [1] ). Valor = Indice del vector. Valor vacio = -1  - Utilizado para finales especiales */
+	int PosicionPeon[8];				/* Se van anadiendo segun se encuentran. Valor = Indice del vector. Valor vacio = -1 */
+	int PeonDoblados[8];				/* Almacena un valor por cada columna del vector (Horizontal A... H). Detectando si hay peones doblados siendo el valor > 1 doblado. Valor vacio 0 */
+	int PeonColumnaAbierta;				/* Numero de peones en columna abierta */
+	int GrupoPeonesQ;					/* Indica si hay peones en la columna a,b,c,d. */
+	int GrupoPeonesK;					/* Indica si hay peones en la columna e,f,g,h. */
+	int PeonCuadroColorB;				/* Indica cuantos peones estan en cuadros blancos */
+	int PeonCuadroColorN;				/* Indica cuantos peones estan en cuadros negro */
+
+	/* Seguridad del rey */
+	int ReyCuadrosAtacando;				/* Numero de cuadros atacando al rededor del rey */
+	int ReyAtaquesPiezas;				/* Numero de piezas atacando el area del rey */
+	_Valor ReyAtaquesValor;				/* Valor de las piezas que atacan */
+	int ReyJaquePieza[5];				/* Pieza que genera jaque. */
+	int ReyJaque;						/* Indica si hay jaque */
 } _ST_Puntos;
 
 /* Estructura del tablero */
 typedef struct tag_TableroX64 {
-    int PosicionReyB;					/* Õndice del vector, posiciÛn del rey Blanco */
-	int PosicionReyN;					/* Õndice del vector, posiciÛn del rey Negro */
+    int PosicionReyB;					/* √çndice del vector, posicion del rey Blanco */
+	int PosicionReyN;					/* √çndice del vector, posicion del rey Negro */
 	int EnroqueB;						/* Enroque permitido con torres */
 	int EnroqueN;						/* Enroque permitido con torres */
-	_ST_Ajedrez960 Ajedrez960;			/* PosiciÛn de las torres. Desde el rey hasta la torre no puede haber ninguna ficha ni pasar por casilla amenazada por el adversario. */
-	int FichaAlPasoPosicion;			/* Õndice del vector, pieza al paso. */
+	_ST_Ajedrez960 Ajedrez960;			/* Posicion de las torres. Desde el rey hasta la torre no puede haber ninguna ficha ni pasar por casilla amenazada por el adversario. */
+	int FichaAlPasoPosicion;			/* √çndice del vector, pieza al paso. */
 
 	int Ply;							/* Ply */
 	int MueveBlancas;					/* turno de jugador */
 	int Regla_50_Movimiento;			/* Regla 50 movimientos */
 	int Etapa;							/* Estado del juego. Apertura. medio juego, final. */
-	_ST_DeshacerMovimiento Estado[MAX_PLY];/* Almacena los avances de la jugada, para poder deshacer despuÈs */
+	_ST_DeshacerMovimiento Estado[MAX_PLY];/* Almacena los avances de la jugada, para poder deshacer despues */
 
 #ifdef USAR_HASH_TB
 	U64 Historico[MAX_HISTORICO];		/* 800 movimientos. Lo normal son 200 o 250 jugadas, que es igual a 400 o 500 movimientos*/
-	int Hply;							/* Contador incremental de los movimientos que se van realizando en la variable HistÛrico */
+	int Hply;							/* Contador incremental de los movimientos que se van realizando en la variable Historico */
 	U64 Hash;							/* Hash del tablero */
 #endif
 
-	int TableroColor[64];				/* Para detectar los m·rgenes del tablero */
-	int Tablero[64];					/* Array donde est·n las piezas en el tablero */
+	int TableroColor[64];				/* Para detectar los margenes del tablero */
+	int Tablero[64];					/* Array donde estan las piezas en el tablero */
 	/*		INDICES								PIEZAS
       8- 00 01 02 03 04 05 06 07     =   11 09 10 12 13 10 09 11		NEGRAS.		VALOR de HORIZONTAL = 7:
 	  7- 08 09 10 11 12 13 14 15     =   08 08 08 08 08 08 08 08
