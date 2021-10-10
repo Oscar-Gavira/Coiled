@@ -14,7 +14,7 @@
 | Libro de aperturas         | Si. Formato SqlIte                |
 | Lenguaje de programación   | C                                 |
 | Ponder                     | No                                |
-| ELO estimado               | ± 3250 NNUE. ± 2xxx Interna.      |
+| ELO estimado               | ± 3250 NNUE. ± 2650 Interna.      |
 
 ## 🚀 Introducción
 
@@ -62,7 +62,7 @@ Coiled-NNUE 0.7	± 3050 ELO.
 
 Coiled-NNUE 0.8 ± 3250 ELO.
 
-La versión actual de Coiled 1.0 calculo que alcanzara ± 2xxx ELO Evaluación interna. Próximamente.
+La versión actual de Coiled 1.0 calculo que alcanzara ± 2650 ELO Evaluación interna.
 
 - [CCRL (40/4)](http://ccrl.chessdom.com/ccrl/404/)
 
@@ -150,6 +150,8 @@ Estoy muy agradecido a las siguientes personas:
 - A Pedro Castro por ser el primero en probar y realizar un torneo. Autor de la web Motores de ajedrez hispanos y autor de DanaSah.
 
 - A la web [Motores de Ajedrez Hispanos](https://sites.google.com/site/motoresdeajedrez/Home) por realizar su primer torneo y darle una clasificación de ELO en su primera versión.
+
+- Alex Chess del foro talkchess, por el torneo realizado en [chess.com](https://www.chess.com/forum/view/game-analysis/freeware-against-commercial-chess-software-arena-3-5-1-vs-chessbase-fritz-17)
 
 - Ronald de Man's, por el proyecto Fathom con el que poder implementar el uso de las tablas de finales Syzygy. [https://github.com/jdart1/Fathom](https://github.com/jdart1/Fathom)
 
