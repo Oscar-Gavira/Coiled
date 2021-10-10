@@ -38,7 +38,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 							Metodos
 ******************************************************************************/
 int AspirationWindows(int depth, int en_jaque, int PuntuacionAnterior);							/* Rutina Aspiration Windows */
-int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int SingularMov);		/* Rutina AlphaBeta	Vp */
+int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo);						/* Rutina AlphaBeta	Vp */
 int AlphaBetaQs(int alpha, int beta);															/* Rutina AlphaBeta	Quiescence */
 void ActualizarVp(int M);																		/* Actualiza la variante principal triangular durante la busqueda. */
 void ActualizarVpRoot();																		/* Actualiza la variante principal de una busqueda terminada de root */

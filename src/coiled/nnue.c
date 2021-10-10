@@ -110,10 +110,13 @@ void CargarNnue()
 		Nnue.DirectorioNuevo = false;
 		if (NNUE_init(Nnue.Directorio) == false)
 		{
-			Nnue.Usar = false;
-			printf(""INFO_STRING"Loading NNUE: "STRING_FORMAT"\n", Nnue.Directorio);
-			printf(""INFO_STRING"NNUE file not found, Unsupported or NnueTechnology Unsupported.\n");
-			fflush(stdout);
+			if (Nnue.Usar == true)
+			{
+				Nnue.Usar = false;
+				printf(""INFO_STRING"Loading NNUE: "STRING_FORMAT"\n", Nnue.Directorio);
+				printf(""INFO_STRING"NNUE file not found, Unsupported or NnueTechnology Unsupported.\n");
+				fflush(stdout);
+			}
 		}
 	}
 }

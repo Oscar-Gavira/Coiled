@@ -79,6 +79,8 @@ int Cargar_sqlite_dll()
 	}
 	else
 	{
+		printf(""INFO_STRING""STRING_FORMAT" not found. Unable to use Book.\n", SQLITE_NOMBRE);
+		fflush(stdout);
 		LibroSql.UsarLibro = false;
 		return false;
 	}
@@ -113,6 +115,8 @@ int ComprobarAccesoLibro()
 
 		if (error)
 		{
+			printf(""INFO_STRING"Book.db not found. Unable to use Book.\n");
+			fflush(stdout);
 			CerrarBaseDeDatos();
 			return false;
 		}
@@ -161,7 +165,7 @@ void ObtenerJugadaLibro(char *move)
 	return;
 }
 
-int BuscarJugadaLibro()
+int BuscarJugadaLibro(char *Str)
 {
 	int error = 0;
 	int i = 0;
@@ -194,7 +198,7 @@ int BuscarJugadaLibro()
 	memset(LibroSql.Jugada, 0, 5 * sizeof(char));
 	memset(VarianteApertura, 0, (MAX_LONG + 1) * sizeof(char));
 
-	if (LibroSql.Apertura[0] != '\0')
+	if (Str[0] != '\0')
 	{
 		if (LibroSql.AperturaEstandar == true)
 		{
@@ -211,14 +215,14 @@ int BuscarJugadaLibro()
 			strcat(LibroSql.Sql, "' AND Partida LIKE '");
 #ifdef USAR_AJEDREZ960
 			/* Convertimos los enroques de la GUI Arena al formato del libro qu es de tipo UCI */
-			if (IndexOfShift(LibroSql.Apertura, "O-O", 0) != -1 || IndexOfShift(LibroSql.Apertura, "O-O-O", 0) != -1)
+			if (IndexOfShift(Str, "O-O", 0) != -1 || IndexOfShift(Str, "O-O-O", 0) != -1)
 			{
 				Ajedrez960EnroqueVariante();
 			}
 #endif
 		}
 
-		strcat(LibroSql.Sql, LibroSql.Apertura);
+		strcat(LibroSql.Sql, Str);
 		strcat(LibroSql.Sql, "%' ORDER BY RANDOM() LIMIT 1;\0");
 	}
 	else

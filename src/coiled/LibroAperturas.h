@@ -100,7 +100,7 @@ int ComprobarAccesoLibro();											/* Comprobamos si podemos acceder a la bas
 void ListaJugadas(char *_Jugadas, int longitud);					/* Lista de los movimientos realizados hasta el momento (e2e4 c7c5 g1f3 d7d6 f1b5 b8c6...)
 																	   para realizar la busqueda en la base de datos con LIKE %	*/
 void ObtenerJugadaLibro(char *move);								/* Obtenemos el movimiento a realizar obtenido de la Bd. */
-int BuscarJugadaLibro();											/* Buscamos en la Bd si existe una variacion. */
+int BuscarJugadaLibro(char *Str);											/* Buscamos en la Bd si existe una variacion. */
 void Ajedrez960EnroqueVariante();
 void CerrarBaseDeDatos();											/* Cerramos la conexion con la Bd. */
 void VerificarLibroApertura();										/* Rutina para verificar las aperturas de la Bd.

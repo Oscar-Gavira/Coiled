@@ -24,7 +24,7 @@ void ObtenerCpu(_ST_Cpu *Cpu)
 }
 
 #else
-void ObtenerCpu(_ST_Cpu* Cpu) 
+void ObtenerCpu(_ST_Cpu* Cpu)
 {
     int regs[4] = { 0, 0, 0, 0 };
     unsigned int ids = 0;

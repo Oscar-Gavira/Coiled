@@ -226,7 +226,7 @@ int AspirationWindows(int depth, int en_jaque, int PuntuacionAnterior)
 
 	while (1)
 	{
-		puntos = AlphaBeta(depth, alpha, beta, en_jaque, false, NO_MOVIMIENTO);
+		puntos = AlphaBeta(depth, alpha, beta, en_jaque, false);
 		if (TipoJuego.Interrumpir == true)
 		{
 			return puntos;
@@ -253,12 +253,12 @@ int AspirationWindows(int depth, int en_jaque, int PuntuacionAnterior)
 		windows += ASPIRATION;
 	}
 #else
-	puntos = AlphaBeta(depth, -VALOR_MATE, VALOR_MATE, en_jaque, false, NO_MOVIMIENTO);
+	puntos = AlphaBeta(depth, -VALOR_MATE, VALOR_MATE, en_jaque, false);
 	return puntos;
 #endif
 }
 
-int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int SingularMov)
+int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 {
 	int i = 0;
 	_ST_Movimiento ListaMovimiento[MAX_JUGADAS];
@@ -405,7 +405,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int Sin
 			}
 		}
 		/* Root */
-		if (AccederTablasDeFinales == true && Ply == 1 && depth == 1 && depth == TipoJuego.DepthAct - 1) /* Hay que jugar una interacción. Para obtener el movimiento ganador. */
+		if (AccederTablasDeFinales == true && Ply == 1 && depth == 1 && depth == TipoJuego.DepthAct - 1) /* Hay que jugar una interaccion. Para obtener el movimiento ganador. */
 		{
 			puntos = 0;
 			if (Probar_gaviota(&puntos, &Ply) != TBUNKNOWN)
@@ -475,8 +475,8 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int Sin
 		NumeroFichas = Blancas.PeonTotales + Blancas.CaballosTotales + Blancas.AlfilTotales + Blancas.TorresTotales + Blancas.DamasTotales
 			+ Negras.PeonTotales + Negras.CaballosTotales + Negras.AlfilTotales + Negras.TorresTotales + Negras.DamasTotales + 2; /* + 2 son los reyes */
 
-		//if (NumeroFichas > Egbb.EGBB_man || NumeroFichas > Egbb.Limite)
-		//	AccederTablasDeFinales = false;
+		if (NumeroFichas > TablaDeFinales.Limite)
+			AccederTablasDeFinales = false;
 
 		/* Busqueda. Acceso en depth 1 */
 		if (AccederTablasDeFinales == true && Ply > 1 && depth <= 1)
@@ -534,7 +534,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int Sin
 	{
 		nuevo_depth = depth - (4 + depth / 6 + MIN(3, (Ev - beta) / 200));
 		HacerMovimientoNull();
-		puntos = -AlphaBeta(nuevo_depth, -beta, -beta + 1, en_jaque, true, NO_MOVIMIENTO);
+		puntos = -AlphaBeta(nuevo_depth, -beta, -beta + 1, en_jaque, true);
 		DeshacerMovimientoNull();
 
 		if (puntos >= beta) return beta;
@@ -643,17 +643,17 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo, int Sin
 
 		if (MovimientosLegales == 1)
 		{
-			puntos = -AlphaBeta(nuevo_depth - 1, -beta, -alpha, da_jaque, false, NO_MOVIMIENTO);
+			puntos = -AlphaBeta(nuevo_depth - 1, -beta, -alpha, da_jaque, false);
 		}
 		else
 		{
-			puntos = -AlphaBeta(nuevo_depth - reducciones, -alpha-1, -alpha, da_jaque, false, NO_MOVIMIENTO);
+			puntos = -AlphaBeta(nuevo_depth - reducciones, -alpha-1, -alpha, da_jaque, false);
 
 			if (puntos > alpha && reducciones != 1)
-				puntos = -AlphaBeta(nuevo_depth - 1, -alpha - 1, -alpha, da_jaque, false, NO_MOVIMIENTO);
+				puntos = -AlphaBeta(nuevo_depth - 1, -alpha - 1, -alpha, da_jaque, false);
 
 			if (puntos > alpha && puntos < beta)
-				puntos = -AlphaBeta(nuevo_depth - 1, -beta, -alpha, da_jaque, false, NO_MOVIMIENTO);
+				puntos = -AlphaBeta(nuevo_depth - 1, -beta, -alpha, da_jaque, false);
 		}
 
 		DeshacerMovimiento();

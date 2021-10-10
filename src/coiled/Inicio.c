@@ -201,11 +201,10 @@ void UciEntrada(char* parametro)
 #ifdef USAR_SQLITE
 		if (LibroSql.Dll_Cargada == true)
 		{
-			LibroSql.UsarLibro = ComprobarAccesoLibro();
-
 			if (LibroSql.UsarLibro == true)
 			{
 				printf("option name OwnBook type check default true\n");
+				LibroSql.UsarLibro = ComprobarAccesoLibro();
 			}
 			else
 			{
@@ -284,14 +283,12 @@ void UciEntrada(char* parametro)
 			printf("option name NnuePath type string default "STRING_FORMAT"\n", Nnue.Directorio);
 		fflush(stdout);
 		memset(Str, 0, MAX_DIR * sizeof(char));
-		if (Cpu.AVX2)
-			strcat(Str, " var AVX2");
-		if (Cpu.SSE41)
-			strcat(Str, " var SSE4.1");
-		if (Cpu.SSE3)
-			strcat(Str, " var SSE3");
-		if (Cpu.SSE2)
-			strcat(Str, " var SSE2");
+	
+		strcat(Str, " var AVX2");
+		strcat(Str, " var SSE4.1");
+		strcat(Str, " var SSE3");
+		strcat(Str, " var SSE2");
+		
 		switch (Nnue.Tecnologia)
 		{
 		case 1:
@@ -384,7 +381,7 @@ void UciEntrada(char* parametro)
 	}
 	else if (strncmp(parametro, "setoption name OwnBookLimit value ", 34) == 0)
 	{
-		parametro += 34;
+		parametro += 29;
 		LibroSql.LimiteJugadas = MAX(2, (int)atoll(parametro));
 		if (LibroSql.LimiteJugadas > 10) LibroSql.LimiteJugadas = 8;
 	}
@@ -764,7 +761,7 @@ void InicioBusqueda(char *ptr) {
 		char move[6];
 		memset(move, 0, 5 * sizeof(char));
 
-		if (LibroSql.UsarLibro == true && BuscarJugadaLibro())
+		if (LibroSql.UsarLibro == true && BuscarJugadaLibro(LibroSql.Apertura))
 		{
 			ObtenerJugadaLibro(move);
 			printf("bestmove ");

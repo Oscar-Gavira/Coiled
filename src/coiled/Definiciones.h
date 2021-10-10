@@ -33,7 +33,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 	#define USAR_NNUE													/* En version de 64 bit activamos la opcion de evaluacion NNUE */
 #endif
 
-//#define DEBUG
+//#define DEBUG															/* Activa/desactiva los mensajes en formato debug "info string ....." */
 #ifdef DEBUG
 	#define INFO_STRING "info string "
 #else
@@ -60,6 +60,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>														/* log(x) */
 #include <unistd.h>														/* Necesario para vincular librerias, SqliIte y TbProbe y EntradaStdIn() */
 #include <sys/time.h>													/* Tiempo */
+#include <dlfcn.h>
+#define CDECL
+#define HMODULE void*
+#define LoadLibrary(x) dlopen(x,RTLD_LAZY)
+#define FreeLibrary(x) dlclose(x)
+#define GetProcAddress dlsym
 #endif
 
 #ifdef _MSC_VER
