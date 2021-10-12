@@ -5,16 +5,17 @@
 |                            |    CARACTERISTICAS                |
 | -------------------------- | --------------------------------- |
 | Protocolo de comunicación  | UCI                               |
-| Codito abierto             | Si                                |
+| Código abierto             | Si                                |
 | Tipo de licencia           | GNU General Public License v3.0   |
-| Sistema operativo          | Windows. 32 y 64 bit              |
+| Sistema operativo          | Windows y Linux. 32&64 bit        |
 | Ajedrez960 / Chess960      | Si.                               |
 | Soporta redes neuronales   | Si. (NNUE)                        |
 | Tablas de finales          | Si. Syzygy, Gaviota y BitBases.   |
 | Libro de aperturas         | Si. Formato SqlIte                |
 | Lenguaje de programación   | C                                 |
 | Ponder                     | No                                |
-| ELO estimado               | ± 3250 NNUE. ± 2650 Interna.      |
+| Multihilo                  | No                                |
+| ELO estimado               | ± 3250 NNUE. ± 2600 Interna.      |
 
 ## 🚀 Introducción
 
@@ -36,7 +37,7 @@ Para leer más sobre algunas de las técnicas utilizadas en Coiled, consulte la 
 | SISTEMA OPERATIVO | Windows 32 bit             | Windows 64 bit.                           |
 | ----------------- | -------------------------- | ----------------------------------------- |
 | PROCESADOR        | Intel Pentium Pro o Amd K7 | Intel o Ahtlon con soporte MMX, SSE, SSE2 |
-| RAM               | 64MB.                      | 128MB.                                    |
+| RAM               | 16MB.                      | 64MB.                                    |
 
 
 ## 🔧 Instalación
@@ -62,7 +63,7 @@ Coiled-NNUE 0.7	± 3050 ELO.
 
 Coiled-NNUE 0.8 ± 3250 ELO.
 
-La versión actual de Coiled 1.0 calculo que alcanzara ± 2650 ELO Evaluación interna.
+La versión actual de Coiled 1.0 calculo que alcanzara ± 2600 ELO Evaluación interna.
 
 - [CCRL (40/4)](http://ccrl.chessdom.com/ccrl/404/)
 
@@ -87,11 +88,11 @@ La versión actual de Coiled 1.0 calculo que alcanzara ± 2650 ELO Evaluación i
 |                                    OPCIONES                                                                |                                          DESCRIPCION                                                            |
 | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Hash                                                                                                       | Para ajustar el tamaño de la tabla hash en MB.                                                                  |
-| ShowPv                                                                                                     | Limita la información enviada a la GUI en el proceso de calculo.                                                |
+| ShowPv                                                                                                     | Limita la información enviada a la GUI en el proceso de cálculo.                                                |
 | OwnBook                                                                                                    | Para usar el libro de apertura propio del motor. (por defecto: false)                                           |
-| OwnBookLimit                                                                                               | Para limitar el numero de jugadas máximas obtenidas desde el libro de apertura. (por defecto: 8)                |
-| EndGamesTablebases                                                                                         | Seleccione entre la tablas de finales a usar: Ninguna, Syzygy, Gaviota y BitBases. (por defecto: Ninguna)       |
-| EndGamesTablebasesPath                                                                                     | Para asignar la carpetas/directorios de las tablas de finales. Syzygy, Gaviota y BitBases. (por defecto: Vacío) |
+| OwnBookLimit                                                                                               | Para limitar el número de jugadas máximas obtenidas desde el libro de apertura. (por defecto: 8)                |
+| EndGamesTablebases                                                                                         | Seleccione entre la tabla de finales a usar: Ninguna, Syzygy, Gaviota y BitBases. (por defecto: Ninguna)       |
+| EndGamesTablebasesPath                                                                                     | Para asignar la carpeta/directorio de las tablas de finales. Syzygy, Gaviota y BitBases. (por defecto: Vacío) |
 | EndGamesTablebasesCache                                                                                    | Para ajustar el tamaño de la cache en MB de las tablas de finales. Gaviota y BitBases. (por defecto: 32MB)                               |
 | EndGamesTablebasesLimit                                                                                    | Indica a partir de cuantas piezas busca en la tabla de finales. Syzygy y Gaviota. (por defecto: 5)              |
 | NnueUse \*                                                                                                 | Activa/desactiva el uso de redes neuronales. (por defecto: true)                                                |
@@ -104,7 +105,16 @@ La versión actual de Coiled 1.0 calculo que alcanzara ± 2650 ELO Evaluación i
 
 \*\* Si activa UCI\_Chess960 y utiliza la GUI de Arena, en la opción UCI\_Chess960CastlingSign debes seleccionar la configuración: O-O/O-O-O. Para un correcto funcionamiento con la GUI Arena.
 
+## ⌨️ Comandos adicionales no oficiales UCI
 
+- perft [x]: Ejecutando perft hasta [profundidad] en la posición actual.
+
+- perftdiv [x]: Ejecutando perft divide hasta [profundidad] en la posición actual.
+
+- book: Verifica el libro de aperturas.
+
+Estas opciones también están disponibles para el modo Chess960, solo has de activar el modo UCI_Chess960.
+    
 ## 🛠️ Construido y compilado con
 
 * [CodeBlocks](https://www.codeblocks.org/)
