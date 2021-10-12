@@ -33,13 +33,19 @@ o
 sqlite3_x86.dll
 */
 HMODULE sqlite_hmod = NULL;
-
+#ifdef _WIN32
 #ifdef ARC_64BIT
 	char SQLITE_NOMBRE[] = { "sqlite3_x64.dll" };
 #else
 	char SQLITE_NOMBRE[] = { "sqlite3_x86.dll" };
 #endif
-
+#else
+#ifdef ARC_64BIT
+	char SQLITE_NOMBRE[] = { "/usr/lib/i386-linux-gnu/libsqlite3.so.0" };
+#else
+	char SQLITE_NOMBRE[] = { "sqlite3_x86.so" };
+#endif
+#endif
 int Cargar_sqlite_dll()
 {
 	if ((sqlite_hmod = LoadLibrary(SQLITE_NOMBRE)) != 0)
@@ -433,7 +439,7 @@ void VerificarLibroApertura()
 	char ErrorJugadas[MAX_LONG + 1];
 	int Ok = false;
 	int ErrorJugada = false;
-	char fen[80];
+	char fen[MAX_DIR];
 	int pp = 0;
 	char Ajedrez960Enroque[] = { 'a','b','c','d','e','f','g','h' };
 	char Ajedrez960EnroqueBook[5];
@@ -491,7 +497,7 @@ void VerificarLibroApertura()
 
 	while ((error = sqlite3_step(LibroSql.stmt)) == SQLITE_ROW)
     {
-		memset(fen, 0, 80 * sizeof(char));
+		memset(fen, 0, MAX_DIR * sizeof(char));
 		memset(Ajedrez960EnroqueBook, '\0', 5 * sizeof(char));
 
 		val = (char*)sqlite3_column_text(LibroSql.stmt, 0);

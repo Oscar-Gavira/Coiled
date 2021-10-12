@@ -20,13 +20,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include "Externo.h"
 #include "Utilidades.h"
 #include "Fen.h"
-#ifdef USAR_SQLITE
-	#include "LibroAperturas.h"
-#endif
-
 
 /* Cargamos una posicion FEN */
-int CargarFen(char *epd)
+int CargarFen(char *epd, char *variante)
 {
 	/* Vector de coordenadas para el peon al paso */
 	char TableroCoordenadasL[] = {
@@ -55,8 +51,8 @@ int CargarFen(char *epd)
 	int i = 0;
 	int j = 0;
 	int pieza = 0;
-	char contenedor[80];
-	memset(contenedor, 0, 80 * sizeof(char));
+	char contenedor[MAX_DIR];
+	memset(contenedor, 0, MAX_DIR * sizeof(char));
 	memset(TableroCoordenadas, 0, 3 * sizeof(char));
 
 	char Ajedrez960Enroque[] = { 'A','B','C','D','E','F','G','H','a','b','c','d','e','f','g','h' };
@@ -108,7 +104,7 @@ int CargarFen(char *epd)
 
 				if (i >= 56 && pieza > 1 && pieza < 7)
 				{
-					LibroSql.Variante[Variante++] = pieza_char[pieza];
+					variante[Variante++] = pieza_char[pieza];
 				}
 #endif
 				switch (pieza)										/* Que pieza es? */
@@ -407,7 +403,7 @@ int CargarFen(char *epd)
 		epd++;
 	}
 
-	epd = SplitString(epd, contenedor, sizeof(contenedor));
+	SplitString(epd, contenedor, sizeof(contenedor));
 	if (strcmp(contenedor, "-") ==  0)
 	{
 		TableroGlobal.FichaAlPasoPosicion = 0;
@@ -437,9 +433,9 @@ int CargarFen(char *epd)
 
 	if (strcmp(epd, "") != 0)
 	{
-		memset(contenedor, 0, 80 * sizeof(char));
+		memset(contenedor, 0, MAX_DIR * sizeof(char));
 		epd++;
-		epd = SplitString(epd, contenedor, sizeof(contenedor));
+		SplitString(epd, contenedor, sizeof(contenedor));
 		TableroGlobal.Regla_50_Movimiento = MAX(0, (int)atoll(contenedor));
 		if (TableroGlobal.Regla_50_Movimiento > 100) TableroGlobal.Regla_50_Movimiento = 100;
 #ifdef USAR_HASH_TB
@@ -456,4 +452,154 @@ int CargarFen(char *epd)
 	}
 
 	return true;
+}
+
+void GuardarFen(char* Fen)
+{
+	int x = 0;																		/* Repeticiones de 8 (columnas) */
+	int y = 0;																		/* Repeticiones de 8 (Filas) */
+	int l = 0;																		/* Obtenemos el numero de cuadros vacios */
+	int i = 0;																		/* Valores almacenados a copiar */
+	int sq = 0;																		/* Indice del vector */
+	int enroque_ = 0;																/* Enroques disponibles */
+	char fila[9];																	/* Valores almacenados por fila */
+																					/* ERROR hay que recibirlo limpio */
+	for (y = 0; y < 8; y++)
+	{
+		i = l = 0;																	/* Iniciamos variables */
+		memset(fila, 0, 9 * sizeof(char));											/* Limpiamos la cadena */
+		for (x = 0; x < 8; x++)
+		{
+			sq = (y * 8) + x;														/* Obtenemos el cuadro */
+			if (TableroGlobal.Tablero[sq] == CasillaVacia)							/* Esta vacio */
+			{
+				l++;																/* Incrementamos huecos vacios */
+			}
+			else
+			{
+				if (l > 0)															/* Hay pieza y tenemos cuadros vacios */
+				{
+					fila[i] = (char)(l + 48); i++;									/* Añadimos cuantos */
+				}
+				l = 0;																/* Reiniciamos huevos vacios */
+				switch (TableroGlobal.Tablero[sq])									/* Que pieza hay */
+				{
+				case CasillaVacia:
+					continue;
+					break;
+				case PeonB:
+					fila[i] = 'P';												/* Peón blanco */
+					break;
+				case TorreB:
+					fila[i] = 'R';												/* Torre blanca */
+					break;
+				case CaballoB:
+					fila[i] = 'N';												/* Caballo blanco */
+					break;
+				case AlfilB:
+					fila[i] = 'B';												/* Alfil blanco */
+					break;
+				case DamaB:
+					fila[i] = 'Q';												/* Dama blanca */
+					break;
+				case ReyB:
+					fila[i] = 'K';												/* Rey blanco */
+					break;
+				case PeonN:
+					fila[i] = 'p';												/* Peón negro */
+					break;
+				case TorreN:
+					fila[i] = 'r';												/* Torre negra */
+					break;
+				case CaballoN:
+					fila[i] = 'n';												/* Caballo negro */
+					break;
+				case AlfilN:
+					fila[i] = 'b';												/* Alfil negro */
+					break;
+				case DamaN:
+					fila[i] = 'q';												/* Dama negra */
+					break;
+				case ReyN:
+					fila[i] = 'k';												/* Rey negro */
+					break;
+				default:
+					printf("Error Creating a FEN position.\n");
+					continue;
+					break;
+				}
+				i++;
+			}
+		}
+		if (l > 0)																	/* Hay cuadros vacios */
+		{
+			fila[i] = (char)(l + 48); i++;											/* Añadimos cuantos */
+		}
+		strcat(Fen, fila);															/* Unimos los valores almacenados a la variable FEN */
+		if (y < 7)
+		{
+			strcat(Fen, "/");														/* Si quedan filas se pone separador */
+		}
+	}
+
+	if (TableroGlobal.MueveBlancas)													/* De quien es el turno */
+	{
+		strcat(Fen, " w ");															/* Ajustamos turno blancas */
+	}
+	else
+	{
+		strcat(Fen, " b ");															/* Ajustamos turno negras */
+	}
+
+	if (TableroGlobal.EnroqueB == Corto)
+	{
+		strcat(Fen, "K"); enroque_ = Corto;											/* Ajustamos enroques permitidos */
+	}
+	if (TableroGlobal.EnroqueB == Largo)
+	{
+		strcat(Fen, "Q"); enroque_ = Largo;											/* Ajustamos enroques permitidos */
+	}
+	if (TableroGlobal.EnroqueB == LosDos)
+	{
+		strcat(Fen, "KQ"); enroque_ = LosDos;										/* Ajustamos enroques permitidos */
+	}
+	if (TableroGlobal.EnroqueN == Corto)
+	{
+		strcat(Fen, "k"); enroque_ = Corto;											/* Ajustamos enroques permitidos */
+	}
+	if (TableroGlobal.EnroqueN == Largo)
+	{
+		strcat(Fen, "q"); enroque_ = Largo;											/* Ajustamos enroques permitidos */
+	}
+	if (TableroGlobal.EnroqueN == LosDos)
+	{
+		strcat(Fen, "kq"); enroque_ = LosDos;										/* Ajustamos enroques permitidos */
+	}
+
+	if (!enroque_)
+	{
+		strcat(Fen, "-");															/* Si no hay enroques - */
+	}
+
+	if (TableroGlobal.FichaAlPasoPosicion == 0)										/* Ficha al paso? */
+	{
+		strcat(Fen, " -");															/* No hay ficha al paso - */
+	}
+	else																			/* Si hay ficha al paso */
+	{
+		strcat(Fen, "-");
+		/* Blancas */
+		//if (TableroGlobal.FichaAlPasoPosicion >= 40 && i <= TableroGlobal.FichaAlPasoPosicion)
+		//{
+		//	strcat(Fen, TableroCoordenadasL[TableroGlobal.FichaAlPasoPosicion + 8], strlen(TableroCoordenadasL[TableroGlobal.FichaAlPasoPosicion + 8]));
+		//	strcat(Fen, TableroCoordenadasN[TableroGlobal.FichaAlPasoPosicion + 8], strlen(TableroCoordenadasN[TableroGlobal.FichaAlPasoPosicion + 8]));
+		//}
+		///* Negras */
+		//if (TableroGlobal.FichaAlPasoPosicion >= 16 && i <= TableroGlobal.FichaAlPasoPosicion)
+		//{
+		//	strcat(Fen, TableroCoordenadasL[TableroGlobal.FichaAlPasoPosicion - 8], strlen(TableroCoordenadasL[TableroGlobal.FichaAlPasoPosicion - 8]));
+		//	strcat(Fen, TableroCoordenadasN[TableroGlobal.FichaAlPasoPosicion - 8], strlen(TableroCoordenadasN[TableroGlobal.FichaAlPasoPosicion - 8]));
+		//}
+	}
+	strcat(Fen, "\0");																/* Añadimos final de cadena */
 }

@@ -1068,8 +1068,8 @@ int EsTablaRepeticion()
 /* Comprobamos tiempo y entradas */
 void ComprobarTiempo()
 {
-	char entrada[80];
-	int longitud = 80;
+	char entrada[MAX_DIR];
+	int longitud = MAX_DIR;
 	char *pchar = NULL;
 	char *pchar2 = NULL;
 
@@ -1091,7 +1091,7 @@ void ComprobarTiempo()
 
 		if (EntradaStdIn())
 		{
-			memset(entrada, 0 , 80 * sizeof(char));
+			memset(entrada, 0 , MAX_DIR * sizeof(char));
 			if (fgets(entrada, longitud, stdin) == NULL)
 			{
 				Salir = true;

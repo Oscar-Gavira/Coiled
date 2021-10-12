@@ -79,30 +79,42 @@ void MovimientoCoordenadas(int Inicio, int Fin, int PiezaCoronacion, char *mov)
 	}
 }
 
-char *SplitString(char *_string, char *contenedor, int longitud)
+void SplitString(char *_string, char *contenedor, int longitud)
 {
     int ll = 0;
+	int i = 0;
+	int len = strlen(_string);
+	char *ptr = _string;
 
-	while (*_string == ' ')
+	while (*ptr == ' ')
 	{
-		_string++;
+		ll++;
+		ptr++;
 	}
 
-	while (*_string != ' ' && *_string != '\0')
+	while (*ptr != ' ' && *ptr != '\0')
 	{
         ll++;
 
 		if (ll >= longitud)
 		{
 			contenedor[longitud - 1] = '\0';
-			return _string;
+			break;
 		}
 
-		*contenedor++ = *_string++;
+		*contenedor++ = *ptr++;
 	}
 	*contenedor = '\0';
-
-	return _string;
+	
+	while (*ptr == ' ')
+	{
+		ll++;
+		ptr++;
+	}
+	for (i = 0; i < len; i++)
+	{
+		_string[i] = _string[i + ll];
+	}
 }
 
 /* Obtenemos el tiempo */

@@ -36,6 +36,7 @@ extern _ST_Puntos Negras;									/* Almacena la puntuacion de las negras */
     extern _ST_TablaDeFinales TablaDeFinales;
 #endif
 extern U64 zobrist_Tablero[14][64];                         /* Almacena las llaves zobrist */
+extern _ST_TT_Opciones TT_Opciones;
 
 /************************************************************************************
                     Metodos externos Inicio.c

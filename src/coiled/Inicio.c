@@ -52,15 +52,14 @@ _ST_TableroX64 TableroGlobal;									/* Tablero actual. */
 _ST_TipoJuego TipoJuego;										/* Almacena informacion del juego por tiempo. */
 _ST_Puntos Blancas;												/* Almacenamos informacion de la evaluacion de las blancas */
 _ST_Puntos Negras;												/* Almacenamos informacion de la evaluacion de las negras */
+_ST_TT_Opciones TT_Opciones;
+int Salir;														/* Indica al programa que salga, para evitar un "exit(EXIT_FAILURE)" sin liberar la tabla hash */
 #ifdef USAR_NNUE
 	_ST_Cpu Cpu;
 #endif
-
 #ifdef USAR_TABLAS_DE_FINALES
 	_ST_TablaDeFinales TablaDeFinales;
 #endif
-int Salir;														/* Indica al programa que salga, para evitar un "exit(EXIT_FAILURE)" sin liberar la tabla hash */
-
 #ifdef ARC_64BIT
 U64 zobrist_Tablero[14][64] = {
 { (U64)0xBFACF94C33349DBA, (U64)0x378D114F3610E99D, (U64)0xC58162EA0F809985, (U64)0x30953FE760210A01, (U64)0x5A98784C5FA58438, (U64)0x695A3AC1EC390F0A, (U64)0x5129CB6753161046, (U64)0x1BEEB565D35CEE74, (U64)0xC6D009B391738BB8, (U64)0x600964F3CDD3FF77, (U64)0xF0219E3696C30BC6, (U64)0x4739D25AFA560D0B, (U64)0x65F891F2957ED27A, (U64)0x1AFEC31D7ECC190B, (U64)0x51D2EDBB8C51744, (U64)0x1CFEDCD809BF7177, (U64)0xC159600F598AC8F9, (U64)0x54318D0EE5AC7D34, (U64)0xA11DD589F45C1CA6, (U64)0x160933F41AC9934A, (U64)0x3051795F3F194779, (U64)0x4FE6CBA2D2078D49, (U64)0xA35C46430880526, (U64)0x68D22507A3E27735, (U64)0xB56F8D52F74D5EBB, (U64)0x9D156430236F6A34, (U64)0xDE9D7C75588F1AA5, (U64)0x2B854B09100A8148, (U64)0x1471CA1AAC25D39, (U64)0xD04A2A1F18108E0B, (U64)0x7F81BDB8967B9B67, (U64)0x7772C4BB23216174, (U64)0x624775EDAE5640A9, (U64)0xEA8C1CED8BB07477, (U64)0x4AA18CC892E884E7, (U64)0x6CB4A2B5FA55870B, (U64)0xCEEFE53C40875B4A, (U64)0xA47BD7E3BAFB100A, (U64)0xAEC954055EB59D65, (U64)0x66FE806CDDFF276, (U64)0x7FD354510C81D7C8, (U64)0xFFAAF94101C1F215, (U64)0x3DC1E176383397E6, (U64)0x589A4FEA77B6126B, (U64)0xBADB8D80C87CCC48, (U64)0xE555BF5CF3AC0668, (U64)0x996DB96A74A6C826, (U64)0x53CD11F864DCF494, (U64)0xEFBBDACA6EAD5CA, (U64)0x880210FEEA06E014, (U64)0x745F08ABA976D1A4, (U64)0x8B2A3F57D5EB08E8, (U64)0xADF3647F6ABBDA09, (U64)0xDAC556C05D67416B, (U64)0xC55789D6AF795A06, (U64)0xDCF1F8657E03AAD5, (U64)0x495FC1326E3DC389, (U64)0x903628027E5DB756, (U64)0x417FF117478D47C6, (U64)0xF626D6EB0D284EAA, (U64)0xDC6791C226A0D80B, (U64)0x8FA927BDE5B2D32B, (U64)0xB25B606B0B1A5C45, (U64)0xA89190D19C503DD7 },
@@ -102,12 +101,9 @@ U64 zobrist_Tablero[14][64] = {
 *******************************************************************************/
 int main(int argc, char *argv[])
 {
-	char command[16350];
+	char command[8192];
 
 	Salir = false;
-
-	setbuf(stdout, NULL);
-	setbuf(stdin, NULL);
 
 	Iniciar_AlphaBeta();
 	Inicializar_See();
@@ -146,8 +142,8 @@ int main(int argc, char *argv[])
 
 	for (;;)
 	{
-		memset(command, 0, 16350 * sizeof(char));
-		LeerComandos(command, 16350);
+		memset(command, 0, 8192 * sizeof(char));
+		LeerComandos(command, 8192);
 
 		UciEntrada(command);
 
@@ -174,7 +170,7 @@ int main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 
-void UciEntrada(char* parametro)
+void UciEntrada(char *parametro)
 {
 	char Str[MAX_DIR];
 
@@ -204,7 +200,6 @@ void UciEntrada(char* parametro)
 			if (LibroSql.UsarLibro == true)
 			{
 				printf("option name OwnBook type check default true\n");
-				LibroSql.UsarLibro = ComprobarAccesoLibro();
 			}
 			else
 			{
@@ -283,12 +278,12 @@ void UciEntrada(char* parametro)
 			printf("option name NnuePath type string default "STRING_FORMAT"\n", Nnue.Directorio);
 		fflush(stdout);
 		memset(Str, 0, MAX_DIR * sizeof(char));
-	
+
 		strcat(Str, " var AVX2");
 		strcat(Str, " var SSE4.1");
 		strcat(Str, " var SSE3");
 		strcat(Str, " var SSE2");
-		
+
 		switch (Nnue.Tecnologia)
 		{
 		case 1:
@@ -374,14 +369,17 @@ void UciEntrada(char* parametro)
 		if (LibroSql.Dll_Cargada == true)
 		{
 			if (strcmp(parametro, "true") == 0)
+			{
 				LibroSql.UsarLibro = true;
+				LibroSql.UsarLibro = ComprobarAccesoLibro();
+			}
 			else if (strcmp(parametro, "false") == 0)
 				LibroSql.UsarLibro = false;
 		}
 	}
 	else if (strncmp(parametro, "setoption name OwnBookLimit value ", 34) == 0)
 	{
-		parametro += 29;
+		parametro += 34;
 		LibroSql.LimiteJugadas = MAX(2, (int)atoll(parametro));
 		if (LibroSql.LimiteJugadas > 10) LibroSql.LimiteJugadas = 8;
 	}
@@ -615,7 +613,6 @@ void UciEntrada(char* parametro)
 
 void LeerComandos(char *entrada, int longitud)
 {
-	fflush(stdout);
 	/* Si en la entrada no contiene nada */
 	if (fgets(entrada, longitud, stdin) == NULL)
 	{
@@ -645,26 +642,30 @@ void Position_Fen_Startpos(char *ptr)
 	char fen[MAX_DIR];
 	int Ok = false;
 	char buffer[MAX_DIR];
+#ifdef USAR_SQLITE
+	char *Var = LibroSql.Variante;
+#else
+	char *Var = NULL;
+#endif
 
 	LimpiarPuntuacion(true);
-	memset(contenedor, '\0', MAX_DIR * sizeof(char));
-
+	memset(contenedor, 0, MAX_DIR * sizeof(char));
 	TipoJuego.NJugadasTotales = 0;
 	TableroGlobal.Regla_50_Movimiento = 0;
 #ifdef USAR_HASH_TB
 	TableroGlobal.Hply = 0;
 #endif
 
-	ptr = SplitString(ptr, contenedor, MAX_DIR);
+	SplitString(ptr, contenedor, MAX_DIR);
 	if (strcmp(contenedor, "fen") == 0)
 	{
-		memset(fen, '\0', MAX_DIR * sizeof(char));
+		memset(fen, 0, MAX_DIR * sizeof(char));
 		fen[strlen(fen)] = '\0';
 
 		for (;;)
 		{
-			memset(contenedor, '\0', MAX_DIR * sizeof(char));
-			ptr = SplitString(ptr, contenedor, MAX_DIR);
+			memset(contenedor, 0, MAX_DIR * sizeof(char));
+			SplitString(ptr, contenedor, MAX_DIR);
 			if (*contenedor == '\0' || strcmp(contenedor, "moves") == 0)
 			{
 				break;
@@ -677,8 +678,7 @@ void Position_Fen_Startpos(char *ptr)
 			}
 
 		}
-
-		if (!CargarFen(fen))
+		if (!CargarFen(fen, Var))
 		{
 			printf(""INFO_STRING"FEN format incorrect.\n");
 			fflush(stdout);
@@ -687,8 +687,8 @@ void Position_Fen_Startpos(char *ptr)
 			Position_Fen_Startpos(buffer);
 			return;
 		}
-		/* Desde una posicion Fen, el libro no encuentra variaciones de aperturas, lo finalizamos */
 #ifdef USAR_SQLITE
+		/* Desde una posicion Fen, el libro no encuentra variaciones de aperturas, lo finalizamos */
 		if (TipoJuego.Ajedrez960 == false)
 			LibroSql.FinVariacion = true;
 #endif
@@ -696,10 +696,10 @@ void Position_Fen_Startpos(char *ptr)
 	else /* Posicion inicial (STARTPOS) */
 	{
 		memset(contenedor, 0, MAX_DIR * sizeof(char));
-		ptr = SplitString(ptr, contenedor, MAX_DIR);
+		SplitString(ptr, contenedor, MAX_DIR);
 		memset(buffer, 0, MAX_DIR * sizeof(char));
 		strcpy(buffer, START_POS);
-		if (!CargarFen(buffer))
+		if (!CargarFen(buffer, Var))
 		{
 			Salir = true;
 			return;
@@ -728,13 +728,14 @@ void Position_Fen_Startpos(char *ptr)
 		for (;;)
 		{
 			memset(contenedor, 0, MAX_DIR * sizeof(char));
-			ptr = SplitString(ptr, contenedor, MAX_DIR);
-			if (*contenedor == '\0')
+			SplitString(ptr, contenedor, MAX_DIR);
+			if (contenedor == '\0')
 			{
 				break;
 			}
 
 			Movimiento(contenedor, &Ok, (!strlen(ptr)));
+			Ok = false;
 		}
 	}
 }
@@ -820,7 +821,7 @@ void InicioBusqueda(char *ptr) {
 
 	for (;;)
 	{
-		ptr = SplitString(ptr, contenedor, MAX_DIR);
+		SplitString(ptr, contenedor, MAX_DIR);
 		if (*contenedor == '\0')
 		{
 			break;
@@ -828,32 +829,32 @@ void InicioBusqueda(char *ptr) {
 
 		if (strcmp(contenedor, "mate") == 0)
 		{
-			ptr = SplitString(ptr, contenedor, MAX_DIR);
+			SplitString(ptr, contenedor, MAX_DIR);
 			TipoJuego.BuscarMate = MAX(1, (int)atoll(contenedor));
 			mate = true;
 		}
 
 		if (strcmp(contenedor, "wtime") == 0)
 		{
-			ptr = SplitString(ptr, contenedor, MAX_DIR);
+			SplitString(ptr, contenedor, MAX_DIR);
 			wtime = MAX(1, (int)atoll(contenedor));
 			mate = false;
 		}
 		else if (strcmp(contenedor, "btime") == 0)
 		{
-			ptr = SplitString(ptr, contenedor, MAX_DIR);
+			SplitString(ptr, contenedor, MAX_DIR);
 			btime = MAX(1, (int)atoll(contenedor));
 			mate = false;
 		}
 		else if (strcmp(contenedor, "winc") == 0)
 		{
-			ptr = SplitString(ptr, contenedor, MAX_DIR);
+			SplitString(ptr, contenedor, MAX_DIR);
 			winc = MAX(1, (int)atoll(contenedor));
 			mate = false;
 		}
 		else if (strcmp(contenedor, "binc") == 0)
 		{
-			ptr = SplitString(ptr, contenedor, MAX_DIR);
+			SplitString(ptr, contenedor, MAX_DIR);
 			binc = MAX(1, (int)atoll(contenedor));
 			mate = false;
 		}
@@ -864,7 +865,7 @@ void InicioBusqueda(char *ptr) {
 		}
 		else if (strcmp(contenedor, "depth") == 0)
 		{
-			ptr = SplitString(ptr, contenedor, MAX_DIR);
+			SplitString(ptr, contenedor, MAX_DIR);
 			TipoJuego.MaxDepth = MAX(2, (int)atoll(contenedor) + 1);
 			if (TipoJuego.MaxDepth > MAX_PLY / 2)
 				TipoJuego.MaxDepth = (MAX_PLY / 2);
@@ -872,13 +873,13 @@ void InicioBusqueda(char *ptr) {
 		}
 		else if (strcmp(contenedor, "movestogo") == 0)
 		{
-			ptr = SplitString(ptr, contenedor, MAX_DIR);
+			SplitString(ptr, contenedor, MAX_DIR);
 			NJugadasTotales = MAX(1, (int)atoll(contenedor));
 			mate = false;
 		}
 		else if (strcmp(contenedor, "movetime") == 0)
 		{
-			ptr = SplitString(ptr, contenedor, MAX_DIR);
+			 SplitString(ptr, contenedor, MAX_DIR);
 			movetime = MAX(1, (int)atoll(contenedor));
 			mate = false;
 		}
@@ -1003,7 +1004,7 @@ void IniciarConfiguracion()
 	CrearTransposicion(TT_Opciones.tt_Mb);
 #endif
 #ifdef USAR_SQLITE
-	LibroSql.UsarLibro = false;
+	LibroSql.UsarLibro = true;
 	LibroSql.LimiteJugadas = 8;
 	memset(LibroSql.SqlTabla, 0, 9 * sizeof(char));
 	memset(LibroSql.Variante, 0, 9 * sizeof(char));
@@ -1120,8 +1121,8 @@ void Movimiento(char *ptr, int *Ok, int Ultimo)
 
 	for (j = 0; j < NumeroDeMovimientos; j++)
 	{
-		memset(mov, '\0', 6 * sizeof(char));
-		memset(_Enroque, '\0', 6 * sizeof(char));
+		memset(mov, 0, 6 * sizeof(char));
+		memset(_Enroque, 0, 6 * sizeof(char));
 #ifdef USAR_AJEDREZ960
 		if (TipoJuego.Ajedrez960 == true)
 		{
@@ -1148,7 +1149,7 @@ void Movimiento(char *ptr, int *Ok, int Ultimo)
 			}
 			else if (strcmp(ptr, "O-O-O") == 0)
 			{
-				memset(_Enroque, '\0', 6 * sizeof(char));
+				memset(_Enroque, 0, 6 * sizeof(char));
 				if (TableroGlobal.MueveBlancas == true)
 				{
 					MovimientoCoordenadas(TableroGlobal.PosicionReyB, TableroGlobal.Ajedrez960.TorreBlancaA, 0, _Enroque);
@@ -1186,10 +1187,6 @@ void Movimiento(char *ptr, int *Ok, int Ultimo)
 					break;
 				}
 				*Ok = true;
-#ifdef USAR_HASH_TB
-				TableroGlobal.Historico[TableroGlobal.Hply++] = TableroGlobal.Hash;
-#endif
-				TipoJuego.NJugadasTotales++;
 				break;
 			}
 		}
@@ -1208,10 +1205,6 @@ void Movimiento(char *ptr, int *Ok, int Ultimo)
 					break;
 				}
 				*Ok = true;
-#ifdef USAR_HASH_TB
-				TableroGlobal.Historico[TableroGlobal.Hply++] = TableroGlobal.Hash;
-#endif
-				TipoJuego.NJugadasTotales++;
 				break;
 			}
 #ifdef USAR_AJEDREZ960

@@ -55,12 +55,19 @@ int TBflip[64] =
 	 8,  9, 10, 11, 12, 13, 14, 15,
 	 0,  1,  2,  3,  4,  5,  6,  7};
 
+#ifdef _WIN32
 #ifdef ARC_64BIT
 	char GTB_NOMBRE[] = { "gtbprobe_x64.dll" };
 #else
 	char GTB_NOMBRE[] = { "gtbprobe_x86.dll" };
 #endif
-
+#else
+#ifdef ARC_64BIT
+	char GTB_NOMBRE[] = { "gtbprobe_x64.so" };
+#else
+	char GTB_NOMBRE[] = { "gtbprobe_x86.so" };
+#endif
+#endif
 int Cargar_gaviota_dll()
 {
 

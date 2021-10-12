@@ -23,6 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 /*******************************************************************************
 								Metodos
 *******************************************************************************/
-int CargarFen(char *epd);				/* Cargamos una posicion FEN */
+int CargarFen(char *epd, char *variante);				/* Cargamos una posicion FEN */
+void GuardarFen(char *Fen);
 
 #endif

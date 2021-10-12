@@ -384,10 +384,12 @@ void EvaluarPeones(int Turno)
 			if (TableroGlobal.Tablero[Cs + DireccionPeon[0]] == PosicionReyOp) TempColorOp->ReyCuadrosAtacando += 1;
 		if (Columna > ColumnaBorde[2] && Columna < ColumnaBorde[3])
 			if (TableroGlobal.Tablero[Cs + DireccionPeon[2]] == PosicionReyOp) TempColorOp->ReyCuadrosAtacando += 1;
+		
 		if (TableroGlobal.TableroColor[Cs] == true)
 			TempColor->PeonCuadroColorB++;
 		else
 			TempColor->PeonCuadroColorN++;
+		
 		if (Columna <= COLUMNA_D)
 			TempColor->GrupoPeonesQ++;
 		else
@@ -786,7 +788,6 @@ void EvaluarSeguridadRey(int Turno)
 	_Valor PuntosAtaque = PuntosCero;
 	_ST_Puntos *TempColor = Turno ? &Blancas : &Negras;
 	_ST_Puntos *TempColorOp = Turno ? &Negras : &Blancas;
-	
 
 	if (TempColor->ReyAtaquesPiezas > 1 - TempColor->DamasTotales)
 	{
@@ -806,8 +807,8 @@ void EvaluarSeguridadRey(int Turno)
 			+ SEGURIDAD_REY_DAMA_JAQUE.Final * TempColor->ReyJaquePieza[DAMA]
 			+ SEGURIDAD_REY_DAMA_ENEMIGA.Final * !TempColorOp->DamasTotales;
 
-			TempColor->Puntos.Apertura += -PuntosAtaque.Apertura * MAX(0, PuntosAtaque.Apertura) / 720;
-			TempColor->Puntos.Final += -MAX(0, PuntosAtaque.Final) / 20;
+		TempColor->Puntos.Apertura += -PuntosAtaque.Apertura * MAX(0, PuntosAtaque.Apertura) / 720;
+		TempColor->Puntos.Final += -MAX(0, PuntosAtaque.Final) / 20;
 	}
 }
 void EvaluarSeguridadReyPeon(int Turno)
@@ -831,7 +832,7 @@ void EvaluarSeguridadReyPeon(int Turno)
 		Puntos += (Shelter != 7 || Storm != 7) ? 0 : COLUMNA_ABIERTA_SHELTER[Columna];
 		Puntos += (Shelter == 7 && Storm != 7) ? COLUMNA_SEMI_ABIERTA_SHELTER[Columna] : 0;
 		Puntos += Storm != 7 ? COLUMNA_STORM[Storm] : 0;
-		
+
 		TempColor->Puntos.Apertura += Puntos;
 		TempColor->Puntos.Final += Puntos;
 

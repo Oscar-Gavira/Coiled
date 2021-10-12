@@ -25,7 +25,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 void ImprimirMovimientoCoordenadas(int Inicio, int Fin, int PiezaCoronacion);		/* Imprimir el movimiento en coordenadas E2E4 */
 void MovimientoCoordenadas(int Inicio, int Fin, int PiezaCoronacion, char *mov);	/* Obtenemos el movimiento en coordenadas E2E4 */
-char *SplitString(char *string, char *contenedor, int longitud);					/* Limpiamos cadenas con espacios */
+void SplitString(char *string, char *contenedor, int longitud);					/* Limpiamos cadenas con espacios */
 U64 ObtenerTiempo();																/* Obtenemos el tiempo */
 int EntradaStdIn();																/* Comprobamos entradas durante la busqueda. */
 int ValorPieza(int Pieza);															/* Obtenemos el valor de la pieza */

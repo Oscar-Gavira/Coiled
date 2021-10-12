@@ -21,7 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define DEFINICIONES_H
 
 #define NOMBRE "Coiled"
-#define VER  "1.0"
+#define VER  "1.1"
 #define AUTOR  "Oscar Gavira"
 
 #define USAR_SQLITE														/* Para compilar el uso de sqlite. Libro de aperturas. */
@@ -43,6 +43,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #ifdef _WIN32
 #include <stdio.h>														/* Printf, FILE, fclose, fflush, stdout, fgets... */
 #include <time.h>														/* Tiempo */
+#include <ctype.h>														/* toupper */
 #include <string.h>														/* Memset, strcat, strcopy */
 #include <stdlib.h>														/* atoi, atoll, exit(EXIT_SUCCESS), srand, rand */
 #include <stdint.h>														/* Tipo de variables y valores maximos */
@@ -53,6 +54,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #else
 #include <stdio.h>														/* Printf, FILE, fclose, fflush, stdout, fgets... */
 #include <string.h>														/* Memset, strcat, strcopy */
+#include <ctype.h>														/* toupper */
 #include <stdlib.h>														/* atoi, atoll, exit(EXIT_SUCCESS), srand, rand */
 #include <stdint.h>														/* Tipo de variables y valores maximos */
 #include <limits.h>														/* Valores maximos y minimos de cada tipo de variable int, short, char...*/
@@ -175,6 +177,16 @@ typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el histori
 #define CAPTURA_ALPASO(m) (m & MFLAGEP)									/* Devuelve 0 o MFLAGEP. Indica si el movimiento es una captura al paso */
 #define GENERA_ALPASO(m) (m & MFLAGPS)									/* Devuelve 0 o MFLAGPS. Indica dos a delante de un peon */
 #define ENROQUE(m) (m & MFLAGCA)										/* Devuelve 0 o MFLAGCA. Indica movimiento de enroque */
+
+// 16 bit short (2 bytes * 8) = 16 bit */
+// 0000 0000 0111 1111 */		/*EDAD -  7 bit*/   Valor maximo 127
+// 0001 1111 1000 0000 */		/*DEPTH - 6 bit*/   Valor maximo 63
+// 0110 0000 0000 0000 */		/*FLAG -  2 bit*/   Valor maximo 3
+#define EDAD(e)		((e) & 0x7F)					/* 7bit - rango del 0 al 127 */
+#define DEPTH(d)	(((d)>>7) & 0x3F)				/* 6bit - rango del 0 al 63 */
+#define FLAG(f)		(((f)>>13) & 0x3)				/* 2bit = 1 o 2 o 3 (ALPHA, BETA, EXACT) */
+#define MAX_EDAD	(127)							/* Edad maxima */
+#define CELDAS		(3)
 
 /* Valor de las piezas en el tablero */
 #define PeonB  (1)														/* Valor del peon blanco en el tablero */

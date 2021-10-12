@@ -23,7 +23,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 HMODULE SG_hmod = NULL;
 
-char SG_NOMBRE[] = { "syzygy_x64.dll" };
+#ifdef _WIN32
+	char SG_NOMBRE[] = { "syzygy_x64.dll" };
+#else
+	char SG_NOMBRE[] = { "syzygy_x64.so" };
+#endif
+
 U64 SG_Mascara[64];
 
 int Cargar_Syzygy_dll()
