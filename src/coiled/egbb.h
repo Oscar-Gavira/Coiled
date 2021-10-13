@@ -25,15 +25,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #ifdef USAR_TABLAS_DE_FINALES
 
 /**************************************************************************************
-						METODOS DISPONIBLE DE LA DLL
-**************************************************************************************/
-typedef int (CDECL *EGBB_PROBE_EGBB) (int player, int *piece, int *square);
-typedef int (CDECL *EGBB_LOAD_EGBB) (char *path, int cache_size, int load_options);
-
-EGBB_LOAD_EGBB EGBB_load_egbb;							/* Cargamos la tablas de finales. */
-EGBB_PROBE_EGBB EGBB_probe_egbb;						/* Acceso a las tablas de finales. */
-
-/**************************************************************************************
 								Metodos
 **************************************************************************************/
 int Cargar_egbb_dll();

@@ -54,9 +54,9 @@ int EGBBflip[64] =
 #endif
 #else
 #ifdef ARC_64BIT
-	char EGBB_NOMBRE[] = { "egbb_x64.so" };
+	char EGBB_NOMBRE[] = { "./libegbb_x64.so" };
 #else
-	char EGBB_NOMBRE[] = { "egbb_x86.so" };
+	char EGBB_NOMBRE[] = { "./libegbb_x86.so" };
 #endif
 #endif
 int Cargar_egbb_dll()

@@ -56,10 +56,46 @@ _ST_TT_Opciones TT_Opciones;
 int Salir;														/* Indica al programa que salga, para evitar un "exit(EXIT_FAILURE)" sin liberar la tabla hash */
 #ifdef USAR_NNUE
 	_ST_Cpu Cpu;
+	_ST_Nnue Nnue;
+	NNUE_INIT NNUE_init;
+	NNUE_EVALUATE NNUE_evaluate;
+#endif
+#ifdef USAR_SQLITE
+	_ST_EstructuraBd LibroSql;
+	SQLITE3_OPEN_V2 sqlite3_open_v2;
+	SQLITE_PREPARE_V2 sqlite3_prepare_v2;
+	SQLITE_STEP sqlite3_step;
+	SQLITE_COLUMN_TEXT sqlite3_column_text;
+	SQLITE_RESET sqlite3_reset;
+	SQLITE_CLOSE_V2 sqlite3_close_v2;
 #endif
 #ifdef USAR_TABLAS_DE_FINALES
 	_ST_TablaDeFinales TablaDeFinales;
+
+	EGBB_LOAD_EGBB EGBB_load_egbb;					/* Cargamos la tablas de finales. */
+	EGBB_PROBE_EGBB EGBB_probe_egbb;				/* Acceso a las tablas de finales. */
+
+	SG_INITS SG_inits;								/* Inicializa la tabla de finales */
+	SG_FREE SG_free;								/* Libera la tabla de finales */
+	SG_PROBE_ROOT SG_probe_root;					/* Acceso a las tablas de finales en root. */
+	SG_PROBE_WDL SG_probe_wdl;						/* Acceso a las tablas de finales en la busqueda. */
+	SG_LARGEST SG_man;								/* Indica la tablas disponibles. 3, 4, 5, 6 o 7 piezas. */
+
+	TBINIT TBinit;									/* Inicializa la tabla de finales */
+	TBIS_INITIALIZED TBis_initialized;				/* Indica si la tabla esta inicializada */
+	TBRESTART TBrestart;							/* Reinicia la tabla de finales */
+	TBDONE TBdone;									/* Libera la tabla de finales */
+	TBPROBE_HARD TBprobe_hard;						/* Acceso a las tablas de finales en root. En HDD. (DTM) */
+	TBPROBE_SOFT TBprobe_soft;						/* Acceso a las tablas de finales en root. En Cache. (DTM) */
+	TBAVAILABILITY TBavailability;					/* Indica la tablas disponibles */
+	TBCACHE_INIT TBcache_init;						/* Inicia la cache y fraccion */
+	TBCACHE_DONE TBcache_done;						/* Borra la cache */
+	TBCACHE_IS_ON TBcache_is_on;
+	TBPATHS_INIT TBpaths_init;						/* Inicializa las rutas */
+	TBPATHS_ADD TBpaths_add;						/* Anade rutas */
+	TBPATHS_DONE TBpaths_done;						/* Libera ruta */
 #endif
+
 #ifdef ARC_64BIT
 U64 zobrist_Tablero[14][64] = {
 { (U64)0xBFACF94C33349DBA, (U64)0x378D114F3610E99D, (U64)0xC58162EA0F809985, (U64)0x30953FE760210A01, (U64)0x5A98784C5FA58438, (U64)0x695A3AC1EC390F0A, (U64)0x5129CB6753161046, (U64)0x1BEEB565D35CEE74, (U64)0xC6D009B391738BB8, (U64)0x600964F3CDD3FF77, (U64)0xF0219E3696C30BC6, (U64)0x4739D25AFA560D0B, (U64)0x65F891F2957ED27A, (U64)0x1AFEC31D7ECC190B, (U64)0x51D2EDBB8C51744, (U64)0x1CFEDCD809BF7177, (U64)0xC159600F598AC8F9, (U64)0x54318D0EE5AC7D34, (U64)0xA11DD589F45C1CA6, (U64)0x160933F41AC9934A, (U64)0x3051795F3F194779, (U64)0x4FE6CBA2D2078D49, (U64)0xA35C46430880526, (U64)0x68D22507A3E27735, (U64)0xB56F8D52F74D5EBB, (U64)0x9D156430236F6A34, (U64)0xDE9D7C75588F1AA5, (U64)0x2B854B09100A8148, (U64)0x1471CA1AAC25D39, (U64)0xD04A2A1F18108E0B, (U64)0x7F81BDB8967B9B67, (U64)0x7772C4BB23216174, (U64)0x624775EDAE5640A9, (U64)0xEA8C1CED8BB07477, (U64)0x4AA18CC892E884E7, (U64)0x6CB4A2B5FA55870B, (U64)0xCEEFE53C40875B4A, (U64)0xA47BD7E3BAFB100A, (U64)0xAEC954055EB59D65, (U64)0x66FE806CDDFF276, (U64)0x7FD354510C81D7C8, (U64)0xFFAAF94101C1F215, (U64)0x3DC1E176383397E6, (U64)0x589A4FEA77B6126B, (U64)0xBADB8D80C87CCC48, (U64)0xE555BF5CF3AC0668, (U64)0x996DB96A74A6C826, (U64)0x53CD11F864DCF494, (U64)0xEFBBDACA6EAD5CA, (U64)0x880210FEEA06E014, (U64)0x745F08ABA976D1A4, (U64)0x8B2A3F57D5EB08E8, (U64)0xADF3647F6ABBDA09, (U64)0xDAC556C05D67416B, (U64)0xC55789D6AF795A06, (U64)0xDCF1F8657E03AAD5, (U64)0x495FC1326E3DC389, (U64)0x903628027E5DB756, (U64)0x417FF117478D47C6, (U64)0xF626D6EB0D284EAA, (U64)0xDC6791C226A0D80B, (U64)0x8FA927BDE5B2D32B, (U64)0xB25B606B0B1A5C45, (U64)0xA89190D19C503DD7 },
@@ -729,7 +765,7 @@ void Position_Fen_Startpos(char *ptr)
 		{
 			memset(contenedor, 0, MAX_DIR * sizeof(char));
 			SplitString(ptr, contenedor, MAX_DIR);
-			if (contenedor == '\0')
+			if (contenedor == '\0' || contenedor[0] == '\0')
 			{
 				break;
 			}
@@ -822,7 +858,7 @@ void InicioBusqueda(char *ptr) {
 	for (;;)
 	{
 		SplitString(ptr, contenedor, MAX_DIR);
-		if (*contenedor == '\0')
+		if (*contenedor == '\0' || contenedor[0] == '\0')
 		{
 			break;
 		}

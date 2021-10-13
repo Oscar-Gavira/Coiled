@@ -18,7 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "GeneradorDeMovimientos.h"
-#include "Hash.h"
+#include "Estructuras.h"
 
 /*******************************************************************************
 							Variables

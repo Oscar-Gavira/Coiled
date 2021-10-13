@@ -26,7 +26,7 @@ HMODULE SG_hmod = NULL;
 #ifdef _WIN32
 	char SG_NOMBRE[] = { "syzygy_x64.dll" };
 #else
-	char SG_NOMBRE[] = { "syzygy_x64.so" };
+	char SG_NOMBRE[] = { "./libsyzygy_x64.so" };
 #endif
 
 U64 SG_Mascara[64];

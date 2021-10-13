@@ -134,7 +134,7 @@ typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el histori
 #define COMPROBAR_ENTRADAS	(1024)										/* Cada x tiempo comprobamos entradas */
 
 #define MAX_DIR				(256)
-#define START_POS			"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define START_POS			"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
 #define false (0)
 #define true  (1)
 
@@ -213,6 +213,52 @@ typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el histori
 /* Enumeracion para obtener todos los movimientos o Capturas y coronaciones */
 #define Todos (1)				    									/* Generara todas los movimientos posibles */
 #define CapturasCoronacion (2)											/* Generar todas las capturas y coronaciones posibles */
+
+#ifdef USAR_SQLITE
+#define SQLITE_OPEN_READONLY        0x00000001	/* Ok for sqlite3_open_v2() */
+#define SQLITE_OPEN_URI             0x00000040	/* Ok for sqlite3_open_v2() */
+#define SQLITE_OK					0	/* Successful result */
+#define SQLITE_ERROR				1	/* Generic error */
+#define SQLITE_ROW					100	/* sqlite3_step() has another row ready */
+#define SQLITE_DONE					101	/* sqlite3_step() has finished executing */
+#define MAX_LONG					100	/* longitud maxima del contenido de jugadas en el libro de aperturas */
+#endif
+
+#if defined(USAR_TABLAS_DE_FINALES) && defined(ARC_64BIT)
+#define SG_RESULT_WDL_MASK          0x0000000F
+#define SG_RESULT_TO_MASK           0x000003F0
+#define SG_RESULT_FROM_MASK         0x0000FC00
+#define SG_RESULT_PROMOTES_MASK     0x00070000
+#define SG_RESULT_EP_MASK           0x00080000
+#define SG_RESULT_DTZ_MASK          0xFFF00000
+#define SG_RESULT_WDL_SHIFT         0
+#define SG_RESULT_TO_SHIFT          4
+#define SG_RESULT_FROM_SHIFT        10
+#define SG_RESULT_PROMOTES_SHIFT    16
+#define SG_RESULT_EP_SHIFT          19
+#define SG_RESULT_DTZ_SHIFT         20
+
+#define SG_GET_WDL(_res)                        \
+    (((_res) & SG_RESULT_WDL_MASK) >> SG_RESULT_WDL_SHIFT)
+#define SG_GET_TO(_res)                         \
+    (((_res) & SG_RESULT_TO_MASK) >> SG_RESULT_TO_SHIFT)
+#define SG_GET_FROM(_res)                       \
+    (((_res) & SG_RESULT_FROM_MASK) >> SG_RESULT_FROM_SHIFT)
+#define SG_GET_PROMOTES(_res)                   \
+    (((_res) & SG_RESULT_PROMOTES_MASK) >> SG_RESULT_PROMOTES_SHIFT)
+#define SG_GET_EP(_res)                         \
+    (((_res) & SG_RESULT_EP_MASK) >> SG_RESULT_EP_SHIFT)
+#define SG_GET_DTZ(_res)                        \
+    (((_res) & SG_RESULT_DTZ_MASK) >> SG_RESULT_DTZ_SHIFT)
+
+#define SG_SET_WDL(_res, _wdl)                  \
+    (((_res) & ~SG_RESULT_WDL_MASK) |           \
+     (((_wdl) << SG_RESULT_WDL_SHIFT) & SG_RESULT_WDL_MASK))
+
+#define SG_RESULT_FAILED            0xFFFFFFFF
+#define SG_RESULT_CHECKMATE         SG_SET_WDL(0, TB_WIN)
+#define SG_RESULT_STALEMATE         SG_SET_WDL(0, TB_DRAW)
+#endif
 
 #define VALOR_MATE		(32000)
 #define MATE(p)			(-VALOR_MATE + p)

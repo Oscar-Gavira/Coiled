@@ -24,31 +24,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef USAR_NNUE
 
-typedef struct tag_nnue
-{
-	int Usar;															/* Se puede usar la tablas de gaviota (true/false) */
-	int Dll_Cargada;													/* Esta cargada la DLL */
-	int Tecnologia;														/* 1 = SSE2	2 = SSE3	3 = SSE4.1		4 = AVX2 */
-	char Directorio[MAX_DIR];											/* Obtenemos las rutas a las tablas de finales */
-	int DirectorioNuevo;												/* Indica si el directorio es diferente (Nueva NNUE) */
-} _ST_Nnue;
-
-_ST_Nnue Nnue;
-
-/**************************************************************************************
-METODOS DISPONIBLE DE LA DLL
-**************************************************************************************/
-typedef int (CDECL *NNUE_INIT)(const char *ruta);
-typedef int (CDECL *NNUE_EVALUATE)(
-	int player,
-	int *pieces,
-	int *squares
-);
-
-/* Inicia la carga de la informacion */
-NNUE_INIT NNUE_init;
-NNUE_EVALUATE NNUE_evaluate;
-
 /* Valor de las piezas para consultas NNUE */
 enum NNUE_Piezas
 {
@@ -62,7 +37,6 @@ Metodos
 int Cargar_nnue_dll();
 void CargarNnue();
 int Descargar_nnue_dll();
-int ProbarNNUE();
 
 #endif
 

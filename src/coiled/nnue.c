@@ -36,9 +36,9 @@ int NNUE_FLIP[64] =
 
 int Cargar_nnue_dll()
 {
-	char NNUE_NOMBRE[16];
-	memset(NNUE_NOMBRE, 0, 16 * sizeof(char));
-
+	char NNUE_NOMBRE[25];
+	memset(NNUE_NOMBRE, 0, 25 * sizeof(char));
+#ifdef _WIN32
 	switch (Nnue.Tecnologia)
 	{
 	case 1:
@@ -56,6 +56,25 @@ int Cargar_nnue_dll()
 	default:
 		break;
 	}
+#else
+	switch (Nnue.Tecnologia)
+	{
+	case 1:
+		strcpy(NNUE_NOMBRE, "./libnnue_sse2.so");
+		break;
+	case 2:
+		strcpy(NNUE_NOMBRE, "./libnnue_sse3.so");
+		break;
+	case 3:
+		strcpy(NNUE_NOMBRE, "./libnnue_sse4.1.so");
+		break;
+	case 4:
+		strcpy(NNUE_NOMBRE, "./libnnue_avx2.so");
+		break;
+	default:
+		break;
+	}
+#endif
 
 	if ((NNUE_hmod = LoadLibrary(NNUE_NOMBRE)) != 0)
 	{

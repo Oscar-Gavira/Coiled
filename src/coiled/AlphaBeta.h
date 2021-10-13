@@ -49,4 +49,5 @@ void ComprobarTiempo();																			/* Comprobamos tiempo y entradas */
 int FigurasAdversarioNull(int turno);															/* Comprueba si se puede hacer Movimiento nulo */
 int EsPuntuacionMate(int puntos);																/* Obtenemos si la puntuacion esta dentro del margen de mate */
 int EsTablaRepeticion();																		/* Obtenemos si es tablas por repeticion */
+
 #endif

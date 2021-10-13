@@ -4,7 +4,10 @@
 #include "Definiciones.h"
 
 #ifdef USAR_NNUE
-#include <intrin.h>
+
+#ifdef _WIN32
+    #include <intrin.h>
+#endif
 
 typedef struct tag_CPU
 {

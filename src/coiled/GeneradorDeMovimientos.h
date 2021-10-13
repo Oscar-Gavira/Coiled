@@ -17,10 +17,11 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "Hash.h"
+
 #ifndef GENERADORDEMOVIMIENTOS_H
 #define GENERADORDEMOVIMIENTOS_H
 
-#include "Externo.h"
 
 #define MargenIzquierdo(x)	((x) - COLUMNA((x)))										/* Obtenemos el margen izquierdo del tablero */
 

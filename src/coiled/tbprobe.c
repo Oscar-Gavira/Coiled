@@ -43,7 +43,6 @@ enum TBEnroque
    TBBOOO = 1
 };
 
-
 int TBflip[64] =
 {
 	56, 57, 58, 59, 60, 61, 62, 63,
@@ -57,15 +56,15 @@ int TBflip[64] =
 
 #ifdef _WIN32
 #ifdef ARC_64BIT
-	char GTB_NOMBRE[] = { "gtbprobe_x64.dll" };
+	char GTB_NOMBRE[] = { "gtb_x64.dll" };
 #else
-	char GTB_NOMBRE[] = { "gtbprobe_x86.dll" };
+	char GTB_NOMBRE[] = { "gtb_x86.dll" };
 #endif
 #else
 #ifdef ARC_64BIT
-	char GTB_NOMBRE[] = { "gtbprobe_x64.so" };
+	char GTB_NOMBRE[] = { "./libgtb_x64.so" };
 #else
-	char GTB_NOMBRE[] = { "gtbprobe_x86.so" };
+	char GTB_NOMBRE[] = { "./libgtb_x86.so" };
 #endif
 #endif
 int Cargar_gaviota_dll()

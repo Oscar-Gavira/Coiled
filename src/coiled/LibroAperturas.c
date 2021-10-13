@@ -41,11 +41,12 @@ HMODULE sqlite_hmod = NULL;
 #endif
 #else
 #ifdef ARC_64BIT
-	char SQLITE_NOMBRE[] = { "/usr/lib/i386-linux-gnu/libsqlite3.so.0" };
+	char SQLITE_NOMBRE[] = { "/usr/lib/x86_64-linux-gnu/libsqlite3.so.0" };
 #else
-	char SQLITE_NOMBRE[] = { "sqlite3_x86.so" };
+	char SQLITE_NOMBRE[] = { "/usr/lib/i386-linux-gnu/libsqlite3.so.0" };
 #endif
 #endif
+
 int Cargar_sqlite_dll()
 {
 	if ((sqlite_hmod = LoadLibrary(SQLITE_NOMBRE)) != 0)
