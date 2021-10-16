@@ -32,7 +32,7 @@ Actualmente Coiled es capaz de jugar a la variante Chess960 de usar tablas de fi
 Para leer más sobre algunas de las técnicas utilizadas en Coiled, consulte la página Wiki de programación de ajedrez de [Coiled.](https://www.chessprogramming.org/Coiled) (inglés)
 
 
-## ☑️ Requisitos
+## ☑️ Requisitos mínimo
 
 | SISTEMA OPERATIVO | Windows 32 bit             | Windows 64 bit.                           |
 | ----------------- | -------------------------- | ----------------------------------------- |
