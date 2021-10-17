@@ -19,6 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Hash.h"
 
+_ST_TT_Cache *TT_Datos;
 
 short GuardarFlag(int d, int e, int f)
 {
