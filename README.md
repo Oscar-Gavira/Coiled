@@ -40,6 +40,17 @@ Para leer más sobre algunas de las técnicas utilizadas en Coiled, consulte la 
 | RAM               | 16MB.                      | 64MB.                                    |
 
 
+## 🔩 Redes neuronales (NNUE)
+
+
+Actualmente Coiled utiliza la red neuronal de Fisherman.
+
+| Autor     | Creado              | Url                                                          |
+| --------- | ------------------- | ------------------------------------------------------------ |
+| Fisherman |  21-03-20 23:34:03  | https://tests.stockfishchess.org/api/nn/nn-a9f9e868162a.nnue |
+
+
+
 ## 🔧 Instalación
 
 GUI de entornos gratuito:
