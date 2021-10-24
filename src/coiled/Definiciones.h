@@ -26,7 +26,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #define USAR_SQLITE														/* Para compilar el uso de sqlite. Libro de aperturas. */
 #define USAR_AJEDREZ960													/* Para compilar el uso de Ajedrez960. */
-#define ARC_64BIT														/* Para compilar a 64 bit. */
+//#define ARC_64BIT														/* Para compilar a 64 bit. */
 #define USAR_TABLAS_DE_FINALES											/* Para compilar con las tablas de finales */
 
 #ifdef ARC_64BIT
