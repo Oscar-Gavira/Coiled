@@ -1,3 +1,7 @@
+![Release](https://img.shields.io/github/v/release/Oscar-Gavira/Coiled)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+
 # ![imagen](https://user-images.githubusercontent.com/33672268/136560248-95e1ebf4-9405-414c-9827-6f1f3cf76b05.png) Coiled - Motor de ajedrez.
 
 ## 📋 Características
@@ -134,7 +138,8 @@ Estas opciones también están disponibles para el modo Chess960, solo has de ac
 
 - Cada proyecto contiene un archivo .cbp que es el contenedor del proyecto para ser editados/compilados mediante codeblocks.
 - Puede usar cualquier otro editor, al igual que puede usar otro compilador. 
-- Por ahora solo se puede compilar para Windows.
+- Para compilar en linux: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile)
+- Formas de compilar: make o make BIT=64 o make help
 
 
 ## 📄 Licencia
