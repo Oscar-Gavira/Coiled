@@ -42,15 +42,15 @@ int _lowerbound = 0;
 
 void Iniciar_AlphaBeta()
 {
-	int dp;
-	int mv;
+	U64 dp;
+	U64 mv;
 
 #ifdef USAR_REDUCTION
 	for (dp = 0; dp < 64; dp++)
 	{
 		for (mv = 0; mv < 64; mv++)
 		{
-			lmr[dp][mv] = (int)(0.75 + (float)log(dp) * (float)log(MIN(mv, MAX_PLY - 1)) / 2.25f);
+			lmr[dp][mv] = (int)(0.75 + log(dp) * log(MIN(mv, MAX_PLY - 1)) / 2.25f);
 
 			if (lmr[dp][mv] < 1.0f)
 				lmr[dp][mv] = 0;
@@ -63,7 +63,6 @@ void Iniciar_AlphaBeta()
 	{
 		lmp[0][dp] = 2.5 + 2 * dp * dp / 4.5;
 		lmp[1][dp] = 4.0 + 4 * dp * dp / 4.5;
-
 	}
 #endif
 }
@@ -237,7 +236,7 @@ int AspirationWindows(int depth, int en_jaque, int PuntuacionAnterior)
 
 		if (puntos <= alpha)
 		{
-			beta = (alpha + beta) / 2;
+			if ((alpha + beta) != 0) beta = (alpha + beta) / 2; else beta = 0;
 			alpha = MAX(-VALOR_MATE, alpha - windows);
 			depth = depthOrg;
 		}

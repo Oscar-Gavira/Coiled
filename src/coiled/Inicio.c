@@ -225,11 +225,11 @@ void UciEntrada(char *parametro)
 #endif
 		fflush(stdout);
 		printf("id author "AUTOR"\n"); fflush(stdout);
-		printf("\n"); fflush(stdout);
 #ifdef USAR_HASH_TB
 		printf("option name Hash type spin default "U64_FORMAT" min "S32_FORMAT" max "S32_FORMAT"\n", TT_Opciones.tt_Mb, MB_HASH_TABLE_MIN, MB_HASH_TABLE_MAX);
 		fflush(stdout);
 #endif
+
 #ifdef USAR_SQLITE
 		if (LibroSql.Dll_Cargada == true)
 		{
@@ -313,13 +313,12 @@ void UciEntrada(char *parametro)
 		else
 			printf("option name NnuePath type string default "STRING_FORMAT"\n", Nnue.Directorio);
 		fflush(stdout);
-		memset(Str, 0, MAX_DIR * sizeof(char));
 
+		memset(Str, 0, MAX_DIR * sizeof(char));
 		strcat(Str, " var AVX2");
 		strcat(Str, " var SSE4.1");
 		strcat(Str, " var SSE3");
 		strcat(Str, " var SSE2");
-
 		switch (Nnue.Tecnologia)
 		{
 		case 1:
@@ -339,6 +338,7 @@ void UciEntrada(char *parametro)
 		}
 		fflush(stdout);
 #endif
+
 #ifdef USAR_AJEDREZ960
 		if (TipoJuego.Ajedrez960 == true)
 		{
@@ -398,6 +398,7 @@ void UciEntrada(char *parametro)
 		CrearTransposicion(TT_Opciones.tt_Mb);
 	}
 #endif
+
 #ifdef USAR_SQLITE
 	else if (strncmp(parametro, "setoption name OwnBook value ", 29) == 0)
 	{
@@ -858,7 +859,7 @@ void InicioBusqueda(char *ptr) {
 	for (;;)
 	{
 		SplitString(ptr, contenedor, MAX_DIR);
-		if (*contenedor == '\0' || contenedor[0] == '\0')
+		if (contenedor[0] == '\0')
 		{
 			break;
 		}
@@ -1040,7 +1041,7 @@ void IniciarConfiguracion()
 	CrearTransposicion(TT_Opciones.tt_Mb);
 #endif
 #ifdef USAR_SQLITE
-	LibroSql.UsarLibro = true;
+	LibroSql.UsarLibro = false;
 	LibroSql.LimiteJugadas = 8;
 	memset(LibroSql.SqlTabla, 0, 9 * sizeof(char));
 	memset(LibroSql.Variante, 0, 9 * sizeof(char));
@@ -1066,7 +1067,11 @@ void IniciarConfiguracion()
 	Nnue.Dll_Cargada = false;
 	Nnue.Tecnologia = 1;										/* Por defecto SSE2 */
 	memset(Nnue.Directorio, 0, MAX_DIR * sizeof(char));
+#ifdef _WIN32
 	strcpy(Nnue.Directorio, "red_neuronal.nnue");
+#else
+	strcpy(Nnue.Directorio, "./red_neuronal.nnue");
+#endif
 	Nnue.DirectorioNuevo = false;
 #endif
 }
