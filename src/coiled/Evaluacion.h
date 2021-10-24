@@ -24,10 +24,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include "Hash.h"
 #include "GeneradorDeMovimientos.h"
 
-#ifdef USAR_NNUE
-	#include "nnue.h"
-#endif
-
 /* Para crear el tablero contrario */
 int ESPEJO[] = {
   56, 57, 58, 59, 60, 61, 62, 63,
@@ -45,20 +41,20 @@ int ESPEJO[] = {
 #define FIN_ETAPA	 (9)			/* ETAPA Final */
 _Valor	PuntosCero = { 0, 0 };		/* Valor cero */
 
-_Valor PEONVALOR = {79, 127};
-_Valor CABALLOVALOR = {248, 275};
-_Valor ALFILVALOR = {253, 292};
-_Valor TORREVALOR = {355, 526};
-_Valor DAMAVALOR = {847, 939};
-_Valor REYVALOR = {0, 0};
+_Valor PEONVALOR = { 79, 127 };
+_Valor CABALLOVALOR = { 248, 275 };
+_Valor ALFILVALOR = { 253, 292 };
+_Valor TORREVALOR = { 355, 526 };
+_Valor DAMAVALOR = { 847, 939 };
+_Valor REYVALOR = { 0, 0 };
 
 enum eHorizontal
 {
-    HORIZONTAL_1, HORIZONTAL_2, HORIZONTAL_3, HORIZONTAL_4, HORIZONTAL_5, HORIZONTAL_6, HORIZONTAL_7, HORIZONTAL_8
+	HORIZONTAL_1, HORIZONTAL_2, HORIZONTAL_3, HORIZONTAL_4, HORIZONTAL_5, HORIZONTAL_6, HORIZONTAL_7, HORIZONTAL_8
 };
 enum eVertical
 {
-    COLUMNA_A, COLUMNA_B, COLUMNA_C, COLUMNA_D, COLUMNA_E, COLUMNA_F, COLUMNA_G, COLUMNA_H
+	COLUMNA_A, COLUMNA_B, COLUMNA_C, COLUMNA_D, COLUMNA_E, COLUMNA_F, COLUMNA_G, COLUMNA_H
 };
 enum {
 	NEGRAS, BLANCAS
@@ -76,10 +72,8 @@ void EvaluarAlFil(int Turno);
 void EvaluarTorre(int Turno);
 void EvaluarDama(int Cs, int Turno);
 void EvaluarSeguridadRey(int Turno);
-void EvaluarSeguridadReyPeon(int Turno);
 int ProteccionPeonesReyShelter(int Cl, int Turno);
 int ProteccionPeonesReyStorm(int Cl, int Turno);
-void EvaluarAjustePiezas();
 void EvaluarComplejidad(_Valor *puntos);
 
 typedef struct tag_Evaluacion {
@@ -144,11 +138,10 @@ _Valor PEON_RETRASADO[8] = {
 int COLUMNA_ABIERTA_SHELTER[8] = { -6, -5, -4, -4, -4, -4, -5, -6 };
 int COLUMNA_SEMI_ABIERTA_SHELTER[8] = { -5, -4, -3, -3, -3, -3, -4, -5 };
 int COLUMNA_STORM[8] = { 0, 0, -3, -2, -1, 0, 0, 0 };
-
 _Valor SEGURIDAD_REY_ATAQUE_PIEZAS[5] = {
 	{0, 0}, {48,  41}, {24,  35}, {36,   8}, {30,   6}
 };
-_Valor SEGURIDAD_REY_ATAQUES = { 45, 34 };
+_Valor SEGURIDAD_REY_ATAQUES_ZONA = { 45, 34 };
 _Valor SEGURIDAD_REY_CABALLO_JAQUE = { 112, 117 };
 _Valor SEGURIDAD_REY_ALFIL_JAQUE = { 59,  59 };
 _Valor SEGURIDAD_REY_TORRE_JAQUE = { 90,  98 };

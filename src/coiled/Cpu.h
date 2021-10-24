@@ -17,7 +17,7 @@ typedef struct tag_CPU
 	int AVX2;
 } _ST_Cpu;
 
-void ObtenerCpu(_ST_Cpu* Cpu);
+void ObtenerCpu(_ST_Cpu *Cpu);
 
 #endif
 #endif

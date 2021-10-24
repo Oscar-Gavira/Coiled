@@ -233,11 +233,8 @@ typedef struct tag_Puntos {
 	int PosicionDama[8];				/* Se van anadiendo segun se encuentren. ( Si solo hay dos dama estaran en [0] y [1] ). Valor = Indice del vector. Valor vacio = -1  - Utilizado para finales especiales */
 	int PosicionPeon[8];				/* Se van anadiendo segun se encuentran. Valor = Indice del vector. Valor vacio = -1 */
 	int PeonDoblados[8];				/* Almacena un valor por cada columna del vector (Horizontal A... H). Detectando si hay peones doblados siendo el valor > 1 doblado. Valor vacio 0 */
-	int PeonColumnaAbierta;				/* Numero de peones en columna abierta */
 	int GrupoPeonesQ;					/* Indica si hay peones en la columna a,b,c,d. */
 	int GrupoPeonesK;					/* Indica si hay peones en la columna e,f,g,h. */
-	int PeonCuadroColorB;				/* Indica cuantos peones estan en cuadros blancos */
-	int PeonCuadroColorN;				/* Indica cuantos peones estan en cuadros negro */
 
 	/* Seguridad del rey */
 	int ReyCuadrosAtacando;				/* Numero de cuadros atacando al rededor del rey */
