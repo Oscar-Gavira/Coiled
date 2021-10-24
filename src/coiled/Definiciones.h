@@ -60,6 +60,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include <limits.h>														/* Valores maximos y minimos de cada tipo de variable int, short, char...*/
 #include <inttypes.h>													/* Los formatos para imprimir un string, int, U32, U64... %d, %s, llu... */
 #include <math.h>														/* log(x) */
+#include <cpuid.h>
 #include <unistd.h>														/* Necesario para vincular librerias, SqliIte y TbProbe y EntradaStdIn() */
 #include <sys/time.h>													/* Tiempo */
 #include <dlfcn.h>
