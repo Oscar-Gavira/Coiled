@@ -2,7 +2,7 @@
 #define DLL_EXPORT
 #include "egbbdll.h"
 #undef DLL_EXPORT
-
+#include <ctype.h>
 /*
 globals
 */
