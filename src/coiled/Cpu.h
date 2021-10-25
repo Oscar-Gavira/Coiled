@@ -5,7 +5,7 @@
 
 #ifdef USAR_NNUE
 
-#ifdef _WIN32
+#ifdef _MSC_VER
     #include <intrin.h>
 #endif
 
