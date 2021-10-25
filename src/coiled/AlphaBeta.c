@@ -385,8 +385,8 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 				if (puntos < 0)
 					tbResultado = TB_LOSS;
 
-				hPuntos = puntos < 0 ? beta += 500 + Ply
-					: puntos > 0 ? beta -= 500 + Ply: 0;
+				hPuntos = tbResultado == TB_LOSS ? beta += 500 + Ply
+					: tbResultado == TB_WIN ? beta -= 500 + Ply: 0;
 
 				hFlag = tbResultado == TB_LOSS ? TT_ALPHA
 					: tbResultado == TB_WIN ? TT_BETA : TT_EXACTO;
@@ -395,8 +395,6 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 					|| (hFlag == TT_BETA && hPuntos >= beta)
 					|| (hFlag == TT_ALPHA && hPuntos <= alpha)) 
 				{
-					ConvertirValorTT(&hPuntos);
-					AlmacenarPosicion(depth, hPuntos, VALOR_TB_VACIO, hFlag, TableroGlobal.Estado[Ply - 1].Movimiento);
 					return hPuntos;
 				}
 			}
@@ -432,17 +430,15 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 				TablaDeFinales.Acierto++;
 
 				hPuntos = tbResultado == TB_LOSS ? beta += 500 + Ply
-					: tbResultado == TB_LOSS ? beta -= 500 + Ply : 0;
+					: tbResultado == TB_WIN ? beta -= 500 + Ply : 0;
 
 				hFlag = tbResultado == TB_LOSS ? TT_ALPHA
-					: tbResultado == TB_LOSS ? TT_BETA : TT_EXACTO;
+					: tbResultado == TB_WIN ? TT_BETA : TT_EXACTO;
 
 				if (hFlag == TT_EXACTO
 					|| (hFlag == TT_BETA && hPuntos >= beta)
 					|| (hFlag == TT_ALPHA && hPuntos <= alpha))
 				{
-					ConvertirValorTT(&hPuntos);
-					AlmacenarPosicion(depth, hPuntos, VALOR_TB_VACIO, hFlag, TableroGlobal.Estado[Ply - 1].Movimiento);
 					return hPuntos;
 				}
 			}
@@ -488,8 +484,8 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 				if (puntos < 0)
 					tbResultado = TB_LOSS;
 
-				hPuntos = puntos < 0 ? beta += 500 + Ply
-					: puntos > 0 ? beta -= 500 + Ply : 0;
+				hPuntos = tbResultado == TB_LOSS ? beta += 500 + Ply
+					: tbResultado == TB_WIN ? beta -= 500 + Ply : 0;
 
 				hFlag = tbResultado == TB_LOSS ? TT_ALPHA
 					: tbResultado == TB_WIN ? TT_BETA : TT_EXACTO;
@@ -498,8 +494,6 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 					|| (hFlag == TT_BETA && hPuntos >= beta)
 					|| (hFlag == TT_ALPHA && hPuntos <= alpha))
 				{
-					ConvertirValorTT(&hPuntos);
-					AlmacenarPosicion(depth, hPuntos, VALOR_TB_VACIO, hFlag, TableroGlobal.Estado[Ply - 1].Movimiento);
 					return hPuntos;
 				}
 			}
