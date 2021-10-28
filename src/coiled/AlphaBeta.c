@@ -406,6 +406,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 			if (Probar_gaviota(&puntos, &Ply) != TBUNKNOWN)
 			{
 				TablaDeFinales.Acierto++;
+				TipoJuego.DepthAct = TipoJuego.MaxDepth;/* Si hay resultado. Paramos la busqueda. */
 				return puntos;
 			}
 		}

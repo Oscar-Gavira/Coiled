@@ -687,7 +687,6 @@ void Position_Fen_Startpos(char *ptr)
 
 	LimpiarPuntuacion(true);
 	memset(contenedor, 0, MAX_DIR * sizeof(char));
-	TipoJuego.NJugadasTotales = 0;
 	TableroGlobal.Regla_50_Movimiento = 0;
 #ifdef USAR_HASH_TB
 	TableroGlobal.Hply = 0;
@@ -756,9 +755,9 @@ void Position_Fen_Startpos(char *ptr)
 	{
 		/* Reiniciamos el libro de aperturas */
 #ifdef USAR_SQLITE
-		if (*ptr != '\0' && LibroSql.Dll_Cargada == true)
+		if (*ptr != '\0' && LibroSql.Dll_Cargada == true && LibroSql.UsarLibro == true)
 		{
-			ptr++;
+			if (ptr[0] == ' ') ptr++;
 			ListaJugadas(ptr, strlen(ptr));
 		}
 #endif
@@ -766,7 +765,7 @@ void Position_Fen_Startpos(char *ptr)
 		{
 			memset(contenedor, 0, MAX_DIR * sizeof(char));
 			SplitString(ptr, contenedor, MAX_DIR);
-			if (contenedor == '\0' || contenedor[0] == '\0')
+			if (*contenedor == '\0' || contenedor[0] == '\0')
 			{
 				break;
 			}
@@ -960,12 +959,9 @@ void InicioBusqueda(char *ptr) {
 	{
 		TipoJuego.MaxDepth = (MAX_PLY / 2);
 		TipoJuego.Activo = true;
-		TipoJuego.NJugadasTotales = NJugadasTotales;
-		if (TipoJuego.NJugadasTotales == 0)
-		{
-			TipoJuego.NJugadasTotales = 1;
-		}
-		TipoJuego.Tiempo = (time / TipoJuego.NJugadasTotales) + (inc * 0.6);
+		/* Modo repetitivo. De lo contrario pierde por tiempo si NJugadasTotales == 0 */
+		if (NJugadasTotales == 0) NJugadasTotales = 1;
+		TipoJuego.Tiempo =(0.99 * time / NJugadasTotales) + inc;
 		Ok = true;
 	}
 	/**************************************************************************************************
@@ -977,44 +973,15 @@ void InicioBusqueda(char *ptr) {
 	{
 		TipoJuego.MaxDepth = (MAX_PLY / 2);
 		TipoJuego.Activo = true;
-
-		TipoJuego.NJugadasTotales = 130 - TipoJuego.NJugadasTotales;
-
-		if (TipoJuego.NJugadasTotales < 2)
+		/* Blitz, bullet, ultra bullet. Admite 0'+15" partida completa. */
+		if (time == 0)
 		{
-			TipoJuego.NJugadasTotales = 2;
+			time = inc;
+			inc = 0;
 		}
 
-		if (time > 10000 && time < 20000) /* entre 10 y 20 segundos. Reducimos el tiempo. */
-		{
-			TipoJuego.Tiempo = (time / TipoJuego.NJugadasTotales) + inc;
-			if (TipoJuego.Tiempo < 1000)
-			{
-				if (inc)
-				{
-					TipoJuego.Tiempo = inc;
-				}
-				else
-				{
-					TipoJuego.Tiempo = 1000;
-				}
-			}
-		}
-		else if (time < 10000) /* menor de 10 segundos. Reducimos el tiempo mas. */
-		{
-			if (inc)
-			{
-				TipoJuego.Tiempo = inc;
-			}
-			else
-			{
-				TipoJuego.Tiempo = 500;
-			}
-		}
-		else
-		{
-			TipoJuego.Tiempo = time / TipoJuego.NJugadasTotales + 250 + inc;
-		}
+		TipoJuego.Tiempo = (0.95 * time + (24 * inc)) / 50;
+
 		Ok = true;
 	}
 
@@ -1143,7 +1110,6 @@ void UciNewGame()
 	TipoJuego.Inicio = 0;
 	TipoJuego.Interrumpir = false;
 	TipoJuego.MaxDepth = (MAX_PLY / 2);
-	TipoJuego.NJugadasTotales = 0;
 	strcpy(buffer, START_POS);
 	Position_Fen_Startpos(buffer);
 }

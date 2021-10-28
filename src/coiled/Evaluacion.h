@@ -135,17 +135,15 @@ _Valor PEON_RETRASADO[8] = {
 };
 
 /******************************** SEGURIDAD REY *************************************************/
-int COLUMNA_ABIERTA_SHELTER[8] = { -6, -5, -4, -4, -4, -4, -5, -6 };
-int COLUMNA_SEMI_ABIERTA_SHELTER[8] = { -5, -4, -3, -3, -3, -3, -4, -5 };
+int COLUMNA_SEMI_ABIERTA_SHELTER[8] = { -2, -2, -1, -1, -1, -1, -2, -2 };
 int COLUMNA_STORM[8] = { 0, 0, -3, -2, -1, 0, 0, 0 };
-_Valor SEGURIDAD_REY_ATAQUE_PIEZAS[5] = {
-	{0, 0}, {48,  41}, {24,  35}, {36,   8}, {30,   6}
-};
-_Valor SEGURIDAD_REY_ATAQUES_ZONA = { 45, 34 };
-_Valor SEGURIDAD_REY_CABALLO_JAQUE = { 112, 117 };
+
+_Valor SEGURIDAD_REY_ATAQUE_PIEZAS[5] = { {0, 0}, {48,  41}, {24,  35}, {36,   8}, {30,   6} };
+_Valor SEGURIDAD_REY_ATAQUES_ZONA = { 45, 24 };
+_Valor SEGURIDAD_REY_CABALLO_JAQUE = { 112, 112 };
 _Valor SEGURIDAD_REY_ALFIL_JAQUE = { 59,  59 };
-_Valor SEGURIDAD_REY_TORRE_JAQUE = { 90,  98 };
-_Valor SEGURIDAD_REY_DAMA_JAQUE = { 93,  83 };
+_Valor SEGURIDAD_REY_TORRE_JAQUE = { 98,  98 };
+_Valor SEGURIDAD_REY_DAMA_JAQUE = { 83,  83 };
 _Valor SEGURIDAD_REY_DAMA_ENEMIGA = { -237,-259 };
 
 /******************************* PUNTOS EXTRAS *************************************************/
@@ -157,7 +155,7 @@ _Valor TORRE_EN_SEPTIMA = { 18, 0 };
 
 int COMPLEJIDAD_PEONES_TOTALES = 8;
 int COMPLEJIDAD_PEONES_AMBOS_LADOS = 82;
-int COMPLEJIDAD_PEONES_FINALES = 76;
+int COMPLEJIDAD_PEONES_FINALES = 74;
 int COMPLEJIDAD_AJUSTE = -157;
 
 #endif

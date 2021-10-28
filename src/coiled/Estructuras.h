@@ -173,7 +173,6 @@ typedef struct tag_TipoJuego
 	int MaxDepth;						/* Maxima profundidad. Busqueda tipo go depth 15*/
 	int DepthAct;						/* Depth actual */
 	U64 Nodos;							/* Nodos totales */
-	U64 NJugadasTotales;				/* Numero de jugadas totales a dividir por el tiempo total del juego */
 	int MejorJugada;					/* Mejor jugada */
 	int MejorJugadaAdv;					/* Mejor jugada para el adversario */
 	int MostrarVp;						/* Muestra la variante principal de tres formas: 0 = Nada, 1 = Mixto o 2 = Entero */

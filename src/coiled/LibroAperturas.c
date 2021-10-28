@@ -139,7 +139,7 @@ int ComprobarAccesoLibro()
 
 void ListaJugadas(char *_Jugadas, int longitud)
 {
-	if (!LibroSql.FinVariacion && LibroSql.UsarLibro)
+	if (!LibroSql.FinVariacion)
 	{
 		memset(LibroSql.Apertura, 0, (MAX_LONG + 1) * sizeof(char));
 		if (strlen(_Jugadas) < (size_t)LibroSql.LimiteJugadas * 10)

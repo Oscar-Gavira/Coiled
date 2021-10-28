@@ -52,17 +52,7 @@ int Evaluar()
 #ifdef USAR_NNUE
 	if (Nnue.Dll_Cargada == true && Nnue.Usar == true)
 	{
-		puntos = ProbarNNUE();
-
-		if (TableroGlobal.Regla_50_Movimiento > 70)
-		{
-			if (puntos * (101 - TableroGlobal.Regla_50_Movimiento) != 0)
-				puntos = puntos * (101 - TableroGlobal.Regla_50_Movimiento) / 30;
-			else
-				puntos = 0;
-		}
-
-		return puntos;
+		return ProbarNNUE();
 	}
 #endif
 
@@ -335,9 +325,7 @@ void EvaluarPeones(int Turno)
 
 	int pPeon = Turno ? PeonB : PeonN;
 	int pPeonOp = Turno ? PeonN : PeonB;
-	//int PosicionReyOp = Turno ? TableroGlobal.PosicionReyN : TableroGlobal.PosicionReyB;
 	_ST_Puntos *TempColor = Turno ? &Blancas : &Negras;
-	//_ST_Puntos *TempColorOp = Turno ? &Negras : &Blancas;
 
 	if (!Turno)
 	{
@@ -377,11 +365,6 @@ void EvaluarPeones(int Turno)
 			}
 		}
 
-		//if (Columna > ColumnaBorde[0] && Columna < ColumnaBorde[1])
-		//	if (TableroGlobal.Tablero[Cs + DireccionPeon[0]] == PosicionReyOp) TempColorOp->ReyCuadrosAtacando += 1;
-		//if (Columna > ColumnaBorde[2] && Columna < ColumnaBorde[3])
-		//	if (TableroGlobal.Tablero[Cs + DireccionPeon[2]] == PosicionReyOp) TempColorOp->ReyCuadrosAtacando += 1;
-				
 		if (Columna <= COLUMNA_D)
 			TempColor->GrupoPeonesQ++;
 		else
@@ -782,28 +765,23 @@ void EvaluarSeguridadRey(int Turno)
 	_ST_Puntos *TempColorOp = Turno ? &Negras : &Blancas;
 
 	int PosicionRey = Turno ? TableroGlobal.PosicionReyB : TableroGlobal.PosicionReyN;
-	int ColumnaRey = COLUMNA(PosicionRey);
-	int AuxColumna = -1;
+	int ColumnaRey = MIN(6, MAX(1, COLUMNA(PosicionRey))); /* Columna entre 1 y 6 */
 	int Columna = 0;
 	int Shelter = 0;
 	int Storm = 0;
 	int Puntos = 0;
 
-	/* Posicion del rey entre la columna 1 y 6 para evitar que se salga del tablero */
-	for (Columna = MAX(1, ColumnaRey - 1); Columna <= MIN(6, ColumnaRey + 1); Columna++)
+	for (Columna = ColumnaRey - 1; Columna <= ColumnaRey + 1; Columna++)
 	{
-		Shelter = ProteccionPeonesReyShelter(Columna + AuxColumna, Turno);
-		Storm = ProteccionPeonesReyStorm(Columna + AuxColumna, Turno);
+		Shelter = ProteccionPeonesReyShelter(Columna, Turno);
+		Storm = ProteccionPeonesReyStorm(Columna, Turno);
 
-		Puntos += (Shelter != 7 || Storm != 7) ? 0 : COLUMNA_ABIERTA_SHELTER[Columna];
 		Puntos += (Shelter == 7 && Storm != 7) ? COLUMNA_SEMI_ABIERTA_SHELTER[Columna] : 0;
-		Puntos += Storm != 7 ? COLUMNA_STORM[Storm] : 0;
-
-		if (Puntos != 0) TempColor->Puntos.Apertura += Puntos;
-		if (Puntos != 0) TempColor->Puntos.Final += Puntos;
-
-		AuxColumna++;
+		Puntos += COLUMNA_STORM[Storm];
 	}
+	if (Puntos != 0) TempColor->Puntos.Apertura += Puntos * 0.8;
+	if (Puntos != 0) TempColor->Puntos.Final += Puntos;
+
 
 	if (TempColor->ReyAtaquesPiezas > 1 - TempColor->DamasTotales)
 	{
@@ -828,14 +806,18 @@ void EvaluarSeguridadRey(int Turno)
 	}
 }
 
-int ProteccionPeonesReyShelter(int Cs, int Turno)
+int ProteccionPeonesReyShelter(int Cl, int Turno)
 {
 	int x = 0;
 	int pPeon = Turno ? PeonB : PeonN;
 	int DireccionPeon = Turno ? -8 : 8;
-	Cs = Turno ? 56 + Cs : Cs; /* Empezamos a buscar desde el inicio de la columna. */
+	_ST_Puntos *TempColor = Turno ? &Blancas : &Negras;
+	
+	if (TempColor->PeonDoblados[Cl] == 0) return 7; /* No hay peon Shelter */
 
-	for (x = Cs + DireccionPeon; x > -1 && x < 64; x = x + DireccionPeon)
+	Cl = Turno ? 56 + Cl : Cl; /* Empezamos a buscar desde el inicio de la columna. */
+
+	for (x = Cl + DireccionPeon; x > -1 && x < 64; x = x + DireccionPeon)
 	{
 		if (TableroGlobal.Tablero[x] == pPeon)
 		{
@@ -845,14 +827,18 @@ int ProteccionPeonesReyShelter(int Cs, int Turno)
 	}
 	return 7;
 }
-int ProteccionPeonesReyStorm(int Cs, int Turno)
+int ProteccionPeonesReyStorm(int Cl, int Turno)
 {
 	int x = 0;
 	int pPeonOp = Turno ? PeonN : PeonB;
 	int DireccionPeon = Turno ? -8 : 8;
-	Cs = Turno ? 56 + Cs : Cs; /* Empezamos a buscar desde el inicio de la columna. */
+	_ST_Puntos *TempColorOp = Turno ? &Negras : &Blancas;
 
-	for (x = Cs + DireccionPeon; x > -1 && x < 64; x = x + DireccionPeon)
+	if (TempColorOp->PeonDoblados[Cl] == 0) return 7; /* No hay peon adversario storm */
+
+	Cl = Turno ? 56 + Cl : Cl; /* Empezamos a buscar desde el inicio de la columna. */
+
+	for (x = Cl + DireccionPeon; x > -1 && x < 64; x = x + DireccionPeon)
 	{
 		if (TableroGlobal.Tablero[x] == pPeonOp)
 		{
