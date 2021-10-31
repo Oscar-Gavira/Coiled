@@ -111,16 +111,19 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 		}
 	}
 
-	if (*ply > 0)
+	if (*ply > 0 && TableroGlobal.Estado[*ply - 1].Movimiento != NO_MOVIMIENTO)
 	{
-		PiezaCn = PIEZAMOVIDA(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
-		DestinoCn = CUADRADO_DESTINO(PiezaCn);
-		OrigenCn = CUADRADO_ORIGEN(PiezaCn);
-		if (PiezaCn > CasillaVacia)
-			PiezaCn = PiezaCn - 7;
-		
-		if (PiezaCn != NO_MOVIMIENTO)
+		PiezaCn = PIEZAMOVIDA(TableroGlobal.Estado[*ply - 1].Movimiento);
+		DestinoCn = CUADRADO_DESTINO(TableroGlobal.Estado[*ply - 1].Movimiento);
+		OrigenCn = CUADRADO_ORIGEN(TableroGlobal.Estado[*ply - 1].Movimiento);
+
+		if (PiezaCn > NO_MOVIMIENTO && PiezaCn < NoPieza)
+		{
+			if (PiezaCn > CasillaVacia)
+				PiezaCn = PiezaCn - 7;
+
 			HistoricoRefutacion[PiezaCn][OrigenCn][DestinoCn] = M;
+		}
 	}
 
 	for (i = 0; i < Nmov; i++)
@@ -169,22 +172,18 @@ int HistoricoEsMovimientoKillerMate(int *ply, int *M)
 
 int HistoricoMovimientoRefutacion()
 {
-	if (TableroGlobal.Ply > 0)
+	if (TableroGlobal.Ply - 1 && TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento != NO_MOVIMIENTO)
 	{
 		int PiezaCn = PIEZAMOVIDA(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
-		int DestinoCn = 0;
-		int OrigenCn = 0;
+		int DestinoCn = CUADRADO_DESTINO(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
+		int OrigenCn = CUADRADO_ORIGEN(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
 
-		if (PiezaCn != NO_MOVIMIENTO)
+		if (PiezaCn > NO_MOVIMIENTO && PiezaCn < NoPieza)
 		{
-			DestinoCn = CUADRADO_DESTINO(PiezaCn);
-			OrigenCn = CUADRADO_ORIGEN(PiezaCn);
-
 			if (PiezaCn > CasillaVacia)
 				PiezaCn = PiezaCn - 7;
 
-			if (PiezaCn != NO_MOVIMIENTO)
-				return HistoricoRefutacion[PiezaCn][OrigenCn][DestinoCn];
+			return HistoricoRefutacion[PiezaCn][OrigenCn][DestinoCn];
 		}
 	}
 	return NO_MOVIMIENTO;
