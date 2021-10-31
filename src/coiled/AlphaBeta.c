@@ -236,7 +236,7 @@ int AspirationWindows(int depth, int en_jaque, int PuntuacionAnterior)
 
 		if (puntos <= alpha)
 		{
-			if ((alpha + beta) != 0) beta = (alpha + beta) / 2; else beta = 0;
+			beta = (alpha + beta) * 0.5;
 			alpha = MAX(-VALOR_MATE, alpha - windows);
 			depth = depthOrg;
 		}

@@ -226,11 +226,7 @@ typedef struct tag_Puntos {
 	int DamasTotales;					/* Damas totales. */
 	_Valor Puntos;						/* Puntos totales. pst, movilidad, ataques, pareja de alfiles... */
 
-	int PosicionCaballo[8];				/* Se van anadiendo segun se encuentren. ( Si solo hay dos caballos estaran en [0] y [1] ). Valor = Indice del vector - Utilizado para finales especiales. Valor vacio = -1  */
-	int PosicionAlfil[8];				/* Se van anadiendo segun se encuentren. ( Si solo hay dos alfiles estaran en [0] y [1] ). Valor = Indice del vector. Valor vacio = -1  */
 	int PosicionTorre[8];				/* Se van anadiendo segun se encuentren. ( Si solo hay dos torres estaran en [0] y [1] ). Valor = Indice del vector. Valor vacio = -1  */
-	int PosicionDama[8];				/* Se van anadiendo segun se encuentren. ( Si solo hay dos dama estaran en [0] y [1] ). Valor = Indice del vector. Valor vacio = -1  - Utilizado para finales especiales */
-	int PosicionPeon[8];				/* Se van anadiendo segun se encuentran. Valor = Indice del vector. Valor vacio = -1 */
 	int PeonDoblados[8];				/* Almacena un valor por cada columna del vector (Horizontal A... H). Detectando si hay peones doblados siendo el valor > 1 doblado. Valor vacio 0 */
 	int GrupoPeonesQ;					/* Indica si hay peones en la columna a,b,c,d. */
 	int GrupoPeonesK;					/* Indica si hay peones en la columna e,f,g,h. */

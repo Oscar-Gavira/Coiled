@@ -48,6 +48,7 @@ int Evaluar()
 {
 	int puntos = 0;
 	_Valor pGlobal = PuntosCero;
+	int escalar = 100;
 
 #ifdef USAR_NNUE
 	if (Nnue.Dll_Cargada == true && Nnue.Usar == true)
@@ -67,8 +68,7 @@ int Evaluar()
 	/* Evaluamos material para detectar empate */
 	if (TableroGlobal.Etapa <= FIN_ETAPA)
 	{
-		/* Evaluar material insuficiente modo basico. */
-		if (EvaluarTablas())
+		if ( (escalar = FinalesReconocidos(Blancas.PeonTotales, Blancas.CaballosTotales, Blancas.AlfilTotales, Blancas.TorresTotales, Blancas.DamasTotales, Negras.PeonTotales, Negras.CaballosTotales, Negras.AlfilTotales, Negras.TorresTotales, Negras.DamasTotales)) == 0)
 		{
 			return VALOR_EMPATE;
 		}
@@ -80,10 +80,6 @@ int Evaluar()
 	/* Posicion de las piezas en el tablero */
 	EvaluarPuntosPst();
 
-	EvaluarPeones(BLANCAS);
-	EvaluarPeones(NEGRAS);
-	EvaluarAlFil(BLANCAS);
-	EvaluarAlFil(NEGRAS);
 	EvaluarTorre(BLANCAS);
 	EvaluarTorre(NEGRAS);
 	EvaluarSeguridadRey(BLANCAS);
@@ -100,6 +96,8 @@ int Evaluar()
 
 	/* Interpolar puntos de apertura y final */
 	puntos = Interpolar(&pGlobal);
+
+	puntos = puntos != 0 ? puntos * 100 / escalar : 0;
 
 	return Tempo + (TableroGlobal.MueveBlancas ? puntos : -puntos);
 }
@@ -170,16 +168,6 @@ void LimpiarPuntuacion(int todo)
 void EvaluarPuntosPst()
 {
 	int i = 0;
-	int PeB = 0;
-	int PeN = 0;
-	int AlfB = 0;
-	int AlfN = 0;
-	int TorB = 0;
-	int TorN = 0;
-	int CabB = 0;
-	int CabN = 0;
-	int DamB = 0;
-	int DamN = 0;
 
 	for (i = 0; i < 64; i++)
 	{
@@ -191,33 +179,30 @@ void EvaluarPuntosPst()
 
 		case PeonB:
 			SUMA(&Blancas.Puntos, &Evaluacion.PST[BLANCAS][PEON][i]);
-			Blancas.PosicionPeon[PeB++] = i;
-			Blancas.PeonDoblados[COLUMNA(i)]++;
 			Blancas.PeonTotales++;
+			Blancas.PeonDoblados[COLUMNA(i)]++;
+			EvaluarPeones(i, BLANCAS);
 			break;
 
 		case CaballoB:
 			SUMA(&Blancas.Puntos, &Evaluacion.PST[BLANCAS][CABALLO][i]);
-			Blancas.PosicionCaballo[CabB++] = i;
 			Blancas.CaballosTotales++;
 			EvaluarCaballo(i, BLANCAS);
 			break;
 
 		case AlfilB:
 			SUMA(&Blancas.Puntos, &Evaluacion.PST[BLANCAS][ALFIL][i]);
-			Blancas.PosicionAlfil[AlfB++] = i;
 			Blancas.AlfilTotales++;
+			EvaluarAlFil(i, BLANCAS);
 			break;
 
 		case TorreB:
 			SUMA(&Blancas.Puntos, &Evaluacion.PST[BLANCAS][TORRE][i]);
-			Blancas.PosicionTorre[TorB++] = i;
-			Blancas.TorresTotales++;
+			Blancas.PosicionTorre[Blancas.TorresTotales++] = i;
 			break;
 
 		case DamaB:
 			SUMA(&Blancas.Puntos, &Evaluacion.PST[BLANCAS][DAMA][i]);
-			Blancas.PosicionDama[DamB++] = i;
 			Blancas.DamasTotales++;
 			EvaluarDama(i, BLANCAS);
 			break;
@@ -228,33 +213,30 @@ void EvaluarPuntosPst()
 
 		case PeonN:
 			SUMA(&Negras.Puntos, &Evaluacion.PST[NEGRAS][PEON][i]);
-			Negras.PosicionPeon[PeN++] = i;
-			Negras.PeonDoblados[COLUMNA(i)]++;
 			Negras.PeonTotales++;
+			Negras.PeonDoblados[COLUMNA(i)]++;
+			EvaluarPeones(i, NEGRAS);
 			break;
 
 		case CaballoN:
 			SUMA(&Negras.Puntos, &Evaluacion.PST[NEGRAS][CABALLO][i]);
-			Negras.PosicionCaballo[CabN++] = i;
 			Negras.CaballosTotales++;
 			EvaluarCaballo(i, NEGRAS);
 			break;
 
 		case AlfilN:
 			SUMA(&Negras.Puntos, &Evaluacion.PST[NEGRAS][ALFIL][i]);
-			Negras.PosicionAlfil[AlfN++] = i;
 			Negras.AlfilTotales++;
+			EvaluarAlFil(i, NEGRAS);
 			break;
 
 		case TorreN:
 			SUMA(&Negras.Puntos, &Evaluacion.PST[NEGRAS][TORRE][i]);
-			Negras.PosicionTorre[TorN++] = i;
-			Negras.TorresTotales++;
+			Negras.PosicionTorre[Negras.TorresTotales++] = i;
 			break;
 
 		case DamaN:
 			SUMA(&Negras.Puntos, &Evaluacion.PST[NEGRAS][DAMA][i]);
-			Negras.PosicionDama[DamN++] = i;
 			Negras.DamasTotales++;
 			EvaluarDama(i, NEGRAS);
 			break;
@@ -295,10 +277,95 @@ void EvaluarComplejidad(_Valor *puntos)
 
 	puntos->Final += v;
 }
-
-void EvaluarPeones(int Turno)
+int FinalesReconocidos(int bPeon, int bCaballo, int bAlfil, int bTorre, int bDama, int nPeon, int nCaballo, int nAlfil, int nTorre, int nDama)
 {
-	int indice, x;
+	int bTotal = bPeon + bCaballo + bAlfil + bTorre + bDama;
+	int nTotal = nPeon + nCaballo + nAlfil + nTorre + nDama;
+	int total = bTotal + nTotal;
+	int ratio = 100;
+
+	if (bTotal <= 1 && nTotal <= 1)
+	{
+		/* Material insuficiente */
+		if (bTotal == 0 && total == 1)
+			ratio = 0; // KK							ETAPA = 1
+		if (bAlfil == 1 && total == 1)
+			ratio = 0; // KBK							ETAPA = 1
+		if (nAlfil == 1 && total == 1)
+			ratio = 0; // KKB							ETAPA = 1
+		if (bCaballo == 1 && total == 1)
+			ratio = 0; // KNK							ETAPA = 1
+		if (nCaballo == 1 && total == 1)
+			ratio = 0; // KKN							ETAPA = 1
+		if (bCaballo == 1 && nCaballo == 1)
+			ratio = 0; // KNKN							ETAPA = 2
+		if (bAlfil == 1 && nAlfil == 1)
+			ratio = 0; // KBKB							ETAPA = 2
+		if (bCaballo == 1 && nAlfil == 1)
+			ratio = 0; // KNKB							ETAPA = 2
+		if (bAlfil == 1 && nCaballo == 1)
+			ratio = 0; // KBKN							ETAPA = 2
+		if (bTorre == 1 && nTorre == 1)
+			ratio = 1; // KRKR							ETAPA = 2
+		if (bDama == 1 && nDama == 1)
+			ratio = 1; // KQKQ							ETAPA = 2
+		if (bAlfil == 1 && nPeon == 1)
+			ratio = 1; // KBKP							ETAPA = 2
+		if (bPeon == 1 && nAlfil == 1)
+			ratio = 1; // KPKB							ETAPA = 2
+		/* Especiales */
+		if (bCaballo == 1 && nPeon == 1)
+			ratio = 1; // KNKP							ETAPA = 1
+		if (bPeon == 1 && nCaballo == 1)
+			ratio = 1; // KPKN							ETAPA = 1
+		if (bTorre == 1 && nCaballo == 1)
+			ratio = 10; // KRKN							ETAPA = 2
+		if (bCaballo == 1 && nTorre == 1)
+			ratio = 10; // KNKR							ETAPA = 3
+		if (bTorre == 1 && nAlfil == 1)
+			ratio = 1; // KRKB							ETAPA = 3
+		if (bAlfil == 1 && nTorre == 1)
+			ratio = 1; // KBKR							ETAPA = 3
+		if (bDama == 1 && nTorre == 1)
+			ratio = 50; // KQKR							ETAPA = 6
+		if (bTorre == 1 && nDama == 1)
+			ratio = 50; // KQKR							ETAPA = 6
+	}
+	else if (bTotal <= 2 && nTotal <= 2)
+	{
+		/* Material insuficiente */
+		if (bCaballo == 2 && total == 2)
+			ratio = 1; // KNNK							ETAPA = 2
+		if (nCaballo == 2 && total == 2)
+			ratio = 1; // KKNN							ETAPA = 2
+		if (bCaballo == 2 && nCaballo == 1 && total == 3)
+			ratio = 1; // KNNKN							ETAPA = 3
+		if (bCaballo == 1 && nCaballo == 2 && total == 3)
+			ratio = 1; // KNKNN							ETAPA = 3
+		if (bCaballo == 2 && nAlfil == 1 && total == 3)
+			ratio = 1; // KNNKB							ETAPA = 3
+		if (bAlfil == 1 && nCaballo == 2 && total == 3)
+			ratio = 1; // KBKNN							ETAPA = 3
+		if (bAlfil == 2 && nTorre == 1 && total == 3)
+			ratio = 1; // KBBKR							ETAPA = 3
+		if (nAlfil == 2 && bTorre == 1 && total == 3)
+			ratio = 1; // KRKBB							ETAPA = 3
+		if (bTorre == 1 && bCaballo == 1 && nTorre == 1 && total == 3)	//ETAPA = 5
+			ratio = 3;	// KRNKR
+		if (nTorre == 1 && nCaballo == 1 && bTorre == 1 && total == 3)	//ETAPA = 5
+			ratio = 3;	// KRKRN
+		if (bTorre == 1 && bAlfil == 1 && nTorre == 1 && total == 3)	//ETAPA = 5
+			ratio = 6;	// KRBKR
+		if (nTorre == 1 && nAlfil == 1 && bTorre == 1 && total == 3)	//ETAPA = 5
+			ratio = 6;	// KRKRB
+	}
+
+	return ratio;
+}
+
+void EvaluarPeones(int Cs, int Turno)
+{
+	int x;
 	int abierto = false;
 	int pasado = false;
 	int aislado = false;
@@ -308,7 +375,6 @@ void EvaluarPeones(int Turno)
 	int conectado = false;
 	int Horizontal = 0;
 	int Columna = 0;
-	int Cs = 0;
 	int Atras = 0;
 
 	/* Estructura realizada */
@@ -334,49 +400,52 @@ void EvaluarPeones(int Turno)
 		DireccionPeon[2] = 9;
 	}
 
-	for (indice = 0; indice < TempColor->PeonTotales; indice++)
-	{
-		abierto = false;
-		pasado = false;
-		aislado = false;
-		retrasado = false;
-		retrasado2 = false;
-		doblado = false;
-		conectado = false;
-		Cs = TempColor->PosicionPeon[indice];
-		Horizontal = Turno ? HORIZONTAL(Cs) : 7 - HORIZONTAL(Cs);
-		Columna = COLUMNA(Cs);
-		Atras = Turno ? Horizontal * 8 + Cs : Cs - Horizontal * 8;
+	Horizontal = Turno ? HORIZONTAL(Cs) : 7 - HORIZONTAL(Cs);
+	Columna = COLUMNA(Cs);
+	Atras = Turno ? Horizontal * 8 + Cs : Cs - Horizontal * 8;
 
-		/* Detectamos peon abierto - No tiene ningun peon delante. */
-		abierto = true;
-		for (x = Cs + DireccionPeon[1]; x > -1 && x < 64; x = x + DireccionPeon[1])
+	/* Detectamos peon abierto - No tiene ningun peon delante. */
+	abierto = true;
+	for (x = Cs + DireccionPeon[1]; x > -1 && x < 64; x = x + DireccionPeon[1])
+	{
+		if (TableroGlobal.Tablero[x] == pPeonOp)
 		{
-			if (TableroGlobal.Tablero[x] == pPeonOp)
+			abierto = false;
+			break;
+		}
+		if (TableroGlobal.Tablero[x] == pPeon)
+		{
+			doblado = true;
+			abierto = false;
+			break;
+		}
+	}
+
+	if (Columna <= COLUMNA_D)
+		TempColor->GrupoPeonesQ++;
+	else
+		TempColor->GrupoPeonesK++;
+
+	/* Pasado */
+	if (abierto == true && pasado == false)
+	{
+		pasado = true;
+		if (Columna > ColumnaBorde[0] && Columna < ColumnaBorde[1])
+		{
+			for (x = Cs + DireccionPeon[0]; x > -1 && x < 64; x = x + DireccionPeon[1])
 			{
-				abierto = false;
-				break;
-			}
-			if (TableroGlobal.Tablero[x] == pPeon)
-			{
-				doblado = true;
-				abierto = false;
-				break;
+				if (TableroGlobal.Tablero[x] == pPeonOp)
+				{
+					pasado = false;
+					break;
+				}
 			}
 		}
-
-		if (Columna <= COLUMNA_D)
-			TempColor->GrupoPeonesQ++;
-		else
-			TempColor->GrupoPeonesK++;
-
-		/* Pasado */
-		if (abierto == true && pasado == false)
+		if (pasado == true)
 		{
-			pasado = true;
-			if (Columna > ColumnaBorde[0] && Columna < ColumnaBorde[1])
+			if (Columna > ColumnaBorde[2] && Columna < ColumnaBorde[3])
 			{
-				for (x = Cs + DireccionPeon[0]; x > -1 && x < 64; x = x + DireccionPeon[1])
+				for (x = Cs + DireccionPeon[2]; x > -1 && x < 64; x = x + DireccionPeon[1])
 				{
 					if (TableroGlobal.Tablero[x] == pPeonOp)
 					{
@@ -385,27 +454,27 @@ void EvaluarPeones(int Turno)
 					}
 				}
 			}
-			if (pasado == true)
+		}
+	}
+
+	/* Aislado */
+	aislado = true;
+	if (Columna > ColumnaBorde[2] && Columna < ColumnaBorde[3])
+	{
+		for (x = Atras + DireccionLado; x > -1 && x < 64; x = x + DireccionPeon[1])
+		{
+			if (TableroGlobal.Tablero[x] == pPeon)
 			{
-				if (Columna > ColumnaBorde[2] && Columna < ColumnaBorde[3])
-				{
-					for (x = Cs + DireccionPeon[2]; x > -1 && x < 64; x = x + DireccionPeon[1])
-					{
-						if (TableroGlobal.Tablero[x] == pPeonOp)
-						{
-							pasado = false;
-							break;
-						}
-					}
-				}
+				aislado = false;
+				break;
 			}
 		}
-
-		/* Aislado */
-		aislado = true;
-		if (Columna > ColumnaBorde[2] && Columna < ColumnaBorde[3])
+	}
+	if (aislado == true)
+	{
+		if (Columna > ColumnaBorde[0] && Columna < ColumnaBorde[1])
 		{
-			for (x = Atras + DireccionLado; x > -1 && x < 64; x = x + DireccionPeon[1])
+			for (x = Atras - DireccionLado; x > -1 && x < 64; x = x + DireccionPeon[1])
 			{
 				if (TableroGlobal.Tablero[x] == pPeon)
 				{
@@ -414,75 +483,61 @@ void EvaluarPeones(int Turno)
 				}
 			}
 		}
-		if (aislado == true)
+	}
+
+	/* Conectado, mirando hacia atras */
+	if (aislado == false)
+	{
+		if (Columna > ColumnaBorde[2] && Columna < ColumnaBorde[3])
 		{
-			if (Columna > ColumnaBorde[0] && Columna < ColumnaBorde[1])
+			if (TableroGlobal.Tablero[Cs + -DireccionPeon[0]] == pPeon)
 			{
-				for (x = Atras - DireccionLado; x > -1 && x < 64; x = x + DireccionPeon[1])
-				{
-					if (TableroGlobal.Tablero[x] == pPeon)
-					{
-						aislado = false;
-						break;
-					}
-				}
+				conectado = true;
 			}
 		}
-
-		/* Conectado, mirando hacia atras */
-		if (aislado == false)
+		if (Columna > ColumnaBorde[0] && Columna < ColumnaBorde[1])
 		{
-			if (Columna > ColumnaBorde[2] && Columna < ColumnaBorde[3])
+			if (TableroGlobal.Tablero[Cs + -DireccionPeon[2]] == pPeon)
 			{
-				if (TableroGlobal.Tablero[Cs + -DireccionPeon[0]] == pPeon)
-				{
-					conectado = true;
-				}
-			}
-			if (Columna > ColumnaBorde[0] && Columna < ColumnaBorde[1])
-			{
-				if (TableroGlobal.Tablero[Cs + -DireccionPeon[2]] == pPeon)
-				{
-					conectado = true;
-				}
+				conectado = true;
 			}
 		}
+	}
 
-		/* Retrasado */
-		if (conectado == false && aislado == false)
+	/* Retrasado */
+	if (conectado == false && aislado == false)
+	{
+		if (Columna > ColumnaBorde[0] && Columna < ColumnaBorde[1])
 		{
-			if (Columna > ColumnaBorde[0] && Columna < ColumnaBorde[1])
+			if (TableroGlobal.Tablero[Cs + DireccionPeon[0]] == pPeon)
 			{
-				if (TableroGlobal.Tablero[Cs + DireccionPeon[0]] == pPeon)
-				{
-					retrasado2++;
-				}
+				retrasado2++;
 			}
-			if (Columna > ColumnaBorde[2] && Columna < ColumnaBorde[3])
+		}
+		if (Columna > ColumnaBorde[2] && Columna < ColumnaBorde[3])
+		{
+			if (TableroGlobal.Tablero[Cs + DireccionPeon[2]] == pPeon)
 			{
-				if (TableroGlobal.Tablero[Cs + DireccionPeon[2]] == pPeon)
-				{
-					retrasado2++;
-				}
+				retrasado2++;
 			}
-
-			retrasado = (retrasado2 != 0) ? true : false;
 		}
 
-		/* Asignamos puntos */
-		if (doblado == true) {
-			SUMA(&TempColor->Puntos, &PENALIZACION_PEON_DOBLE[Columna]);
-		}
-		if (aislado) {
-			SUMA(&TempColor->Puntos, &PEON_AISLADO[Columna]);
-		}
-		else if (retrasado) {
-			SUMA(&TempColor->Puntos, &PEON_RETRASADO[Columna]);
-		}
+		retrasado = (retrasado2 != 0) ? true : false;
+	}
 
-		if (pasado) {
-			SUMA(&TempColor->Puntos, &PEON_PASADO[Horizontal]);
-		}
+	/* Asignamos puntos */
+	if (doblado == true) {
+		SUMA(&TempColor->Puntos, &PENALIZACION_PEON_DOBLE[Columna]);
+	}
+	if (aislado) {
+		SUMA(&TempColor->Puntos, &PEON_AISLADO[Columna]);
+	}
+	else if (retrasado) {
+		SUMA(&TempColor->Puntos, &PEON_RETRASADO[Columna]);
+	}
+
+	if (pasado) {
+		SUMA(&TempColor->Puntos, &PEON_PASADO[Horizontal]);
 	}
 }
 void EvaluarCaballo(int Cs, int Turno)
@@ -537,61 +592,54 @@ void EvaluarCaballo(int Cs, int Turno)
 	/* Movilidad del caballo */
 	SUMA(&TempColor->Puntos, &CABALLO_MOVILIDAD[mov]);
 }
-void EvaluarAlFil(int Turno)
+void EvaluarAlFil(int Cs, int Turno)
 {
-	int ii, destino, x, Cs;
+	int ii, destino;
 	int Mov_Al[4] = { -7, -9, 7, 9 };
 	int mov = 0;
 	int AttActivoUnaVez = false;
 
 	int pRey = Turno ? ReyB : ReyN;
 	int PosicionReyOp = Turno ? TableroGlobal.PosicionReyN : TableroGlobal.PosicionReyB;
-	_ST_Puntos *TempColor = Turno ? &Blancas : &Negras;
-	_ST_Puntos *TempColorOp = Turno ? &Negras : &Blancas;
+	_ST_Puntos* TempColor = Turno ? &Blancas : &Negras;
+	_ST_Puntos* TempColorOp = Turno ? &Negras : &Blancas;
 
-	for (x = 0; x < TempColor->AlfilTotales; x++)
+	for (ii = 0; ii < 4; ii++)
 	{
-		Cs = TempColor->PosicionAlfil[x];
-		mov = 0;
-		AttActivoUnaVez = false;
+		destino = Cs + Mov_Al[ii];
 
-		for (ii = 0; ii < 4; ii++)
+		while ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino])
 		{
-			destino = Cs + Mov_Al[ii];
+			/* Movilidad */
+			if (TableroGlobal.Tablero[destino] != pRey)
+				mov++;
 
-			while ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino])
+			/* Ataques - Seguridad del rey */
+			if (Distancia(destino, PosicionReyOp) == 1)
 			{
-				/* Movilidad */
-				if (TableroGlobal.Tablero[destino] != pRey)
-					mov++;
-
-				/* Ataques - Seguridad del rey */
-				if (Distancia(destino, PosicionReyOp) == 1)
+				TempColorOp->ReyCuadrosAtacando += 1;
+				if (AttActivoUnaVez == false)
 				{
-					TempColorOp->ReyCuadrosAtacando += 1;
-					if (AttActivoUnaVez == false)
-					{
-						TempColorOp->ReyAtaquesPiezas++;
-						SUMA(&TempColorOp->ReyAtaquesValor, &SEGURIDAD_REY_ATAQUE_PIEZAS[ALFIL]);
-					}
-					AttActivoUnaVez = true;
+					TempColorOp->ReyAtaquesPiezas++;
+					SUMA(&TempColorOp->ReyAtaquesValor, &SEGURIDAD_REY_ATAQUE_PIEZAS[ALFIL]);
 				}
-				if (Distancia(destino, PosicionReyOp) == 0)
-				{
-					TempColorOp->ReyCuadrosAtacando += 1;
-					TempColorOp->ReyJaquePieza[ALFIL] = true;
-					TempColorOp->ReyJaque = true;
-				}
-
-				if (TableroGlobal.Tablero[destino] != CasillaVacia) break;
-
-				destino += Mov_Al[ii];
+				AttActivoUnaVez = true;
 			}
-		}
+			if (Distancia(destino, PosicionReyOp) == 0)
+			{
+				TempColorOp->ReyCuadrosAtacando += 1;
+				TempColorOp->ReyJaquePieza[ALFIL] = true;
+				TempColorOp->ReyJaque = true;
+			}
 
-		/* Movilidad */
-		SUMA(&TempColor->Puntos, &ALFIL_MOVILIDAD[mov]);
+			if (TableroGlobal.Tablero[destino] != CasillaVacia) break;
+
+			destino += Mov_Al[ii];
+		}
 	}
+
+	/* Movilidad */
+	SUMA(&TempColor->Puntos, &ALFIL_MOVILIDAD[mov]);
 }
 void EvaluarTorre(int Turno)
 {
@@ -650,8 +698,7 @@ void EvaluarTorre(int Turno)
 					TempColorOp->ReyJaque = true;
 				}
 
-				if (TableroGlobal.Tablero[destino] != CasillaVacia)
-					break;
+				if (TableroGlobal.Tablero[destino] != CasillaVacia) break;
 
 				colorCs = TableroGlobal.TableroColor[destino];
 				destino += Mov_To[ii];
@@ -758,6 +805,7 @@ void EvaluarDama(int Cs, int Turno)
 	/* Movilidad del dama */
 	SUMA(&TempColor->Puntos, &DAMA_MOVILIDAD[mov]);
 }
+
 void EvaluarSeguridadRey(int Turno)
 {
 	_Valor PuntosAtaque = PuntosCero;
@@ -805,7 +853,6 @@ void EvaluarSeguridadRey(int Turno)
 		if (-MAX(0, PuntosAtaque.Final) != 0) TempColor->Puntos.Final += -MAX(0, PuntosAtaque.Final) / 20;
 	}
 }
-
 int ProteccionPeonesReyShelter(int Cl, int Turno)
 {
 	int x = 0;

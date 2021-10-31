@@ -38,7 +38,7 @@ int ESPEJO[] = {
 
 #define Distancia(a, b) MAX(ABS(HORIZONTAL(a) - HORIZONTAL(b)), ABS(COLUMNA(a) - COLUMNA(b)))
 #define MAX_ETAPA	(24)			/* ETAPA maximo */
-#define FIN_ETAPA	 (9)			/* ETAPA Final */
+#define FIN_ETAPA	 (6)			/* ETAPA Final */
 _Valor	PuntosCero = { 0, 0 };		/* Valor cero */
 
 _Valor PEONVALOR = { 79, 127 };
@@ -66,15 +66,16 @@ enum {
 inline void SUMA(_Valor *a, _Valor *b);
 void EvaluarPuntosPst();
 int Interpolar(_Valor *puntos);
-void EvaluarPeones(int Turno);
+void EvaluarPeones(int Cs, int Turno);
 void EvaluarCaballo(int Cs, int Turno);
-void EvaluarAlFil(int Turno);
+void EvaluarAlFil(int Cs, int Turno);
 void EvaluarTorre(int Turno);
 void EvaluarDama(int Cs, int Turno);
 void EvaluarSeguridadRey(int Turno);
 int ProteccionPeonesReyShelter(int Cl, int Turno);
 int ProteccionPeonesReyStorm(int Cl, int Turno);
 void EvaluarComplejidad(_Valor *puntos);
+int FinalesReconocidos(int bPeon, int bCacallo, int bAlfil, int bTorre, int bDama, int nPeon, int nCaballo, int nAlfil, int nTorre, int nDama);
 
 typedef struct tag_Evaluacion {
 	_Valor PST[2][6][64];
@@ -133,7 +134,6 @@ _Valor PEON_AISLADO[8] = {
 _Valor PEON_RETRASADO[8] = {
 {4, -2 }, {-3, -7 }, {-2, -13 }, {-21, -14 }, {-8, -7 }, {-7, -1 }, {-13, -1 }, {1, -3 }
 };
-
 /******************************** SEGURIDAD REY *************************************************/
 int COLUMNA_SEMI_ABIERTA_SHELTER[8] = { -2, -2, -1, -1, -1, -1, -2, -2 };
 int COLUMNA_STORM[8] = { 0, 0, -3, -2, -1, 0, 0, 0 };
