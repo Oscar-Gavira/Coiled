@@ -12,7 +12,8 @@
 | Código abierto             | Si                                |
 | Tipo de licencia           | GNU General Public License v3.0   |
 | Sistema operativo          | Windows y Linux. 32&64 bit        |
-| Ajedrez960 / Chess960      | Si.                               |
+| Representación del tablero | Mailbox. 8x8 unidimensional.      |
+| Ajedrez960 / FRC           | Si.                               |
 | Soporta redes neuronales   | Si. (NNUE)                        |
 | Tablas de finales          | Si. Syzygy, Gaviota y BitBases.   |
 | Libro de aperturas         | Si. Formato SqlIte                |
@@ -20,6 +21,10 @@
 | Ponder                     | No                                |
 | Multihilo                  | No                                |
 | ELO estimado               | ± 3250 NNUE. ± 2600 Interna.      |
+
+
+- Tablas de finales disponibles en internet. [http://oics.olympuschess.com/tracker/](http://oics.olympuschess.com/tracker/)
+
 
 ## 🚀 Introducción
 
@@ -78,7 +83,7 @@ Coiled-NNUE 0.7	± 3050 ELO.
 
 Coiled-NNUE 0.8 ± 3250 ELO.
 
-La versión actual de Coiled 1.0 calculo que alcanzara ± 2600 ELO Evaluación interna.
+Coiled 1.0 &#177; 2590 ELO Evaluación interna.
 
 - [CCRL (40/4)](http://ccrl.chessdom.com/ccrl/404/)
 
@@ -136,10 +141,13 @@ Estas opciones también están disponibles para el modo Chess960, solo has de ac
 * [Visual Studio](https://visualstudio.microsoft.com/es/)
 * MinGW 8.1 incluido en codeblocks.
 
-- Cada proyecto contiene un archivo .cbp que es el contenedor del proyecto para ser editados/compilados mediante codeblocks.
 - Puede usar cualquier otro editor, al igual que puede usar otro compilador. 
 - Para compilar en linux: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile)
-- Formas de compilar: make o make BIT=64 o make help
+- Formas de compilar: make help
+- Para compilar en Windows 32 bit: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile) con [codeblocks](https://github.com/Oscar-Gavira/Coiled/blob/master/src/Coiled_Windows_x86.cbp)
+- Para compilar en Windows 64 bit: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile) con [codeblocks](https://github.com/Oscar-Gavira/Coiled/blob/master/src/Coiled_Windows_x64.cbp)
+
+
 
 
 ## 📄 Licencia
@@ -169,7 +177,7 @@ Estoy muy agradecido a las siguientes personas:
 
 - A los archivos de rendimientos .epd de posiciones estratégicas tipo: WAC, IQ6, mes400... En especial a la web [https://sites.google.com/site/strategictestsuite/](https://sites.google.com/site/strategictestsuite/)
 
-- A la web [CCRL 40/4](http://www.computerchess.org.uk/ccrl/404/) y a [CEGT 40/4](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html), por realizar un torneo y darle una clasificación de ELO.
+- A la web [CCRL 40/4](http://www.computerchess.org.uk/ccrl/404/), [CEGT 40/4](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html), [Chess Engines Diary](https://chessengines.blogspot.com/) por realizar un torneo y darle una clasificación de ELO.
 
 - A toda web que haya publicado una clasificación ELO o/y haya añadido un enlace a mi web.
 
