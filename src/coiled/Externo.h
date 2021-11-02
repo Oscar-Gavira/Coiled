@@ -47,7 +47,7 @@ extern void Position_Fen_Startpos(char* ptr);			    /* Carga una posicion FEN */
 /************************************************************************************
                     Metodos externos AlphaBeta.c
 ************************************************************************************/
-extern void A_Inicio(int full);							    /* Reinicia variables utilizados en el arbol AlphaBeta */
+extern void A_Inicio(int Reiniciar);                        /* Reinicia variables utilizados en el arbol AlphaBeta */
 extern void Buscar();									    /* Inicializa la busqueda AlphaBeta */
 extern void Iniciar_AlphaBeta();                            /* Inicia un vector para las reducciones en la busqueda */
 

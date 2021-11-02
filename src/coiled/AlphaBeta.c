@@ -67,7 +67,7 @@ void Iniciar_AlphaBeta()
 #endif
 }
 
-void A_Inicio(int full)
+void A_Inicio(int Reiniciar)
 {
 	int i = 0;
 	int y = 0;
@@ -86,10 +86,10 @@ void A_Inicio(int full)
 		vp_terminada[i] = 0;
 	}
 
-	HistoricoIniciar();
+	HistoricoIniciar(Reiniciar);
 
 #ifdef USAR_HASH_TB
-	if (full == true)
+	if (Reiniciar == true)
 	{
 		LimpiarTransposicion();
 	}

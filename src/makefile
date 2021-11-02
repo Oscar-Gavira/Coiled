@@ -69,7 +69,7 @@ VERSION = 1.1
 ifeq ($(WINDOWS),false)
 LIBS = -lm -ldl
 else
-LIBS = -lm -s
+LIBS = -lm
 endif
 
 ifeq ($(BIT),64)
@@ -85,7 +85,7 @@ EGBB = libegbb
 EGBBLIBS = -lm -shared
 else
 EGBB = egbb
-EGBBLIBS = -lm -shared -static -s
+EGBBLIBS = -lm -shared -static
 endif
 
 #EGBBDEFINES = -DPARALLEL
@@ -107,7 +107,7 @@ FATHOM = libsyzygy
 FATHOMLIBS = -lm -shared
 else
 FATHOM = syzygy
-FATHOMLIBS = -lm -shared -static -s
+FATHOMLIBS = -lm -shared -static
 endif
 
 FATHOMDEFINES = -DTB_NO_THREADS
@@ -124,7 +124,7 @@ GTB = gtb
 GTBDEFINES = -DMINGW -DNDEBUG -DZ_PREFIX
 endif
 
-GTBLIBS = -shared -s
+GTBLIBS = -shared
 
 WGTBFLAGS = -g -Wall -Wextra
 CGTBFLAGS = -std=c99 -O2 $(X86_64)
@@ -135,7 +135,7 @@ NNUE = libnnue
 NNUELIBS = -lm -shared
 else
 NNUE = nnue
-NNUELIBS = -lm -shared -static -s
+NNUELIBS = -lm -shared -static
 endif
 
 ifeq ($(BIT),64)

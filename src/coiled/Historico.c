@@ -70,15 +70,33 @@ int MovimientoKiller(int *ply, int *M)
 }
 
 /* Inicializar Historico y killer heuristico */
-void HistoricoIniciar()
+void HistoricoIniciar(int Reiniciar)
 {
-	memset(Historico, 0, 64 * 64 * sizeof(S64));
-	memset(Historico_Killer, 0, MAX_PLY * 2 * sizeof(int));
-	memset(Historico_Killer_Mate, 0, MAX_PLY * 2 * sizeof(int));
-	memset(HistoricoRefutacion, 0, 7 * 64 * 64 * sizeof(int));
+	int i = 0;
+	int ii = 0;
 
-	Max_Historico = 0;
-	Min_Historico = 0;
+	if (Reiniciar == true)
+	{
+		memset(Historico, 0, 64 * 64 * sizeof(S64));
+		memset(Historico_Killer, 0, MAX_PLY * 2 * sizeof(int));
+		memset(Historico_Killer_Mate, 0, MAX_PLY * 2 * sizeof(int));
+		memset(HistoricoRefutacion, 0, 7 * 64 * 64 * sizeof(int));
+
+		Max_Historico = 0;
+		Min_Historico = 0;
+	}
+	else
+	{
+		for (i = 0; i < 64; i++)
+		{
+			for (ii = 0; ii < 64; ii++)
+			{
+				Historico[i][ii] *= 0.4;
+			}
+		}
+		Max_Historico *= 0.4;
+		Min_Historico *= 0.4;
+	}
 }
 
 /* Actualizamos historico y killer */

@@ -226,22 +226,6 @@ void AlmacenarPosicion(int depth, int puntos, int hEv, int hFlag, int hMov)
 	TT_Datos[idx].Celdas[idc].Ev = hEv;
 	TT_Datos[idx].Celdas[idc].M = hMov;
 }
-/* Obtenemos el movimiento si esta almacenado */
-int RecuperarMovimientoHash()
-{
-	U64 idx = (U64)(TableroGlobal.Hash % TT_Opciones.tt_Entradas);
-	int i = 0;
-
-	for (i = 0; i < CELDAS; i++)
-	{
-		if (TT_Datos[idx].Celdas[i].Hash == TableroGlobal.Hash)
-		{
-			return TT_Datos[idx].Celdas[i].M;
-		}
-	}
-
-	return NO_MOVIMIENTO;
-}
 
 /* Vacio la tabla hash */
 void LimpiarTransposicion()

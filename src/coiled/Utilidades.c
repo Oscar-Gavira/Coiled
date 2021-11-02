@@ -120,7 +120,7 @@ void SplitString(char *_string, char *contenedor, int longitud)
 /* Obtenemos el tiempo */
 U64 ObtenerTiempo()
 {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 	return GetTickCount();
 #else
 	struct timeval tv;

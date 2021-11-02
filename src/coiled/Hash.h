@@ -41,8 +41,6 @@ void ConvertirValorTT(int *hPuntos);
 int PodaHash(int *hFlag, int *beta, int *alpha, int *hPuntos);
 /* Guardo la posicion analizada */
 void AlmacenarPosicion(int depth, int puntos, int hEv, int hFlag, int hMov);
-/* Obtenemos el movimiento si esta almacenado */
-int RecuperarMovimientoHash();
 /* Vacio la tabla hash */
 void LimpiarTransposicion();
 /* Obtengo el estado de la tabla (Vacia, Medio llena, LLena) % */
