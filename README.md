@@ -6,21 +6,21 @@
 
 ## 📋 Características
 
-|                            |    CARACTERISTICAS                |
-| -------------------------- | --------------------------------- |
-| Protocolo de comunicación  | UCI                               |
-| Código abierto             | Si                                |
-| Tipo de licencia           | GNU General Public License v3.0   |
-| Sistema operativo          | Windows y Linux. 32&64 bit        |
-| Representación del tablero | Mailbox. 8x8 unidimensional.      |
-| Ajedrez960 / FRC           | Si.                               |
-| Soporta redes neuronales   | Si. (NNUE)                        |
-| Tablas de finales          | Si. Syzygy, Gaviota y BitBases.   |
-| Libro de aperturas         | Si. Formato SqlIte                |
-| Lenguaje de programación   | C                                 |
-| Ponder                     | No                                |
-| Multihilo                  | No                                |
-| ELO estimado               | ± 3250 NNUE. ± 2600 Interna.      |
+|                            |    CARACTERISTICAS                                                                              |
+| -------------------------- | ----------------------------------------------------------------------------------------------- |
+| Protocolo de comunicación  | UCI                                                                                             |
+| Código abierto             | Si                                                                                              |
+| Tipo de licencia           | [GNU General Public License v3.0](https://github.com/Oscar-Gavira/Coiled/blob/master/LICENSE)   |
+| Sistema operativo          | Windows y Linux. 32&64 bit                                                                      |
+| Representación del tablero | Mailbox. 8x8 unidimensional.                                                                    |
+| Ajedrez960 / FRC           | Si.                                                                                             |
+| Soporta redes neuronales   | Si. (NNUE)                                                                                      |
+| Tablas de finales          | Si. Syzygy. Por Ronald de Man. Gaviota. Por Miguel Ballicora. BitBases. Por daniel shawul.      |
+| Libro de aperturas         | Si. Formato SqlIte                                                                              |
+| Lenguaje de programación   | C                                                                                               |
+| Ponder                     | No                                                                                              |
+| Multihilo                  | No                                                                                              |
+| ELO estimado               | ± 3300 NNUE. ± 2600 Interna.                                                                    |
 
 
 - Tablas de finales disponibles en internet. [http://oics.olympuschess.com/tracker/](http://oics.olympuschess.com/tracker/)
@@ -104,21 +104,21 @@ Coiled 1.0 &#177; 2590 ELO Evaluación interna.
 
 
 ## ⚙ Opciones Uci
-
-|                                    OPCIONES                                                                |                                          DESCRIPCION                                                            |
-| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Hash                                                                                                       | Para ajustar el tamaño de la tabla hash en MB.                                                                  |
-| ShowPv                                                                                                     | Limita la información enviada a la GUI en el proceso de cálculo.                                                |
-| OwnBook                                                                                                    | Para usar el libro de apertura propio del motor. (por defecto: false)                                           |
-| OwnBookLimit                                                                                               | Para limitar el número de jugadas máximas obtenidas desde el libro de apertura. (por defecto: 8)                |
-| EndGamesTablebases                                                                                         | Seleccione entre la tabla de finales a usar: Ninguna, Syzygy, Gaviota y BitBases. (por defecto: Ninguna)       |
-| EndGamesTablebasesPath                                                                                     | Para asignar la carpeta/directorio de las tablas de finales. Syzygy, Gaviota y BitBases. (por defecto: Vacío) |
-| EndGamesTablebasesCache                                                                                    | Para ajustar el tamaño de la cache en MB de las tablas de finales. Gaviota y BitBases. (por defecto: 32MB)                               |
-| EndGamesTablebasesLimit                                                                                    | Indica a partir de cuantas piezas busca en la tabla de finales. Syzygy y Gaviota. (por defecto: 5)              |
-| NnueUse \*                                                                                                 | Activa/desactiva el uso de redes neuronales. (por defecto: true)                                                |
-| NnuePath \*                                                                                                | Para asignar la ruta de la red neuronal. (por defecto: nn-a9f9e868162a.nnue)                                    |
-| UCI\_Chess960 \*\*                                                                                         | Activa/desactiva el modo de juego Chess960. (por defecto: false)                                                |
-| UCI\_Chess960CastlingSign \*\*                                                                             | Indica si utiliza el enroque estándar del protocolo UCI o el de la GUI Arena (por defecto: UCI)                 |
+|                                    OPCIONES                                                                |                                          DESCRIPCION                                                                     |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Hash                                                                                                       | Para ajustar el tamaño de la tabla hash en MB.                                                                           |
+| PreventTimeout                                                                                             | Para evitar Timeout en un juego por tiempo. Valor en milisegundo. Descuenta X ms al tiempo por jugada. (por defecto: 50) |
+| OwnBook                                                                                                    | Para usar el libro de apertura propio del motor. (por defecto: false)                                                    |
+| OwnBookLimit                                                                                               | Para limitar el número de jugadas máximas obtenidas desde el libro de apertura. (por defecto: 8)                         |
+| EndGamesTablebases                                                                                         | Seleccione entre la tabla de finales a usar: Ninguna, Syzygy, Gaviota y BitBases. (por defecto: Ninguna)                 |
+| EndGamesTablebasesPath                                                                                     | Para asignar la carpeta/directorio de las tablas de finales. Syzygy, Gaviota y BitBases. (por defecto: Vacío)            |
+| EndGamesTablebasesCache                                                                                    | Para ajustar el tamaño de la cache en MB de las tablas de finales. Gaviota y BitBases. (por defecto: 32MB)               |
+| EndGamesTablebasesLimit                                                                                    | Indica a partir de cuantas piezas busca en la tabla de finales. Syzygy, Gaviota y BitBases. (por defecto: 5)             |
+| NnueUse \*                                                                                                 | Activa/desactiva el uso de redes neuronales. (por defecto: true)                                                         |
+| NnuePath \*                                                                                                | Para asignar la ruta de la red neuronal. (por defecto: nn-a9f9e868162a.nnue)                                             |
+| NnueTechnology \*                                                                                          | Indica el tipo de tecnología que utiliza la red neuronal. AVX2, SSE4.1, SSE3 o SSE2. (por defecto: Auto)                 |
+| UCI\_Chess960 \*\*                                                                                         | Activa/desactiva el modo de juego Chess960. (por defecto: false)                                                         |
+| UCI\_Chess960CastlingSign \*\*                                                                             | Indica si utiliza el enroque estándar del protocolo UCI o el de la GUI Arena (por defecto: UCI)                          |
 
 
 \* Opciones disponibles, solo en la versión de 64bits.
@@ -147,12 +147,8 @@ Estas opciones también están disponibles para el modo Chess960, solo has de ac
 - Para compilar en Windows 32 bit: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile) con [codeblocks](https://github.com/Oscar-Gavira/Coiled/blob/master/src/Coiled_Windows_x86.cbp)
 - Para compilar en Windows 64 bit: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile) con [codeblocks](https://github.com/Oscar-Gavira/Coiled/blob/master/src/Coiled_Windows_x64.cbp)
 
+<img src="https://github.com/Oscar-Gavira/Coiled/blob/master/src/codeblocks_makefile.jpg" width="50%" height="50%" />
 
-
-
-## 📄 Licencia
-
-GNU General Public License v3.0 [LICENSE](https://github.com/Oscar-Gavira/Coiled/blob/master/LICENSE) para detalles
 
 
 ## 📖 Términos de Uso
