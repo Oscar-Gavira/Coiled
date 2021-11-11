@@ -116,11 +116,11 @@ void CrearTransposicion(U64 MB)
 
 void ConvertirValorTT(int *hPuntos)
 {
-	if (*hPuntos >= MATE_EN(MAX_PLY * 2))
+	if (*hPuntos >= VALOR_MATE_MIN)
 	{
 		*hPuntos += -TableroGlobal.Ply;
 	}
-	else if (*hPuntos <= MATE(MAX_PLY * 2))
+	else if (*hPuntos <= -VALOR_MATE_MIN)
 	{
 		*hPuntos += TableroGlobal.Ply;
 	}
@@ -211,11 +211,11 @@ void AlmacenarPosicion(int depth, int puntos, int hEv, int hFlag, int hMov)
 		}
 	}
 
-	if (puntos >= MATE_EN(MAX_PLY * 2))
+	if (puntos >= VALOR_MATE_MIN)
 	{
 		puntos += TableroGlobal.Ply;
 	}
-	else if (puntos <= MATE(MAX_PLY * 2))
+	else if (puntos <= -VALOR_MATE_MIN)
 	{
 		puntos += -TableroGlobal.Ply;
 	}

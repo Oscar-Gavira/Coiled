@@ -43,17 +43,6 @@ enum TBEnroque
    TBBOOO = 1
 };
 
-int TBflip[64] =
-{
-	56, 57, 58, 59, 60, 61, 62, 63,
-	48, 49, 50, 51, 52, 53, 54, 55,
-	40, 41, 42, 43, 44, 45, 46, 47,
-	32, 33, 34, 35, 36, 37, 38, 39,
-	24, 25, 26, 27, 28, 29, 30, 31,
-	16, 17, 18, 19, 20, 21, 22, 23,
-	 8,  9, 10, 11, 12, 13, 14, 15,
-	 0,  1,  2,  3,  4,  5,  6,  7};
-
 #ifdef _WIN32
 #ifdef ARC_64BIT
 	char GTB_NOMBRE[] = { "gtb_x64.dll" };
@@ -245,7 +234,7 @@ int Descargar_gaviota_dll()
 	return true;
 }
 
-unsigned Probar_gaviota(int *puntos, int *ply)
+unsigned Probar_gaviota(int *puntos)
 {
 	int i = 0;
 	int enroque = TBNOCASTLE;
@@ -301,11 +290,11 @@ unsigned Probar_gaviota(int *puntos, int *ply)
 	{
 		if (TableroGlobal.MueveBlancas == false)
 		{
-			epsquare = TBflip[TableroGlobal.FichaAlPasoPosicion + 8];
+			epsquare = (TableroGlobal.FichaAlPasoPosicion + 8) ^ 0x38;
 		}
 		else
 		{
-			epsquare = TBflip[TableroGlobal.FichaAlPasoPosicion - 8];
+			epsquare = (TableroGlobal.FichaAlPasoPosicion - 8) ^ 0x38;
 		}
 	}
 
@@ -335,63 +324,63 @@ unsigned Probar_gaviota(int *puntos, int *ply)
 		switch (TableroGlobal.Tablero[i])
 		{
 		case PeonB:
-			ws[NpiezasB] = TBflip[i];
+			ws[NpiezasB] = (i) ^ 0x38;
 			wp[NpiezasB] = TBPAWN;
 			NpiezasB++;
 			break;
 		case CaballoB:
-			ws[NpiezasB] = TBflip[i];
+			ws[NpiezasB] = (i) ^ 0x38;
 			wp[NpiezasB] = TBKNIGHT;
 			NpiezasB++;
 			break;
 		case AlfilB:
-			ws[NpiezasB] = TBflip[i];
+			ws[NpiezasB] = (i) ^ 0x38;
 			wp[NpiezasB] = TBBISHOP;
 			NpiezasB++;
 			break;
 		case TorreB:
-			ws[NpiezasB] = TBflip[i];
+			ws[NpiezasB] = (i) ^ 0x38;
 			wp[NpiezasB] = TBROOK;
 			NpiezasB++;
 			break;
 		case DamaB:
-			ws[NpiezasB] = TBflip[i];
+			ws[NpiezasB] = (i) ^ 0x38;
 			wp[NpiezasB] = TBQUEEN;
 			NpiezasB++;
 			break;
 		case ReyB:
-			ws[NpiezasB] = TBflip[i];
+			ws[NpiezasB] = (i) ^ 0x38;
 			wp[NpiezasB] = TBKING;
 			NpiezasB++;
 			break;
 
 		case PeonN:
-			bs[NpiezasN] = TBflip[i];
+			bs[NpiezasN] = (i) ^ 0x38;
 			bp[NpiezasN] = TBPAWN;
 			NpiezasN++;
 			break;
 		case CaballoN:
-			bs[NpiezasN] = TBflip[i];
+			bs[NpiezasN] = (i) ^ 0x38;
 			bp[NpiezasN] = TBKNIGHT;
 			NpiezasN++;
 			break;
 		case AlfilN:
-			bs[NpiezasN] = TBflip[i];
+			bs[NpiezasN] = (i) ^ 0x38;
 			bp[NpiezasN] = TBBISHOP;
 			NpiezasN++;
 			break;
 		case TorreN:
-			bs[NpiezasN] = TBflip[i];
+			bs[NpiezasN] = (i) ^ 0x38;
 			bp[NpiezasN] = TBROOK;
 			NpiezasN++;
 			break;
 		case DamaN:
-			bs[NpiezasN] = TBflip[i];
+			bs[NpiezasN] = (i) ^ 0x38;
 			bp[NpiezasN] = TBQUEEN;
 			NpiezasN++;
 			break;
 		case ReyN:
-			bs[NpiezasN] = TBflip[i];
+			bs[NpiezasN] = (i) ^ 0x38;
 			bp[NpiezasN] = TBKING;
 			NpiezasN++;
 			break;
@@ -414,38 +403,30 @@ unsigned Probar_gaviota(int *puntos, int *ply)
 
 	if (TBavailable == true)
 	{
-		if (pliestomate == 0)
-		{
-			pliestomate = *ply;
-		}
 		if (info == TBDRAW)
 		{
 			*puntos = VALOR_EMPATE;
-			return info;
+			return true;
 		}
 		else if (info == TBWMATE && stm == TBWHITE_TO_MOVE)
 		{
-			pliestomate += *ply;
-			*puntos = MATE_EN(pliestomate);
-			return info;
+			*puntos = 1;
+			return true;
 		}
 		else if (info == TBBMATE && stm == TBBLACK_TO_MOVE)
 		{
-			pliestomate += *ply;
-			*puntos = MATE_EN(pliestomate);
-			return info;
+			*puntos = 1;
+			return true;
 		}
 		else if (info == TBWMATE && stm == TBBLACK_TO_MOVE)
 		{
-			pliestomate += *ply;
-			*puntos = MATE(pliestomate);
-			return info;
+			*puntos = -1;
+			return true;
 		}
 		else if (info == TBBMATE && stm == TBWHITE_TO_MOVE)
 		{
-			pliestomate += *ply;
-			*puntos = MATE(pliestomate);
-			return info;
+			*puntos = -1;
+			return true;
 		}
 		return TBUNKNOWN;
 	}

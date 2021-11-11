@@ -77,7 +77,6 @@ int Salir;														/* Indica al programa que salga, para evitar un "exit(EX
 
 	SG_INITS SG_inits;								/* Inicializa la tabla de finales */
 	SG_FREE SG_free;								/* Libera la tabla de finales */
-	SG_PROBE_ROOT SG_probe_root;					/* Acceso a las tablas de finales en root. */
 	SG_PROBE_WDL SG_probe_wdl;						/* Acceso a las tablas de finales en la busqueda. */
 	SG_LARGEST SG_man;								/* Indica la tablas disponibles. 3, 4, 5, 6 o 7 piezas. */
 
@@ -246,21 +245,10 @@ void UciEntrada(char *parametro)
 			fflush(stdout);
 		}
 #endif
-		switch (TipoJuego.MostrarVp)
-		{
-		case 0:
-			printf("option name ShowPv type combo default None var None var Middle var Full\n");
-			break;
-		case 1:
-			printf("option name ShowPv type combo default Middle var None var Middle var Full\n");
-			break;
-		case 2:
-			printf("option name ShowPv type combo default Full var None var Middle var Full\n");
-			break;
-		default:
-			break;
-		}
+
+		printf("option name PreventTimeout type spin default "S32_FORMAT" min 0 max 500\n", TipoJuego.PrevenirTiempoExcedido);
 		fflush(stdout);
+
 #ifdef USAR_TABLAS_DE_FINALES
 		memset(Str, 0, MAX_DIR * sizeof(char));
 		strcat(Str, " var None");
@@ -421,15 +409,11 @@ void UciEntrada(char *parametro)
 		if (LibroSql.LimiteJugadas > 10) LibroSql.LimiteJugadas = 8;
 	}
 #endif
-	else if (strncmp(parametro, "setoption name ShowPv value ", 28) == 0)
+	else if (strncmp(parametro, "setoption name PreventTimeout value ", 36) == 0)
 	{
-		parametro += 28;
-		if (strcmp(parametro, "None") == 0)
-			TipoJuego.MostrarVp = 0;
-		else if (strcmp(parametro, "Middle") == 0)
-			TipoJuego.MostrarVp = 1;
-		else if (strcmp(parametro, "Full") == 0)
-			TipoJuego.MostrarVp = 2;
+		parametro += 36;
+		TipoJuego.PrevenirTiempoExcedido = MAX(0, (int)atoll(parametro));
+		if (TipoJuego.PrevenirTiempoExcedido > 500) TipoJuego.PrevenirTiempoExcedido = 50;
 	}
 #ifdef USAR_TABLAS_DE_FINALES
 	else if (strncmp(parametro, "setoption name EndGamesTableBases value ", 40) == 0)
@@ -483,8 +467,8 @@ void UciEntrada(char *parametro)
 		{
 			memset(TablaDeFinales.Directorio, 0, MAX_DIR * sizeof(char));
 			strcat(TablaDeFinales.Directorio, parametro);
-			if (TablaDeFinales.Directorio[strlen(TablaDeFinales.Directorio)] != '\\')
-				strcat(TablaDeFinales.Directorio, "\\");
+			
+			VerificarDir(TablaDeFinales.Directorio, true);
 		}
 	}
 	else if (strncmp(parametro, "setoption name EndGamesTableBasesLimit value ", 45) == 0)
@@ -528,11 +512,15 @@ void UciEntrada(char *parametro)
 			Nnue.DirectorioNuevo = false;
 		else
 			Nnue.DirectorioNuevo = true;
+		
 		if (Nnue.DirectorioNuevo == true)
 		{
+			Descargar_nnue_dll();
 			memset(Nnue.Directorio, 0, MAX_DIR * sizeof(char));
 			strcat(Nnue.Directorio, parametro);
-			CargarNnue();
+			VerificarDir(Nnue.Directorio, false);
+			Nnue.Dll_Cargada = Cargar_nnue_dll();
+			if (Nnue.Dll_Cargada == true) CargarNnue();
 		}
 	}
 	else if (strncmp(parametro, "setoption name NnueTechnology value ", 36) == 0)
@@ -897,14 +885,14 @@ void InicioBusqueda(char *ptr) {
 		else if (strcmp(contenedor, "infinite") == 0)
 		{
 			TipoJuego.Infinito = true;
-			TipoJuego.MaxDepth = (MAX_PLY / 2);
+			TipoJuego.MaxDepth = MAX_PLY / 2;
 		}
 		else if (strcmp(contenedor, "depth") == 0)
 		{
 			SplitString(ptr, contenedor, MAX_DIR);
 			TipoJuego.MaxDepth = MAX(2, (int)atoll(contenedor) + 1);
 			if (TipoJuego.MaxDepth > MAX_PLY / 2)
-				TipoJuego.MaxDepth = (MAX_PLY / 2);
+				TipoJuego.MaxDepth = MAX_PLY / 2;
 			mate = false;
 		}
 		else if (strcmp(contenedor, "movestogo") == 0)
@@ -923,7 +911,7 @@ void InicioBusqueda(char *ptr) {
 		if (mate == true) /* Sin tiempo ni limite, hasta encontrar el mate. */
 		{
 			TipoJuego.Infinito = true;
-			TipoJuego.MaxDepth = (MAX_PLY / 2);
+			TipoJuego.MaxDepth = MAX_PLY / 2;
 		}
 	}
 
@@ -936,7 +924,7 @@ void InicioBusqueda(char *ptr) {
 	if (TipoJuego.MaxDepth != 0)
 	{
 		/* Ya obtenemos la profundidad indicada */
-		TipoJuego.Activo = false;
+		TipoJuego.Activo = 0;
 		Ok = true;
 	}
 	/**************************************************************************************************
@@ -945,10 +933,12 @@ void InicioBusqueda(char *ptr) {
 	**************************************************************************************************/
 	if (movetime != 0)
 	{
-		TipoJuego.MaxDepth = (MAX_PLY / 2);
-		TipoJuego.Activo = true;
-		int f = movetime * 0.05 > 150 ? 150 : movetime * 0.05 <= 15 ? 20: (int)(movetime * 0.05f);
-		TipoJuego.Tiempo = MAX(movetime, MIN(movetime - f, movetime));
+		TipoJuego.MaxDepth = MAX_PLY / 2;
+		TipoJuego.Activo = 2;
+		TipoJuego.Tiempo = movetime - TipoJuego.PrevenirTiempoExcedido;
+		TipoJuego.TiempoMax1 = movetime - TipoJuego.PrevenirTiempoExcedido;
+		TipoJuego.TiempoMax2 = movetime - TipoJuego.PrevenirTiempoExcedido;
+
 		Ok = true;
 	}
 	/**************************************************************************************************
@@ -957,11 +947,9 @@ void InicioBusqueda(char *ptr) {
 	**************************************************************************************************/
 	if (NJugadasTotales != 0 && wtime != 0 && btime != 0)
 	{
-		TipoJuego.MaxDepth = (MAX_PLY / 2);
-		TipoJuego.Activo = true;
-		/* Modo repetitivo. De lo contrario pierde por tiempo si NJugadasTotales == 0 */
-		if (NJugadasTotales == 0) NJugadasTotales = 1;
-		TipoJuego.Tiempo =(0.99 * time / NJugadasTotales) + inc;
+		TipoJuego.MaxDepth = MAX_PLY / 2;
+		TipoJuego.Activo = 1;
+		TiempoInicio(&TipoJuego, NJugadasTotales, time, inc);
 		Ok = true;
 	}
 	/**************************************************************************************************
@@ -971,17 +959,9 @@ void InicioBusqueda(char *ptr) {
 	**************************************************************************************************/
 	if (NJugadasTotales == 0 && wtime != 0 && btime != 0)
 	{
-		TipoJuego.MaxDepth = (MAX_PLY / 2);
-		TipoJuego.Activo = true;
-		/* Blitz, bullet, ultra bullet. Admite 0'+15" partida completa. */
-		if (time == 0)
-		{
-			time = inc;
-			inc = 0;
-		}
-
-		TipoJuego.Tiempo = (0.95 * time + (24 * inc)) / 50;
-
+		TipoJuego.MaxDepth = MAX_PLY / 2;
+		TipoJuego.Activo = 1;
+		TiempoInicio(&TipoJuego, NJugadasTotales, time, inc);
 		Ok = true;
 	}
 
@@ -1001,7 +981,7 @@ void IniciarConfiguracion()
 {
 	TipoJuego.Ajedrez960 = false;
 	TipoJuego.Ajedrez960Enroque = false;
-	TipoJuego.MostrarVp = 1;
+	TipoJuego.PrevenirTiempoExcedido = 50;
 
 #ifdef USAR_HASH_TB
 	TT_Opciones.tt_Mb = MB_HASH_TABLE;
@@ -1025,12 +1005,11 @@ void IniciarConfiguracion()
 	memset(TablaDeFinales.Directorio, 0, MAX_DIR * sizeof(char));
 	TablaDeFinales.DirectorioNuevo = false;
 	TablaDeFinales.Limite = 5;
-	TablaDeFinales.Piezas = 5;
 	TablaDeFinales.CacheMB = MB_TABLAS_CACHE;
 	TablaDeFinales.CacheNueva = false;
 #endif
 #ifdef USAR_NNUE
-	Nnue.Usar = false;
+	Nnue.Usar = true;
 	Nnue.Dll_Cargada = false;
 	Nnue.Tecnologia = 1;										/* Por defecto SSE2 */
 	memset(Nnue.Directorio, 0, MAX_DIR * sizeof(char));
@@ -1103,13 +1082,16 @@ void UciNewGame()
 
 	A_Inicio(true);
 
-	TipoJuego.Activo = false;
+	TipoJuego.Activo = 0;
 	TipoJuego.Infinito = false;
-	TipoJuego.Tiempo = 0;
-	TipoJuego.TiempoTranscurrido = 0;
+	TipoJuego.Tiempo = 0.0f;
+	TipoJuego.TiempoMax1 = 0.0f;
+	TipoJuego.TiempoMax2 = 0.0f;
+	TipoJuego.TiempoFactor = 0;
+	TipoJuego.TiempoTrascurrido = 0;
 	TipoJuego.Inicio = 0;
 	TipoJuego.Interrumpir = false;
-	TipoJuego.MaxDepth = (MAX_PLY / 2);
+	TipoJuego.MaxDepth = MAX_PLY / 2;
 	strcpy(buffer, START_POS);
 	Position_Fen_Startpos(buffer);
 }

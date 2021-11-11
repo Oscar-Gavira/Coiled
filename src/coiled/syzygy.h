@@ -30,7 +30,7 @@ Metodos
 int Cargar_Syzygy_dll();
 void CargarSyzygy();
 int Descargar_Syzygy_dll();
-unsigned ProbarSyzygy(int WDL, int *mov);
+unsigned ProbarSyzygy();
 void Iniciar_Mascara();
 
 #endif

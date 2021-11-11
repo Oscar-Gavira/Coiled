@@ -23,17 +23,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 HMODULE NNUE_hmod = NULL;
 
-int NNUE_FLIP[64] =
-	{
-		56, 57, 58, 59, 60, 61, 62, 63,
-		48, 49, 50, 51, 52, 53, 54, 55,
-		40, 41, 42, 43, 44, 45, 46, 47,
-		32, 33, 34, 35, 36, 37, 38, 39,
-		24, 25, 26, 27, 28, 29, 30, 31,
-		16, 17, 18, 19, 20, 21, 22, 23,
-		 8,  9, 10, 11, 12, 13, 14, 15,
-		 0,  1,  2,  3,  4,  5,  6,  7 };
-
 int Cargar_nnue_dll()
 {
 	char NNUE_NOMBRE[25];
@@ -129,13 +118,14 @@ void CargarNnue()
 		Nnue.DirectorioNuevo = false;
 		if (NNUE_init(Nnue.Directorio) == false)
 		{
-			if (Nnue.Usar == true)
-			{
-				Nnue.Usar = false;
-				printf(""INFO_STRING"Loading NNUE: "STRING_FORMAT"\n", Nnue.Directorio);
-				printf(""INFO_STRING"NNUE file not found, Unsupported or NnueTechnology Unsupported.\n");
-				fflush(stdout);
-			}
+			Nnue.Usar = false;
+			printf(""INFO_STRING"NNUE file not found or Unsupported.\n");
+			fflush(stdout);
+		}
+		else
+		{
+			printf(""INFO_STRING"Loading NNUE: "STRING_FORMAT"\n", Nnue.Directorio);
+			fflush(stdout);
 		}
 	}
 }
@@ -196,52 +186,52 @@ int ProbarNNUE()
 		switch (TableroGlobal.Tablero[i])
 		{
 		case PeonB:
-			PeonC[indice_pb] = NNUE_FLIP[i];
+			PeonC[indice_pb] = (i) ^ 0x38;
 			indice_pb++;
 			break;
 		case CaballoB:
-			CaballoC[indice_cb] = NNUE_FLIP[i];
+			CaballoC[indice_cb] = (i) ^ 0x38;
 			indice_cb++;
 			break;
 		case AlfilB:
-			AlfilC[indice_ab] = NNUE_FLIP[i];
+			AlfilC[indice_ab] = (i) ^ 0x38;
 			indice_ab++;
 			break;
 		case TorreB:
-			TorreC[indice_tb] = NNUE_FLIP[i];
+			TorreC[indice_tb] = (i) ^ 0x38;
 			indice_tb++;
 			break;
 		case DamaB:
-			DamaC[indice_db] = NNUE_FLIP[i];
+			DamaC[indice_db] = (i) ^ 0x38;
 			indice_db++;
 			break;
 		case ReyB:
-			VCuadros[0] = NNUE_FLIP[i];
+			VCuadros[0] = (i) ^ 0x38;
 			VPiezas[0] = Nnue_wking;
 			break;
 
 		case PeonN:
-			PeonC[indice_pn] = NNUE_FLIP[i];
+			PeonC[indice_pn] = (i) ^ 0x38;
 			indice_pn++;
 			break;
 		case CaballoN:
-			CaballoC[indice_cn] = NNUE_FLIP[i];
+			CaballoC[indice_cn] = (i) ^ 0x38;
 			indice_cn++;
 			break;
 		case AlfilN:
-			AlfilC[indice_an] = NNUE_FLIP[i];
+			AlfilC[indice_an] = (i) ^ 0x38;
 			indice_an++;
 			break;
 		case TorreN:
-			TorreC[indice_tn] = NNUE_FLIP[i];
+			TorreC[indice_tn] = (i) ^ 0x38;
 			indice_tn++;
 			break;
 		case DamaN:
-			DamaC[indice_dn] = NNUE_FLIP[i];
+			DamaC[indice_dn] = (i) ^ 0x38;
 			indice_dn++;
 			break;
 		case ReyN:
-			VCuadros[1] = NNUE_FLIP[i];
+			VCuadros[1] = (i) ^ 0x38;
 			VPiezas[1] = Nnue_bking;
 			break;
 		default:

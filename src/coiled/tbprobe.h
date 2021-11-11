@@ -44,7 +44,7 @@ int Cargar_gaviota_dll();
 void CargarGaviotaTB();
 void CacheGaviotaTB();
 int Descargar_gaviota_dll();
-unsigned Probar_gaviota(int *puntos, int *ply);
+unsigned Probar_gaviota(int *puntos);
 #endif
 
 #endif

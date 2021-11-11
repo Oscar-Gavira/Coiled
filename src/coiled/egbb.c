@@ -35,17 +35,6 @@ enum EGBBPiezas
 
 int _NOTFOUND = 99999;
 
-int EGBBflip[64] =
-{
-	56, 57, 58, 59, 60, 61, 62, 63,
-	48, 49, 50, 51, 52, 53, 54, 55,
-	40, 41, 42, 43, 44, 45, 46, 47,
-	32, 33, 34, 35, 36, 37, 38, 39,
-	24, 25, 26, 27, 28, 29, 30, 31,
-	16, 17, 18, 19, 20, 21, 22, 23,
-	 8,  9, 10, 11, 12, 13, 14, 15,
-	 0,  1,  2,  3,  4,  5,  6,  7};
-
 #ifdef _WIN32
 #ifdef ARC_64BIT
 	char EGBB_NOMBRE[] = { "egbb_x64.dll" };
@@ -162,52 +151,52 @@ int Probar_egbb(int *puntos)
 		switch (TableroGlobal.Tablero[i])
 		{
 		case PeonB:
-			PeonC[indice_pb] = EGBBflip[i];
+			PeonC[indice_pb] = (i) ^ 0x38;
 			indice_pb++;
 			break;
 		case CaballoB:
-			CaballoC[indice_cb] = EGBBflip[i];
+			CaballoC[indice_cb] = (i) ^ 0x38;
 			indice_cb++;
 			break;
 		case AlfilB:
-			AlfilC[indice_ab] = EGBBflip[i];
+			AlfilC[indice_ab] = (i) ^ 0x38;
 			indice_ab++;
 			break;
 		case TorreB:
-			TorreC[indice_tb] = EGBBflip[i];
+			TorreC[indice_tb] = (i) ^ 0x38;
 			indice_tb++;
 			break;
 		case DamaB:
-			DamaC[indice_db] = EGBBflip[i];
+			DamaC[indice_db] = (i) ^ 0x38;
 			indice_db++;
 			break;
 		case ReyB:
-			VCuadros[0] = EGBBflip[i];
+			VCuadros[0] = (i) ^ 0x38;
 			VPiezas[0] = EGBB_WKING;
 			break;
 
 		case PeonN:
-			PeonC[indice_pn] = EGBBflip[i];
+			PeonC[indice_pn] = (i) ^ 0x38;
 			indice_pn++;
 			break;
 		case CaballoN:
-			CaballoC[indice_cn] = EGBBflip[i];
+			CaballoC[indice_cn] = (i) ^ 0x38;
 			indice_cn++;
 			break;
 		case AlfilN:
-			AlfilC[indice_an] = EGBBflip[i];
+			AlfilC[indice_an] = (i) ^ 0x38;
 			indice_an++;
 			break;
 		case TorreN:
-			TorreC[indice_tn] = EGBBflip[i];
+			TorreC[indice_tn] = (i) ^ 0x38;
 			indice_tn++;
 			break;
 		case DamaN:
-			DamaC[indice_dn] = EGBBflip[i];
+			DamaC[indice_dn] = (i) ^ 0x38;
 			indice_dn++;
 			break;
 		case ReyN:
-			VCuadros[1] = EGBBflip[i];
+			VCuadros[1] = (i) ^ 0x38;
 			VPiezas[1] = EGBB_BKING;
 			break;
 		default:
@@ -307,11 +296,7 @@ int Probar_egbb(int *puntos)
 	/* Comprobamos en memoria/cache */
 	*puntos = EGBB_probe_egbb(stm, VPiezas, VCuadros);
 
-	if (*puntos != _NOTFOUND) {
-		return 1;
-	}
-
-	return 0;
+	return (*puntos != _NOTFOUND);
 }
 
 #endif

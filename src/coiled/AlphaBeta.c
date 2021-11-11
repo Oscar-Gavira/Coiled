@@ -76,6 +76,7 @@ void A_Inicio(int Reiniciar)
 #ifdef USAR_TABLAS_DE_FINALES
 	TablaDeFinales.Acierto = 0;
 #endif
+
 	for (i = 0; i < MAX_PLY; i++)
 	{
 		for (y = 0; y < MAX_PLY; y++)
@@ -86,7 +87,7 @@ void A_Inicio(int Reiniciar)
 		vp_terminada[i] = 0;
 	}
 
-	HistoricoIniciar(Reiniciar);
+	HistoricoIniciar();
 
 #ifdef USAR_HASH_TB
 	if (Reiniciar == true)
@@ -105,7 +106,6 @@ void A_Inicio(int Reiniciar)
 
 void Buscar()
 {
-	int _pv = 1;
 	int en_jaque = false;
 	int Puntos = 0;
 	int PuntosAnteriores = 0;
@@ -116,52 +116,44 @@ void Buscar()
 	TipoJuego.Inicio = ObtenerTiempo();
 
 	TipoJuego.DepthAct = 1;
-	if (TipoJuego.MaxDepth < TipoJuego.DepthAct)
-	{
-		TipoJuego.MaxDepth = TipoJuego.DepthAct;
-	}
-	if (TipoJuego.MaxDepth >= (float)MAX_PLY / 2.0f)
-	{
-		TipoJuego.MaxDepth = ((float)MAX_PLY / 2.0f) - 1;
-	}
 
 	en_jaque = Jaque(TableroGlobal.MueveBlancas);
 
 	for (; TipoJuego.DepthAct < TipoJuego.MaxDepth; TipoJuego.DepthAct++)
 	{
-		if (TipoJuego.Interrumpir == true)
-		{
-			if (vp_terminada[0] != NO_MOVIMIENTO)
-			{
-				break;
-			}
-		}
-
 		_lowerbound = 0;
 
 		Puntos = AspirationWindows(TipoJuego.DepthAct, en_jaque, Puntos);
 
-		/* Actualizamos vp_terminada al terminar la interaccion con vp_terminada_root, si no se ha interrumpido la busqueda */
-		if (TipoJuego.Interrumpir == false)
+		if (TipoJuego.Interrumpir == true)
 		{
-			for (x = 0; vp_terminada_root[x] != NO_MOVIMIENTO; x++)
+			/* Corte por tiempo, con pv sin terminar. */
+			if (vp_terminada[0] != NO_MOVIMIENTO)
 			{
-				vp_terminada[x] = vp_terminada_root[x];
+				/* Imprimimos vp */
+				ImprimirVp(TipoJuego.DepthAct, PuntosAnteriores, _lowerbound);
+				break;
 			}
-			vp_terminada[x] = 0;
+
+			TipoJuego.Interrumpir = false;
 		}
 
+		TipoJuego.Interrumpir = TiempoActualizar(&TipoJuego, Puntos, PuntosAnteriores, vp_terminada_root[0], vp_terminada[0], TipoJuego.DepthAct);
+
+		/* Actualizamos vp_terminada al terminar la interaccion con vp_terminada_root, si no se ha interrumpido la busqueda */
+		for (x = 0; vp_terminada_root[x] != NO_MOVIMIENTO; x++)
+		{
+			vp_terminada[x] = vp_terminada_root[x];
+		}
+		vp_terminada[x] = 0;
 
 		if (TipoJuego.DepthAct > 1)
 		{
+			/* En caso de encontrar mate, cortamos */
 			if (TipoJuego.BuscarMate == 0 && EsPuntuacionMate(PuntosAnteriores) == true && EsPuntuacionMate(Puntos) == true && PuntosAnteriores == Puntos)
-			{
-				if (TipoJuego.Infinito == false)
-				{
-					break;
-				}
-			}
+				TipoJuego.Interrumpir = true;
 
+			/* Busqueda por mate. */
 			if (TipoJuego.BuscarMate > 0 && EsPuntuacionMate(PuntosAnteriores) == true && EsPuntuacionMate(Puntos) == true && PuntosAnteriores == Puntos)
 			{
 				if (Puntos > 0)
@@ -178,28 +170,22 @@ void Buscar()
 					else
 						MateEn = (int)((float)((float)(-VALOR_MATE - Puntos) / 2.0f) - 0.5f);
 				}
+
+				if (TipoJuego.BuscarMate >= ABS(MateEn))
+					TipoJuego.Interrumpir = true;
 			}
 		}
 
-		if (TipoJuego.Interrumpir == false)
-		{
-			PuntosAnteriores = Puntos;
-		}
-		else
-		{
-			Puntos = PuntosAnteriores;
-		}
+		PuntosAnteriores = Puntos;
+		TipoJuego.MejorJugada = vp_terminada[0];
+		TipoJuego.MejorJugadaAdv = vp_terminada[1];
+		ImprimirVp(TipoJuego.DepthAct, Puntos, _lowerbound);
 
-		if (TipoJuego.Interrumpir == false)
-		{
-			_pv = TipoJuego.DepthAct;
-			TipoJuego.MejorJugada = vp_terminada[0];
-			TipoJuego.MejorJugadaAdv = vp_terminada[1];
-			ImprimirVp(_pv, Puntos, _lowerbound);
-		}
-
-		if (MateEn != 0 && TipoJuego.BuscarMate >= ABS(MateEn))
+		if (TipoJuego.Interrumpir == true
+			|| (TipoJuego.Activo == 1 && TerminarTiempoLimite(&TipoJuego) == true)
+			|| (TipoJuego.Activo == 2 && TiempoTrascurrido(&TipoJuego) >= TipoJuego.TiempoMax2))
 			break;
+		
 	}
 
 	ImprimirMejorJugada(TipoJuego.MejorJugada, TipoJuego.MejorJugadaAdv);
@@ -208,12 +194,11 @@ void Buscar()
 
 int AspirationWindows(int depth, int en_jaque, int PuntuacionAnterior)
 {
-	int puntos = 0;
-
 #ifdef ASPIRATION_WINDOWS
 	int windows = ASPIRATION;
 	int alpha =-VALOR_MATE, beta = VALOR_MATE;
 	int depthOrg = depth;
+	int puntos = 0;
 
 	if (depth > 6)
 	{
@@ -221,7 +206,7 @@ int AspirationWindows(int depth, int en_jaque, int PuntuacionAnterior)
 		beta = MIN(VALOR_MATE, PuntuacionAnterior + windows);
 	}
 
-	while (1)
+	while (true)
 	{
 		puntos = AlphaBeta(depth, alpha, beta, en_jaque, false);
 		if (TipoJuego.Interrumpir == true)
@@ -236,22 +221,20 @@ int AspirationWindows(int depth, int en_jaque, int PuntuacionAnterior)
 
 		if (puntos <= alpha)
 		{
-			beta = (alpha + beta) * 0.5;
+			beta = (alpha + beta) * 0.5f;
 			alpha = MAX(-VALOR_MATE, alpha - windows);
 			depth = depthOrg;
 		}
-
 		else if (puntos >= beta) 
 		{
 			beta = MIN(VALOR_MATE, beta + windows);
-			depth = depth - (abs(puntos) <= VALOR_MATE / 2);
+			depth = MAX(1, depth - (ABS(puntos) <= VALOR_MATE * 0.5f));
 		}
 
-		windows += ASPIRATION;
+		windows += windows * 0.5f;
 	}
 #else
-	puntos = AlphaBeta(depth, -VALOR_MATE, VALOR_MATE, en_jaque, false);
-	return puntos;
+	return AlphaBeta(depth, -VALOR_MATE, VALOR_MATE, en_jaque, false);
 #endif
 }
 
@@ -263,7 +246,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 	int mInquietos[MAX_JUGADAS / 2];
 	int mInquietosTotal = 0;
 	int MovimientosLegales = 0;
-	int puntos = 0;
+	int puntos = -VALOR_MATE;
 	int puntos_max = -VALOR_MATE;
 	int da_jaque = false;
 	int reducciones = 0;
@@ -273,12 +256,12 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 	int nuevo_depth = 0;
 	int vAlpha = alpha;
 	int Mejor_Movimiento = NO_MOVIMIENTO;
-	int Ev = 0;
+	int Ev = -VALOR_MATE;
 	int EsMovimientoTranquilo = false;
 	int EsMovimientoKiller = false;
 	int EsMovimientoRefutacion = NO_MOVIMIENTO;
 	int SaltarTranquilo = false;
-
+	int mAlpha, mBeta;
 #ifdef USAR_STATIC_EXCHANGE_EVALUATION_PRUNING
 	int SeeMargen = 0;
 	int Coronacion = 0;
@@ -295,14 +278,15 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 	int hEv = VALOR_TB_VACIO;
 #ifdef USAR_HASH_TB
 	int hEncontrado = false;
-	int hPuntos = -VALOR_MATE + (MAX_PLY * 2);
+	int hPuntos = -VALOR_MATE;
 	int hFlag = TT_DESCONOCIDO;
 	vp_Ev[Ply] = VALOR_TB_VACIO;
 #endif
 #ifdef USAR_TABLAS_DE_FINALES
-	int AccederTablasDeFinales = false;
 	int NumeroFichas = 0;
 	unsigned tbResultado = 0;
+	int tbPuntos = -VALOR_MATE;
+	int tbFlag = TT_DESCONOCIDO;
 #endif
 
 	selDepth = Root ? 0 : MAX(selDepth, Ply);
@@ -322,17 +306,17 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 
 	if (Root == false)
 	{
-		if (EsTablaRepeticion() == true)
+		if (EsTablaRepeticion(en_jaque) == true)
 			return 1 - (TipoJuego.Nodos & 2);
 
 		if (Ply > (MAX_PLY - 2))
 			return Evaluar();
 
 #ifdef USAR_MATE_DISTANCE_PRUNING
-		alpha = alpha > MATE(Ply+1) ? alpha : MATE(Ply+1);
-		beta = beta < MATE_EN(Ply) ? beta : MATE_EN(Ply);
-		if (alpha >= beta)
-			return alpha;
+		mAlpha = alpha > -VALOR_MATE + Ply ? alpha : -VALOR_MATE + Ply;
+		mBeta = beta < VALOR_MATE - Ply - 1 ? beta : VALOR_MATE - Ply - 1;
+		if (mAlpha >= mBeta)
+			return mAlpha;
 #endif
 	}
 
@@ -352,6 +336,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 	#endif
 	}
 #endif
+
 #ifdef USAR_TABLAS_DE_FINALES
 	/* Comprobamos acceso a las tablas de finales de gaviota, solo en pv */
 	if (TablaDeFinales.Usar == 2 && !Zw && TablaDeFinales.Dll_CargadaGv == true)
@@ -360,54 +345,33 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 		NumeroFichas = Blancas.PeonTotales + Blancas.CaballosTotales + Blancas.AlfilTotales + Blancas.TorresTotales + Blancas.DamasTotales
 			+ Negras.PeonTotales + Negras.CaballosTotales + Negras.AlfilTotales + Negras.TorresTotales + Negras.DamasTotales + 2; /* + 2 son los reyes */
 
-		if ((TablaDeFinales.Piezas & 1) != 0 && NumeroFichas == 3 && TablaDeFinales.Limite >= NumeroFichas) /* Tenemos 3 piezas */
-		{
-			AccederTablasDeFinales = true;
-		}
-		if ((TablaDeFinales.Piezas & 4) != 0 && NumeroFichas <= 4 && TablaDeFinales.Limite >= NumeroFichas) /* Tenemos 4 piezas */
-		{
-			AccederTablasDeFinales = true;
-		}
-		if ((TablaDeFinales.Piezas & 16) != 0 && NumeroFichas <= 5 && TablaDeFinales.Limite >= NumeroFichas) /* Tenemos 5 piezas */
-		{
-			AccederTablasDeFinales = true;
-		}
 		/* Busqueda. Acceso en depth 1 */
-		if (AccederTablasDeFinales == true && Ply > 1 && depth <= 1)
+		if (NumeroFichas <= TablaDeFinales.Limite && Ply > 1 && depth <= 1)
 		{
-			puntos = 0;
-			if ((tbResultado = Probar_gaviota(&puntos, &Ply)) != TBUNKNOWN)
+			if (Probar_gaviota(&tbPuntos) == true)
 			{
 				TablaDeFinales.Acierto++;
 
-				if (puntos > 0)
+				if (tbPuntos > 0)
 					tbResultado = TB_WIN;
-				if (puntos < 0)
+				if (tbPuntos < 0)
 					tbResultado = TB_LOSS;
 
-				hPuntos = tbResultado == TB_LOSS ? beta += 500 + Ply
-					: tbResultado == TB_WIN ? beta -= 500 + Ply: 0;
+				tbPuntos = tbResultado == TB_LOSS ? -ABS(beta) + 500 + Ply
+					: tbResultado == TB_WIN ? ABS(beta) - 500 - Ply : 0;
 
-				hFlag = tbResultado == TB_LOSS ? TT_ALPHA
+				tbFlag = tbResultado == TB_LOSS ? TT_ALPHA
 					: tbResultado == TB_WIN ? TT_BETA : TT_EXACTO;
 
-				if (hFlag == TT_EXACTO
-					|| (hFlag == TT_BETA && hPuntos >= beta)
-					|| (hFlag == TT_ALPHA && hPuntos <= alpha)) 
+				if (tbFlag == TT_EXACTO
+					|| (tbFlag == TT_BETA && tbPuntos >= beta)
+					|| (tbFlag == TT_ALPHA && tbPuntos <= alpha))
 				{
-					return hPuntos;
+					tbResultado = tbPuntos;
+					ConvertirValorTT(&tbPuntos);
+					AlmacenarPosicion(depth, tbPuntos, VALOR_TB_VACIO, tbFlag, NO_MOVIMIENTO);
+					return tbResultado;
 				}
-			}
-		}
-		/* Root */
-		if (AccederTablasDeFinales == true && Ply == 1 && depth == 1 && depth == TipoJuego.DepthAct - 1) /* Hay que jugar una interaccion. Para obtener el movimiento ganador. */
-		{
-			puntos = 0;
-			if (Probar_gaviota(&puntos, &Ply) != TBUNKNOWN)
-			{
-				TablaDeFinales.Acierto++;
-				TipoJuego.DepthAct = TipoJuego.MaxDepth;/* Si hay resultado. Paramos la busqueda. */
-				return puntos;
 			}
 		}
 	}
@@ -416,45 +380,32 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 	/* Comprobamos acceso a las tablas de finales de Syzygy, solo en pv */
 	if (TablaDeFinales.Usar == 1 && !Zw && TablaDeFinales.Dll_CargadaSg == true)
 	{
-		AccederTablasDeFinales = true;
-
 		NumeroFichas = Blancas.PeonTotales + Blancas.CaballosTotales + Blancas.AlfilTotales + Blancas.TorresTotales + Blancas.DamasTotales
 			+ Negras.PeonTotales + Negras.CaballosTotales + Negras.AlfilTotales + Negras.TorresTotales + Negras.DamasTotales + 2;
 
-		if ((U64)NumeroFichas > *SG_man || NumeroFichas > TablaDeFinales.Limite)
-			AccederTablasDeFinales = false;
 		/* Busqueda. Acceso en depth 1 */
-		if (AccederTablasDeFinales == true && Ply > 1 && depth <= 1)
+		if (NumeroFichas <= TablaDeFinales.Limite && Ply > 1 && depth <= 1)
 		{
-			if ((tbResultado = ProbarSyzygy(true, &hMov)) != SG_RESULT_FAILED)
+			tbResultado = ProbarSyzygy();
+			if (tbResultado != SG_RESULT_FAILED)
 			{
 				TablaDeFinales.Acierto++;
 
-				hPuntos = tbResultado == TB_LOSS ? beta += 500 + Ply
-					: tbResultado == TB_WIN ? beta -= 500 + Ply : 0;
+				tbPuntos = tbResultado == TB_LOSS ? -ABS(beta) + 500 + Ply
+					: tbResultado == TB_WIN ? ABS(beta) - 500 - Ply : 0;
 
-				hFlag = tbResultado == TB_LOSS ? TT_ALPHA
+				tbFlag = tbResultado == TB_LOSS ? TT_ALPHA
 					: tbResultado == TB_WIN ? TT_BETA : TT_EXACTO;
 
-				if (hFlag == TT_EXACTO
-					|| (hFlag == TT_BETA && hPuntos >= beta)
-					|| (hFlag == TT_ALPHA && hPuntos <= alpha))
+				if (tbFlag == TT_EXACTO
+					|| (tbFlag == TT_BETA && tbPuntos >= beta)
+					|| (tbFlag == TT_ALPHA && tbPuntos <= alpha))
 				{
-					return hPuntos;
+					tbResultado = tbPuntos;
+					ConvertirValorTT(&tbPuntos);
+					AlmacenarPosicion(depth, tbPuntos, VALOR_TB_VACIO, tbFlag, NO_MOVIMIENTO);
+					return tbResultado;
 				}
-			}
-		}
-		/* Root */
-		if (AccederTablasDeFinales == true && depth == 1 && TipoJuego.DepthAct == depth)
-		{
-			if ((tbResultado = ProbarSyzygy(false, &hMov)) != SG_RESULT_FAILED)
-			{
-				TablaDeFinales.Acierto++;
-				vp_terminada_root[0] = hMov;
-				vp_terminada_root[1] = NO_MOVIMIENTO;
-				selDepth = 1;
-				TipoJuego.DepthAct = TipoJuego.MaxDepth;
-				return 0;
 			}
 		}
 	}
@@ -463,39 +414,33 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 	/* Comprobamos acceso a las tablas de finales de BitBases, solo en pv */
 	if (TablaDeFinales.Usar == 3 && !Zw && TablaDeFinales.Dll_CargadaBb == true)
 	{
-		AccederTablasDeFinales = true;
-
 		/* Cuantas piezas tenemos */
 		NumeroFichas = Blancas.PeonTotales + Blancas.CaballosTotales + Blancas.AlfilTotales + Blancas.TorresTotales + Blancas.DamasTotales
 			+ Negras.PeonTotales + Negras.CaballosTotales + Negras.AlfilTotales + Negras.TorresTotales + Negras.DamasTotales + 2; /* + 2 son los reyes */
 
-		if (NumeroFichas > TablaDeFinales.Limite)
-			AccederTablasDeFinales = false;
-
 		/* Busqueda. Acceso en depth 1 */
-		if (AccederTablasDeFinales == true && Ply > 1 && depth <= 1)
+		if (NumeroFichas <= TablaDeFinales.Limite && Ply > 1 && depth <= 1)
 		{
-			puntos = 0;
-			if (Probar_egbb(&puntos) == 1)
+			if (Probar_egbb(&tbPuntos) == true)
 			{
 				TablaDeFinales.Acierto++;
 
-				if (puntos > 0)
+				if (tbPuntos > 0)
 					tbResultado = TB_WIN;
-				if (puntos < 0)
+				if (tbPuntos < 0)
 					tbResultado = TB_LOSS;
 
-				hPuntos = tbResultado == TB_LOSS ? beta += 500 + Ply
-					: tbResultado == TB_WIN ? beta -= 500 + Ply : 0;
+				tbPuntos = tbResultado == TB_LOSS ? -ABS(beta) + 500 + Ply
+					: tbResultado == TB_WIN ? ABS(beta) - 500 - Ply : 0;
 
-				hFlag = tbResultado == TB_LOSS ? TT_ALPHA
+				tbFlag = tbResultado == TB_LOSS ? TT_ALPHA
 					: tbResultado == TB_WIN ? TT_BETA : TT_EXACTO;
 
-				if (hFlag == TT_EXACTO
-					|| (hFlag == TT_BETA && hPuntos >= beta)
-					|| (hFlag == TT_ALPHA && hPuntos <= alpha))
+				if (tbFlag == TT_EXACTO
+					|| (tbFlag == TT_BETA && tbPuntos >= beta)
+					|| (tbFlag == TT_ALPHA && tbPuntos <= alpha))
 				{
-					return hPuntos;
+					return tbPuntos;
 				}
 			}
 		}
@@ -522,6 +467,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 		&& depth > 1
 		&& Ev >= beta
 		&& FigurasAdversarioNull(TableroGlobal.MueveBlancas)
+		//&& FigurasAdversarioNull(TableroGlobal.MueveBlancas) > (depth > 12) /* PROBAR - LOS RESULTADOS MATE OK. A VER CON LOS STS Y PARTIDAS. IDEAS WEISS, IMPLEMENTADA EN berserk Y YO */
 		&& (!hEncontrado || FLAG(hFlag) == TT_BETA || hPuntos >= beta))
 	{
 		nuevo_depth = depth - (4 + depth / 6 + MIN(3, (Ev - beta) / 200));
@@ -529,7 +475,8 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 		puntos = -AlphaBeta(nuevo_depth, -beta, -beta + 1, en_jaque, true);
 		DeshacerMovimientoNull();
 
-		if (puntos >= beta) return beta;
+		if (puntos >= beta)
+			return beta;
 	}
 #endif
 #ifdef USAR_IDD
@@ -553,7 +500,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 
 #ifdef USAR_LATE_MOVE_PRUNING
 		if (depth <= 8
-			&& puntos_max > MATE((MAX_PLY * 2))
+			&& puntos_max > -VALOR_MATE_MIN
 			&& i >= lmp[Mejorando][depth])
 		{
 			SaltarTranquilo = true;
@@ -564,7 +511,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 
 #ifdef USAR_FUTILITY_PRUNING_HISTORY
 		if (depth <= 8
-			&& puntos_max > MATE((MAX_PLY * 2))
+			&& puntos_max > -VALOR_MATE_MIN
 			&& EsMovimientoTranquilo
 			&& Ev + (65 * depth) <= alpha
 			&& Historico < HistoricoFutilityPoda[Mejorando])
@@ -574,7 +521,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 #endif
 
 #ifdef USAR_STATIC_EXCHANGE_EVALUATION_PRUNING
-		if (puntos_max > MATE((MAX_PLY * 2))
+		if (puntos_max > -VALOR_MATE_MIN
 			&& depth <= 9
 			&& ListaMovimiento[i].Ordenar < ORDENAR_CAPTURAS)
 		{
@@ -674,7 +621,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 
 	if (MovimientosLegales == 0) {
 		if (en_jaque == true) {
-			return MATE(Ply);
+			return -VALOR_MATE + Ply;
 		}
 		else {
 			return VALOR_EMPATE;
@@ -701,24 +648,28 @@ int AlphaBetaQs(int alpha, int beta)
 	int hMov = NO_MOVIMIENTO;
 	int hEv = VALOR_TB_VACIO;
 #ifdef USAR_HASH_PRUNING
-	int hPuntos = 0;
+	int hPuntos = -VALOR_MATE;
 	int hFlag = TT_DESCONOCIDO;
 #endif
 
 	TipoJuego.Nodos++;
 
 	ComprobarTiempo();
-	if (TipoJuego.Interrumpir == true) return VALOR_EMPATE;
+	if (TipoJuego.Interrumpir == true)
+		return VALOR_EMPATE;
 
-	if (EsTablaRepeticion() == true) return 1 - (TipoJuego.Nodos & 2);
+	if (EsTablaRepeticion(false) == true)
+		return 1 - (TipoJuego.Nodos & 2);
 
-	if (TableroGlobal.Ply > (MAX_PLY - 2)) return Evaluar();
+	if (TableroGlobal.Ply > (MAX_PLY - 2))
+		return Evaluar();
 
 #ifdef USAR_HASH_PRUNING
 	if (RecuperarPosicion(&hPuntos, &hEv, &hMov, &hFlag) == true)
 	{
 		ConvertirValorTT(&hPuntos);
-		if (PodaHash(&hFlag, &beta, &alpha, &hPuntos) == true) return hPuntos;
+		if (PodaHash(&hFlag, &beta, &alpha, &hPuntos) == true)
+			return hPuntos;
 	}
 #endif
 
@@ -727,7 +678,8 @@ int AlphaBetaQs(int alpha, int beta)
 	/* Stand pat */
 	puntos_max = Ev;
 	alpha = MAX(alpha, Ev);
-	if (alpha >= beta) return Ev;
+	if (alpha >= beta)
+		return Ev;
 
 	NumeroDeMovimientos = GenerarMovimientos(CapturasCoronacion, ListaMovimiento);
 	OrdenarMovimientosTodos(&NumeroDeMovimientos, &hMov, ListaMovimiento);
@@ -749,7 +701,7 @@ int AlphaBetaQs(int alpha, int beta)
 		}
 
 #ifdef USAR_STATIC_EXCHANGE_EVALUATION_PRUNING
-		if (puntos_max > MATE((MAX_PLY * 2))
+		if (puntos_max > -VALOR_MATE_MIN
 			&& CORONACION(ListaMovimiento[i].Movimiento) == MFLAGPROM
 			&& ValorPieza(PIEZAMOVIDA(ListaMovimiento[i].Movimiento)) != SeeReyValor
 			&& ValorPieza(PIEZAMOVIDA(ListaMovimiento[i].Movimiento)) > ValorPieza(CAPTURADA(ListaMovimiento[i].Movimiento))
@@ -770,7 +722,8 @@ int AlphaBetaQs(int alpha, int beta)
 			if (puntos > alpha)
 			{
 				alpha = puntos;
-				if (puntos >= beta) return puntos;
+				if (puntos >= beta)
+					return puntos;
 			}
 		}
 	}
@@ -813,39 +766,17 @@ void ImprimirVp(int M_Depth, int puntos, int lowerbound)
 {
 	U64 A_Nps = 0;
 	int pvi = 0;
-	U64 tiempo = (ObtenerTiempo() - TipoJuego.Inicio);
 	int mate = 0;
 
 #ifdef USAR_TABLAS_DE_FINALES
 	U64 tbhits = 0;
 #endif
 
-	if (tiempo != 0)
-		tiempo = (tiempo <= (float)TipoJuego.Tiempo / 3.0f);
-	else
-		tiempo = true;
+	TipoJuego.TiempoTrascurrido = TiempoTrascurrido(&TipoJuego);
 
-	if (TipoJuego.Infinito == false && TipoJuego.MostrarVp == 0)
+	if (TipoJuego.TiempoTrascurrido != 0 && TipoJuego.Nodos != 0)
 	{
-		return;
-	}
-
-	if (TipoJuego.Infinito == false
-		&& TipoJuego.MostrarVp == 1
-		&& (
-		(TipoJuego.Activo == false && M_Depth < (float)TipoJuego.MaxDepth / 2.0f)
-		|| (TipoJuego.Activo == true && tiempo == true)
-		|| (TipoJuego.Activo == true && TipoJuego.Interrumpir == false && tiempo == true)
-		)
-		)
-	{
-		return;
-	}
-
-	TipoJuego.TiempoTranscurrido = ObtenerTiempo() - TipoJuego.Inicio;
-	if (TipoJuego.TiempoTranscurrido != 0 && TipoJuego.Nodos != 0)
-	{
-		A_Nps = (U64)((float)TipoJuego.Nodos / (float)TipoJuego.TiempoTranscurrido) * 1000;
+		A_Nps = (U64)((float)TipoJuego.Nodos / (float)TipoJuego.TiempoTrascurrido) * 1000;
 	}
 	else
 	{
@@ -853,7 +784,7 @@ void ImprimirVp(int M_Depth, int puntos, int lowerbound)
 	}
 
 	printf("info depth "S32_FORMAT" seldepth "S32_FORMAT"", M_Depth, selDepth);
-	printf(" time "U64_FORMAT" nodes "U64_FORMAT" nps "U64_FORMAT" ", TipoJuego.TiempoTranscurrido, TipoJuego.Nodos, A_Nps);
+	printf(" time "U64_FORMAT" nodes "U64_FORMAT" nps "U64_FORMAT" ", TipoJuego.TiempoTrascurrido, TipoJuego.Nodos, A_Nps);
 
 #ifdef USAR_TABLAS_DE_FINALES
 	if (TablaDeFinales.Usar != 0)
@@ -1033,7 +964,7 @@ void ImprimirMejorJugada(int Jugada, int J_Adv)
 	fflush(stdout);
 }
 /* Comprueba si el movimiento genera tabla */
-int EsTablaRepeticion()
+int EsTablaRepeticion(int en_jaque)
 {
 #ifdef USAR_HASH_TB
 	int i = 0;
@@ -1041,7 +972,8 @@ int EsTablaRepeticion()
 
 #endif
 
-	if (TableroGlobal.Regla_50_Movimiento >= 100) return true;
+	if (TableroGlobal.Regla_50_Movimiento >= 100)
+		return true;
 
 #ifdef USAR_HASH_TB
 	for (i = TableroGlobal.Hply - 2; i >= 0; i -= 2)
@@ -1055,7 +987,7 @@ int EsTablaRepeticion()
 	}
 #endif
 
-	return EvaluarTablas();
+	return en_jaque ? false : EvaluarTablas();
 }
 /* Comprobamos tiempo y entradas */
 void ComprobarTiempo()
@@ -1067,19 +999,7 @@ void ComprobarTiempo()
 
 	if (!(TipoJuego.Nodos % COMPROBAR_ENTRADAS))
 	{
-		if (TipoJuego.DepthAct > 1)
-		{
-			if (TipoJuego.Activo == true)
-			{
-				if ((ObtenerTiempo() - TipoJuego.Inicio) >= TipoJuego.Tiempo)
-				{
-					if (vp_terminada[0] != NO_MOVIMIENTO)
-					{
-						TipoJuego.Interrumpir = true;
-					}
-				}
-			}
-		}
+		TerminarTiempoLimite(&TipoJuego);
 
 		if (EntradaStdIn())
 		{
@@ -1125,12 +1045,12 @@ int FigurasAdversarioNull(int turno)
 /* Obtenemos si la puntuacion esta dentro del margen de mate */
 int EsPuntuacionMate(int puntos)
 {
-	if (puntos > MATE_EN( (MAX_PLY*2) ) && puntos != VALOR_MATE)
+	if (puntos > VALOR_MATE_MIN && puntos != VALOR_MATE)
 	{
 		return true;
 	}
 
-	if (puntos < MATE( (MAX_PLY*2) ) && puntos != -VALOR_MATE)
+	if (puntos < -VALOR_MATE_MIN && puntos != -VALOR_MATE)
 	{
 		return true;
 	}

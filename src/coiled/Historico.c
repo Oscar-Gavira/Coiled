@@ -70,33 +70,15 @@ int MovimientoKiller(int *ply, int *M)
 }
 
 /* Inicializar Historico y killer heuristico */
-void HistoricoIniciar(int Reiniciar)
+void HistoricoIniciar()
 {
-	int i = 0;
-	int ii = 0;
+	memset(Historico, 0, 64 * 64 * sizeof(S64));
+	memset(Historico_Killer, 0, MAX_PLY * 2 * sizeof(int));
+	memset(Historico_Killer_Mate, 0, MAX_PLY * 2 * sizeof(int));
+	memset(HistoricoRefutacion, 0, 7 * 64 * 64 * sizeof(int));
 
-	if (Reiniciar == true)
-	{
-		memset(Historico, 0, 64 * 64 * sizeof(S64));
-		memset(Historico_Killer, 0, MAX_PLY * 2 * sizeof(int));
-		memset(Historico_Killer_Mate, 0, MAX_PLY * 2 * sizeof(int));
-		memset(HistoricoRefutacion, 0, 7 * 64 * 64 * sizeof(int));
-
-		Max_Historico = 0;
-		Min_Historico = 0;
-	}
-	else
-	{
-		for (i = 0; i < 64; i++)
-		{
-			for (ii = 0; ii < 64; ii++)
-			{
-				Historico[i][ii] *= 0.4;
-			}
-		}
-		Max_Historico *= 0.4;
-		Min_Historico *= 0.4;
-	}
+	Max_Historico = 0;
+	Min_Historico = 0;
 }
 
 /* Actualizamos historico y killer */
@@ -128,7 +110,7 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 			Historico_Killer[*ply][0] = M;
 		}
 	}
-
+	/* Refutation */
 	if (*ply > 0 && TableroGlobal.Estado[*ply - 1].Movimiento != NO_MOVIMIENTO)
 	{
 		PiezaCn = PIEZAMOVIDA(TableroGlobal.Estado[*ply - 1].Movimiento);
@@ -143,7 +125,7 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 			HistoricoRefutacion[PiezaCn][OrigenCn][DestinoCn] = M;
 		}
 	}
-
+	/* Historico */
 	for (i = 0; i < Nmov; i++)
 	{
 		Fin = CUADRADO_DESTINO(ML[i]);

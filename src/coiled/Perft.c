@@ -67,7 +67,7 @@ void Perft(int div)
 
 	if (div == true) printf("\n");
 	if (div == true) printf("========================================\n");
-	TipoJuego.TiempoTranscurrido = (ObtenerTiempo() - TipoJuego.Inicio) + 1;
+	TipoJuego.TiempoTrascurrido = (ObtenerTiempo() - TipoJuego.Inicio) + 1;
 
 	if (div == false)
 	{
@@ -79,9 +79,9 @@ void Perft(int div)
 	}
 	if (div == true)
 	{
-		if (Perft_Divide_Total.A_Nodos != 0 && TipoJuego.TiempoTranscurrido != 0)
+		if (Perft_Divide_Total.A_Nodos != 0 && TipoJuego.TiempoTrascurrido != 0)
 		{
-			printf("Nps: "U64_FORMAT"\n", Perft_Divide_Total.A_Nodos / TipoJuego.TiempoTranscurrido * 1000);
+			printf("Nps: "U64_FORMAT"\n", Perft_Divide_Total.A_Nodos / TipoJuego.TiempoTrascurrido * 1000);
 		}
 		else
 		{

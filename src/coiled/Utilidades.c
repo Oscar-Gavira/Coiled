@@ -117,19 +117,6 @@ void SplitString(char *_string, char *contenedor, int longitud)
 	}
 }
 
-/* Obtenemos el tiempo */
-U64 ObtenerTiempo()
-{
-#if defined(_WIN32)
-	return GetTickCount();
-#else
-	struct timeval tv;
-
-	gettimeofday(&tv, NULL);
-	return tv.tv_sec * 1000 + tv.tv_usec / 1000;
-#endif
-}
-
 int EntradaStdIn ()
 {
 #ifdef _WIN32
@@ -239,4 +226,29 @@ int IndexOfShift(char *base, char *str, int startIndex) {
 	}
 
 	return result;
+}
+
+void VerificarDir(char *base, int dir)
+{
+	int startIndex = 0;
+	int baselen = strlen(base);
+	int i = 0;
+
+	/* Formato linux */
+	char buscar = '\\';
+	char remplazar = '/';
+
+	for (i = 0; i < baselen; i++)
+	{
+		if (base[i] == buscar)
+		{
+			base[i] = remplazar;
+		}
+	}
+
+	if (dir == true)
+	{
+		if (base[baselen - 1] != remplazar)
+			base[baselen] = remplazar;
+	}
 }

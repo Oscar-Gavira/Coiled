@@ -48,7 +48,6 @@ int Evaluar()
 {
 	int puntos = 0;
 	_Valor pGlobal = PuntosCero;
-	int escalar = 100;
 
 #ifdef USAR_NNUE
 	if (Nnue.Dll_Cargada == true && Nnue.Usar == true)
@@ -68,7 +67,8 @@ int Evaluar()
 	/* Evaluamos material para detectar empate */
 	if (TableroGlobal.Etapa <= FIN_ETAPA)
 	{
-		if ( (escalar = FinalesReconocidos(Blancas.PeonTotales, Blancas.CaballosTotales, Blancas.AlfilTotales, Blancas.TorresTotales, Blancas.DamasTotales, Negras.PeonTotales, Negras.CaballosTotales, Negras.AlfilTotales, Negras.TorresTotales, Negras.DamasTotales)) == 0)
+		/* Evaluar material insuficiente modo basico. */
+		if (EvaluarTablas())
 		{
 			return VALOR_EMPATE;
 		}
@@ -96,8 +96,6 @@ int Evaluar()
 
 	/* Interpolar puntos de apertura y final */
 	puntos = Interpolar(&pGlobal);
-
-	puntos = puntos != 0 ? puntos * 100 / escalar : 0;
 
 	return Tempo + (TableroGlobal.MueveBlancas ? puntos : -puntos);
 }
@@ -255,11 +253,7 @@ int Interpolar(_Valor *puntos)
 {
 	int mg_etapa = MIN(TableroGlobal.Etapa, MAX_ETAPA);
 	int eg_etapa = MAX_ETAPA - TableroGlobal.Etapa;
-
-	if ((puntos->Apertura * mg_etapa + puntos->Final * eg_etapa) != 0)
-		return ((puntos->Apertura * mg_etapa + puntos->Final * eg_etapa) / MAX_ETAPA);
-	else
-		return 0;
+	return (puntos->Apertura * mg_etapa + puntos->Final * eg_etapa) / MAX_ETAPA;
 }
 void EvaluarComplejidad(_Valor *puntos)
 {
@@ -276,91 +270,6 @@ void EvaluarComplejidad(_Valor *puntos)
 	int v = Signo * MAX(Complejidad, -ABS(puntos->Final));
 
 	puntos->Final += v;
-}
-int FinalesReconocidos(int bPeon, int bCaballo, int bAlfil, int bTorre, int bDama, int nPeon, int nCaballo, int nAlfil, int nTorre, int nDama)
-{
-	int bTotal = bPeon + bCaballo + bAlfil + bTorre + bDama;
-	int nTotal = nPeon + nCaballo + nAlfil + nTorre + nDama;
-	int total = bTotal + nTotal;
-	int ratio = 100;
-
-	if (bTotal <= 1 && nTotal <= 1)
-	{
-		/* Material insuficiente */
-		if (bTotal == 0 && total == 1)
-			ratio = 0; // KK							ETAPA = 1
-		if (bAlfil == 1 && total == 1)
-			ratio = 0; // KBK							ETAPA = 1
-		if (nAlfil == 1 && total == 1)
-			ratio = 0; // KKB							ETAPA = 1
-		if (bCaballo == 1 && total == 1)
-			ratio = 0; // KNK							ETAPA = 1
-		if (nCaballo == 1 && total == 1)
-			ratio = 0; // KKN							ETAPA = 1
-		if (bCaballo == 1 && nCaballo == 1)
-			ratio = 0; // KNKN							ETAPA = 2
-		if (bAlfil == 1 && nAlfil == 1)
-			ratio = 0; // KBKB							ETAPA = 2
-		if (bCaballo == 1 && nAlfil == 1)
-			ratio = 0; // KNKB							ETAPA = 2
-		if (bAlfil == 1 && nCaballo == 1)
-			ratio = 0; // KBKN							ETAPA = 2
-		if (bTorre == 1 && nTorre == 1)
-			ratio = 1; // KRKR							ETAPA = 2
-		if (bDama == 1 && nDama == 1)
-			ratio = 1; // KQKQ							ETAPA = 2
-		if (bAlfil == 1 && nPeon == 1)
-			ratio = 1; // KBKP							ETAPA = 2
-		if (bPeon == 1 && nAlfil == 1)
-			ratio = 1; // KPKB							ETAPA = 2
-		/* Especiales */
-		if (bCaballo == 1 && nPeon == 1)
-			ratio = 1; // KNKP							ETAPA = 1
-		if (bPeon == 1 && nCaballo == 1)
-			ratio = 1; // KPKN							ETAPA = 1
-		if (bTorre == 1 && nCaballo == 1)
-			ratio = 10; // KRKN							ETAPA = 2
-		if (bCaballo == 1 && nTorre == 1)
-			ratio = 10; // KNKR							ETAPA = 3
-		if (bTorre == 1 && nAlfil == 1)
-			ratio = 1; // KRKB							ETAPA = 3
-		if (bAlfil == 1 && nTorre == 1)
-			ratio = 1; // KBKR							ETAPA = 3
-		if (bDama == 1 && nTorre == 1)
-			ratio = 50; // KQKR							ETAPA = 6
-		if (bTorre == 1 && nDama == 1)
-			ratio = 50; // KQKR							ETAPA = 6
-	}
-	else if (bTotal <= 2 && nTotal <= 2)
-	{
-		/* Material insuficiente */
-		if (bCaballo == 2 && total == 2)
-			ratio = 1; // KNNK							ETAPA = 2
-		if (nCaballo == 2 && total == 2)
-			ratio = 1; // KKNN							ETAPA = 2
-		if (bCaballo == 2 && nCaballo == 1 && total == 3)
-			ratio = 1; // KNNKN							ETAPA = 3
-		if (bCaballo == 1 && nCaballo == 2 && total == 3)
-			ratio = 1; // KNKNN							ETAPA = 3
-		if (bCaballo == 2 && nAlfil == 1 && total == 3)
-			ratio = 1; // KNNKB							ETAPA = 3
-		if (bAlfil == 1 && nCaballo == 2 && total == 3)
-			ratio = 1; // KBKNN							ETAPA = 3
-		if (bAlfil == 2 && nTorre == 1 && total == 3)
-			ratio = 1; // KBBKR							ETAPA = 3
-		if (nAlfil == 2 && bTorre == 1 && total == 3)
-			ratio = 1; // KRKBB							ETAPA = 3
-		if (bTorre == 1 && bCaballo == 1 && nTorre == 1 && total == 3)	//ETAPA = 5
-			ratio = 3;	// KRNKR
-		if (nTorre == 1 && nCaballo == 1 && bTorre == 1 && total == 3)	//ETAPA = 5
-			ratio = 3;	// KRKRN
-		if (bTorre == 1 && bAlfil == 1 && nTorre == 1 && total == 3)	//ETAPA = 5
-			ratio = 6;	// KRBKR
-		if (nTorre == 1 && nAlfil == 1 && bTorre == 1 && total == 3)	//ETAPA = 5
-			ratio = 6;	// KRKRB
-	}
-
-	return ratio;
 }
 
 void EvaluarPeones(int Cs, int Turno)
@@ -827,7 +736,7 @@ void EvaluarSeguridadRey(int Turno)
 		Puntos += (Shelter == 7 && Storm != 7) ? COLUMNA_SEMI_ABIERTA_SHELTER[Columna] : 0;
 		Puntos += COLUMNA_STORM[Storm];
 	}
-	if (Puntos != 0) TempColor->Puntos.Apertura += Puntos * 0.8;
+	if (Puntos != 0) TempColor->Puntos.Apertura += Puntos * 0.8f;
 	if (Puntos != 0) TempColor->Puntos.Final += Puntos;
 
 

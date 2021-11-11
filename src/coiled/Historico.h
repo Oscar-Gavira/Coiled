@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 /*******************************************************************************
 									Metodos
 *******************************************************************************/
-void HistoricoIniciar(int Reiniciar);												/* Inicializar Historico y killer heuristico */
+void HistoricoIniciar();															/* Inicializar Historico y killer heuristico */
 void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmov);	/* Actualizacion historico para el mejor movimiento y posible killer. */
 int MovimientoTranquilo(int *M);													/* Es un movimiento que no genera cambio de material */
 int MovimientoKiller(int *ply, int *M);												/* Indica si el movimiento es un killer o killer mate */

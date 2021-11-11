@@ -18,6 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "Estructuras.h"
+#include "Tiempo.h"
 
 #ifndef UTILIDADES_H
 #define UTILIDADES_H
@@ -26,8 +27,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 							Metodos
 ******************************************************************************/
 void ImprimirMovimientoCoordenadas(int Inicio, int Fin, int PiezaCoronacion);		/* Imprimir el movimiento en coordenadas E2E4 */
-U64 ObtenerTiempo();																/* Obtenemos el tiempo */
 int EntradaStdIn();																/* Comprobamos entradas durante la busqueda. */
 int ValorPieza(int Pieza);															/* Obtenemos el valor de la pieza */
 int IndexOfShift(char *base, char *str, int startIndex);							/* Devuelve el indice de la coincidencia dentro de un string. Si no hay devuelve -1 */
+void VerificarDir(char* base, int dir);
 #endif

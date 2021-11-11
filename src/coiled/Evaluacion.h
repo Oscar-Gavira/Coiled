@@ -38,7 +38,7 @@ int ESPEJO[] = {
 
 #define Distancia(a, b) MAX(ABS(HORIZONTAL(a) - HORIZONTAL(b)), ABS(COLUMNA(a) - COLUMNA(b)))
 #define MAX_ETAPA	(24)			/* ETAPA maximo */
-#define FIN_ETAPA	 (6)			/* ETAPA Final */
+#define FIN_ETAPA	 (4)			/* ETAPA Final */
 _Valor	PuntosCero = { 0, 0 };		/* Valor cero */
 
 _Valor PEONVALOR = { 79, 127 };
@@ -75,7 +75,6 @@ void EvaluarSeguridadRey(int Turno);
 int ProteccionPeonesReyShelter(int Cl, int Turno);
 int ProteccionPeonesReyStorm(int Cl, int Turno);
 void EvaluarComplejidad(_Valor *puntos);
-int FinalesReconocidos(int bPeon, int bCacallo, int bAlfil, int bTorre, int bDama, int nPeon, int nCaballo, int nAlfil, int nTorre, int nDama);
 
 typedef struct tag_Evaluacion {
 	_Valor PST[2][6][64];

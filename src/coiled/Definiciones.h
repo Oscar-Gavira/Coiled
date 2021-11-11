@@ -261,15 +261,14 @@ typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el histori
 #define SG_RESULT_STALEMATE         SG_SET_WDL(0, TB_DRAW)
 #endif
 
-#define VALOR_MATE		(32000)
-#define MATE(p)			(-VALOR_MATE + p)
-#define MATE_EN(p)		(VALOR_MATE - p)
-#define VALOR_EMPATE	(0)
-#define VALOR_TB_VACIO	(-VALOR_MATE - 1)
+#define VALOR_MATE		    (32000)
+#define VALOR_MATE_MIN	    (VALOR_MATE - MAX_PLY)
+#define VALOR_EMPATE	    (0)
+#define VALOR_TB_VACIO	    (VALOR_MATE + 1)
 
 #define ASPIRATION_WINDOWS
 #ifdef ASPIRATION_WINDOWS
-	#define ASPIRATION (15)
+	#define ASPIRATION (10)
 #endif
 #define USAR_IDD
 #define USAR_MATE_DISTANCE_PRUNING

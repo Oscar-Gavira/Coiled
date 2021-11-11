@@ -45,11 +45,6 @@ int Cargar_Syzygy_dll()
 		{
 			return false;
 		}
-		SG_probe_root = (SG_PROBE_ROOT)GetProcAddress(SG_hmod, "tb_probe_root_impl");
-		if (SG_probe_root == NULL)
-		{
-			return false;
-		}
 		SG_probe_wdl = (SG_PROBE_WDL)GetProcAddress(SG_hmod, "tb_probe_wdl_impl");
 		if (SG_probe_wdl == NULL)
 		{
@@ -99,7 +94,6 @@ int Descargar_Syzygy_dll()
 	SG_hmod = NULL;
 	SG_inits = NULL;
 	SG_free = NULL;
-	SG_probe_root = NULL;
 	SG_probe_wdl = NULL;
 	SG_man = NULL;
 
@@ -119,27 +113,14 @@ void Iniciar_Mascara()
 	}
 }
 
-unsigned ProbarSyzygy(int WDL, int *mov)
+unsigned ProbarSyzygy()
 {
 	int i = 0;
-	unsigned Resultado = 0;
-	unsigned ListaMovimiento[MAX_JUGADAS];
 
 	U64 SG_Blancas = 0ULL, SG_Negras = 0ULL, SG_Rey = 0ULL, SG_Dama = 0ULL;
 	U64 SG_Torre = 0ULL, SG_Alfil = 0ULL, SG_Caballo = 0ULL, SG_Peon = 0ULL;
 
-	unsigned SG_de = 0;
-	unsigned SG_a = 0;
-	unsigned SG_promocion = 0;
-	int SG_Promociones[2][5] = {
-		{ 0, 12, 11, 10, 9 },
-		{ 0, 5, 4, 3, 2 } };
-
-	int de = 0;
-	int a = 0;
-	int promocion = 0;
-
-	if ((TableroGlobal.EnroqueB != 0 || TableroGlobal.EnroqueN != 0) || TableroGlobal.FichaAlPasoPosicion != 0)
+	if ((TableroGlobal.EnroqueB > Ninguno || TableroGlobal.EnroqueN > Ninguno) || TableroGlobal.FichaAlPasoPosicion != 0)
 		return SG_RESULT_FAILED;
 
 	for (i = 0; i < 64; ++i)
@@ -205,47 +186,17 @@ unsigned ProbarSyzygy(int WDL, int *mov)
 		}
 	}
 
-	if (WDL == true)
-	{
-		return SG_probe_wdl(
-			SG_Blancas,
-			SG_Negras,
-			SG_Rey,
-			SG_Dama,
-			SG_Torre,
-			SG_Alfil,
-			SG_Caballo,
-			SG_Peon,
-			0,		/*EP*/
-			TableroGlobal.MueveBlancas);
-	}
-	else
-	{
-		Resultado = SG_probe_root(
-			SG_Blancas,
-			SG_Negras,
-			SG_Rey,
-			SG_Dama,
-			SG_Torre,
-			SG_Alfil,
-			SG_Caballo,
-			SG_Peon,
-			TableroGlobal.Regla_50_Movimiento, 0, TableroGlobal.MueveBlancas, ListaMovimiento);
-
-		// Creamos el movimiento
-		SG_de = SG_GET_FROM(Resultado);
-		SG_a = SG_GET_TO(Resultado);
-		SG_promocion = SG_GET_PROMOTES(Resultado);
-
-		de = SG_de ^ 0x38;
-		a = SG_a ^ 0x38;
-		promocion = SG_Promociones[TableroGlobal.MueveBlancas][SG_promocion];
-
-		*mov = MOVIMIENTO(de, a, TableroGlobal.Tablero[de], (TableroGlobal.Tablero[a] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[a], (promocion != 0) ? promocion : MFLAGPROM, 0);
-
-		return Resultado;
-	}
-	return SG_RESULT_FAILED;
+	return SG_probe_wdl(
+		SG_Blancas,
+		SG_Negras,
+		SG_Rey,
+		SG_Dama,
+		SG_Torre,
+		SG_Alfil,
+		SG_Caballo,
+		SG_Peon,
+		0,		/*EP*/
+		TableroGlobal.MueveBlancas);
 }
 
 #endif

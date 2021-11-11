@@ -145,7 +145,7 @@ void ListaJugadas(char *_Jugadas, int longitud)
 		if (strlen(_Jugadas) < (size_t)LibroSql.LimiteJugadas * 10)
 		{
 			if ( (strlen(LibroSql.Apertura) - longitud) > 0)
-				strncat(LibroSql.Apertura, _Jugadas, longitud);
+				strcat(LibroSql.Apertura, _Jugadas);
 
 			return;
 		}

@@ -1954,12 +1954,12 @@ int probe_wdl(Pos *pos, int *success)
   // Now handle the stalemate case.
   if (bestEp > -3 && v == 0) {
     TbMove moves[TB_MAX_MOVES];
-    TbMove *end2 = gen_moves(pos, moves);
+    TbMove *end = gen_moves(pos, moves);
     // Check for stalemate in the position with ep captures.
-    for (m = moves; m < end2; m++) {
+    for (m = moves; m < end; m++) {
       if (!is_en_passant(pos,*m) && legal_move(pos, *m)) break;
     }
-    if (m == end2 && !is_check(pos)) {
+    if (m == end && !is_check(pos)) {
       // stalemate score from tb (w/o e.p.), but an en-passant capture
       // is possible.
       *success = 2;
@@ -2368,6 +2368,9 @@ int root_probe_wdl(const Pos *pos, bool useRule50, struct TbRootMoves *rm)
 // Use the DTM tables to find mate scores.
 // Either DTZ or WDL must have been probed successfully earlier.
 // A return value of 0 means that not all probes were successful.
+#if defined(__cplusplus) && __cplusplus >= 201703L
+[[maybe_unused]]
+#endif
 int root_probe_dtm(const Pos *pos, struct TbRootMoves *rm)
 {
   int success;
@@ -2411,6 +2414,9 @@ int root_probe_dtm(const Pos *pos, struct TbRootMoves *rm)
 }
 
 // Use the DTM tables to complete a PV with mate score.
+#if defined(__cplusplus) && __cplusplus >= 201703L
+[[maybe_unused]]
+#endif
 void tb_expand_mate(Pos *pos, struct TbRootMove *move, Value moveScore, unsigned cardinalityDTM)
 {
   int success = 1, chk = 0;

@@ -120,7 +120,6 @@ typedef U64(CDECL *SG_LARGEST);
 typedef int (CDECL *SG_INITS) (const char *ruta);
 typedef void(CDECL *SG_FREE)(void);
 typedef unsigned (CDECL *SG_PROBE_WDL) (U64 white, U64 black, U64 kings, U64 queens, U64 rooks, U64 bishops, U64 knights, U64 pawns, unsigned ep, int turn);
-typedef unsigned (CDECL *SG_PROBE_ROOT) (U64 white, U64 black, U64 kings, U64 queens, U64 rooks, U64 bishops, U64 knights, U64 pawns, unsigned rule50, unsigned ep, int turn, unsigned *results);
 
 /* tbprobe */
 /* Inicia la carga de la informacion */
@@ -165,17 +164,20 @@ typedef struct tag_TablaDeFinales
 typedef struct tag_TipoJuego
 {
 	int Interrumpir;					/* false o true - Cuando se excede el tiempo o se recibe el comando stop */
-	U64 Tiempo;							/* Tiempo total por movimiento. */
+	float Tiempo;						/* Tiempo ideal por movimiento. */
+	float TiempoMax1;					/* Tiempo medio por movimiento. */
+	float TiempoMax2;					/* Tiempo maximo por movimiento. */
+	int TiempoFactor;					/* Estabilidad de la Pv */
+	int PrevenirTiempoExcedido;			/* Para evitar un Timeout en un juego por tiempo. Descuenta tiempo en ms al tiempo de busqueda, para poder enviar el mejor movimiento sin exceder el tiempo limite. */
 	U64 Inicio;							/* Tiempo inicial. */
-	U64 TiempoTranscurrido;				/* Para detectar si excedemos el tiempo limite por jugada */
-	int Activo;							/* Si el juego es por tiempo o por profundidad (depth) */
+	U64 TiempoTrascurrido;				/* Para detectar si excedemos el tiempo limite por jugada */
+	int Activo;							/* Si el juego es por 1 = tiempo. 2 = movetime. 0 = Mate, Infinite, profundidad (depth) */
 	int Infinito;						/* Activa el modo Analisis por asi decirlo, piensa hasta recibir un stop o una entrada */
 	int MaxDepth;						/* Maxima profundidad. Busqueda tipo go depth 15*/
 	int DepthAct;						/* Depth actual */
 	U64 Nodos;							/* Nodos totales */
 	int MejorJugada;					/* Mejor jugada */
 	int MejorJugadaAdv;					/* Mejor jugada para el adversario */
-	int MostrarVp;						/* Muestra la variante principal de tres formas: 0 = Nada, 1 = Mixto o 2 = Entero */
 	int BuscarMate;						/* Busca hasta localizar un mate en x */
 	int Ajedrez960;						/* Activa/desactiva el modo de juego Ajedrez960 */
 	int Ajedrez960Enroque;				/* Valor de 0 = UCI estandar. Valor de 1 O-O/O-O-O GUI Arena */

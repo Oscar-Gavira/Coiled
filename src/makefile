@@ -28,18 +28,7 @@ ICONFILE =
 endif
 
 ##################################WINDOWS O LINUX#########################################
-ifeq ($(WINDOWS),false)
-EXT = .so
-DEL1 = rm -rf egbbdll/*.o
-DEL2 = rm -rf fathom/*.o
-DEL3 = rm -rf gtbprobe/*.o
-DEL4 = rm -rf gtbprobe/sysport/*.o
-DEL5 = rm -rf gtbprobe/compression/*.o
-DEL6 = rm -rf gtbprobe/compression/lzma/*.o
-DEL7 = rm -rf nnue/*.o
-DEL8 = rm -rf coiled/*.o
-DEL9 = 
-else
+ifdef SystemRoot
 EXT = .dll
 EXT2 = .exe
 DEL1 = del egbbdll\*.o
@@ -51,6 +40,17 @@ DEL6 = del gtbprobe\compression\lzma\*.o
 DEL7 = del nnue\*.o
 DEL8 = del coiled\*.o
 DEL9 = del coiled\*.res
+else
+EXT = .so
+DEL1 = rm -rf egbbdll/*.o
+DEL2 = rm -rf fathom/*.o
+DEL3 = rm -rf gtbprobe/*.o
+DEL4 = rm -rf gtbprobe/sysport/*.o
+DEL5 = rm -rf gtbprobe/compression/*.o
+DEL6 = rm -rf gtbprobe/compression/lzma/*.o
+DEL7 = rm -rf nnue/*.o
+DEL8 = rm -rf coiled/*.o
+DEL9 = 
 endif
 
 ##################################32 O 64 BIT############################################
@@ -160,11 +160,11 @@ CNNUEFLAGS = -std=c++11 -O2 -fomit-frame-pointer -fstrict-aliasing -fno-exceptio
 .PHONY: all
 all: help
 	
-.PHONY: WindowsX86 LinuxX86
-X86 LinuxX86: egbb gtb engine 
+.PHONY: X86
+X86: egbb gtb engine 
 	
-.PHONY: WindowsX64 LinuxX64
-X64 LinuxX64: egbb syzygy gtb nn engine 
+.PHONY: X64
+X64: egbb syzygy gtb nn engine 
 	
 engine:
 	$(CC) $(CFLAGS) $(DEFINES) -c coiled/AlphaBeta.c -o coiled/AlphaBeta.o
@@ -184,8 +184,9 @@ engine:
 	$(CC) $(CFLAGS) $(DEFINES) -c coiled/syzygy.c -o coiled/syzygy.o
 	$(CC) $(CFLAGS) $(DEFINES) -c coiled/tbprobe.c -o coiled/tbprobe.o
 	$(CC) $(CFLAGS) $(DEFINES) -c coiled/Utilidades.c -o coiled/Utilidades.o
+	$(CC) $(CFLAGS) $(DEFINES) -c coiled/Tiempo.c -o coiled/Tiempo.o
 	$(ICON) $(ICONFILECOMP)
-	$(CC) -o $(EXE)_$(VERSION)_$(ARCHITECTURE)$(EXT2) coiled/AlphaBeta.o coiled/Cpu.o coiled/egbb.o coiled/Evaluacion.o coiled/Fen.o coiled/GeneradorDeMovimientos.o coiled/Hash.o coiled/Historico.o coiled/Inicio.o coiled/LibroAperturas.o coiled/nnue.o coiled/OrdenarMovimientos.o coiled/Perft.o coiled/See.o coiled/syzygy.o coiled/tbprobe.o coiled/Utilidades.o $(ICONFILE) $(LIBS)
+	$(CC) -o $(EXE)_$(VERSION)_$(ARCHITECTURE)$(EXT2) coiled/AlphaBeta.o coiled/Cpu.o coiled/egbb.o coiled/Evaluacion.o coiled/Fen.o coiled/GeneradorDeMovimientos.o coiled/Hash.o coiled/Historico.o coiled/Inicio.o coiled/LibroAperturas.o coiled/nnue.o coiled/OrdenarMovimientos.o coiled/Perft.o coiled/See.o coiled/syzygy.o coiled/tbprobe.o coiled/Utilidades.o coiled/Tiempo.o $(ICONFILE) $(LIBS)
 	
 egbb:
 	$(CXX) $(CEGBBFLAGS) $(EGBBDEFINES) -c -fPIC -o egbbdll/egbbdll.o egbbdll/egbbdll.cpp
