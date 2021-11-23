@@ -8,7 +8,7 @@
 
 |                            |    CARACTERISTICAS                                                                              |
 | -------------------------- | ----------------------------------------------------------------------------------------------- |
-| Protocolo de comunicación  | UCI                                                                                             |
+| Protocolo de comunicación  | [UCI](https://www.shredderchess.com/download/div/uci.zip)                                       |
 | Código abierto             | Si                                                                                              |
 | Tipo de licencia           | [GNU General Public License v3.0](https://github.com/Oscar-Gavira/Coiled/blob/master/LICENSE)   |
 | Sistema operativo          | Windows y Linux. 32&64 bit                                                                      |
@@ -20,7 +20,7 @@
 | Lenguaje de programación   | C                                                                                               |
 | Ponder                     | No                                                                                              |
 | Multihilo                  | No                                                                                              |
-| ELO estimado               | ± 3300 NNUE. ± 2600 Interna.                                                                    |
+| ELO estimado               | ± 3325 NNUE. ± 2600 Interna.                                                                    |
 
 
 - Tablas de finales disponibles en internet. [http://oics.olympuschess.com/tracker/](http://oics.olympuschess.com/tracker/)
@@ -79,46 +79,49 @@ Consultar el manual de instalación de un motor de ajedrez en dicha GUI.
 
 ## <img src="https://github.githubassets.com/images/icons/emoji/unicode/1f3c5.png" width="32" height="32" /> Clasificación ELO 
 
-Coiled-NNUE 0.7	± 3050 ELO.
 
-Coiled-NNUE 0.8 ± 3250 ELO.
-
-Coiled 1.0 &#177; 2590 ELO Evaluación interna.
+| VERSION NNUE |   ELO  |
+| ------------ | ------ |
+| Coiled 0.7   | 3050 ± |
+| Coiled 0.8   | 3250 ± |
+| Coiled 0.9   | 3250 ± |
+| Coiled 1.0   | 3250 ± |
+| Coiled 1.1   | 3300 ± |
 
 - [CCRL (40/4)](http://ccrl.chessdom.com/ccrl/404/)
 
 | VERSION      |   ELO  |
 | ------------ | ------ |
-| Coiled 0.1a  | 1694   |
-| Coiled 0.2b  | 1996   |
-| Coiled 0.4   | 2508   |
-| Coiled 0.5   | 2600   |
+| Coiled 0.1a  | 1694 ± |
+| Coiled 0.2b  | 1996 ± |
+| Coiled 0.4   | 2508 ± |
+| Coiled 0.5   | 2600 ± |
 
 - [CEGT (40/4)](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)
 
 | VERSION      |   ELO  |
 | ------------ | ------ |
-| Coiled 0.2b  | 1824   |
-| Coiled 0.4   | 2334   |
-| Coiled 0.6   | 2446   |
+| Coiled 0.2b  | 1824 ± |
+| Coiled 0.4   | 2334 ± |
+| Coiled 0.6   | 2446 ± |
 
 
 ## ⚙ Opciones Uci
 |                                    OPCIONES                                                                |                                          DESCRIPCION                                                                     |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Hash                                                                                                       | Para ajustar el tamaño de la tabla hash en MB.                                                                           |
-| PreventTimeout                                                                                             | Para evitar Timeout en un juego por tiempo. Valor en milisegundo. Descuenta X ms al tiempo por jugada. (por defecto: 50) |
 | OwnBook                                                                                                    | Para usar el libro de apertura propio del motor. (por defecto: false)                                                    |
 | OwnBookLimit                                                                                               | Para limitar el número de jugadas máximas obtenidas desde el libro de apertura. (por defecto: 8)                         |
+| PreventTimeout                                                                                             | Para evitar Timeout en un juego por tiempo. Valor en milisegundo. Descuenta X ms al tiempo por jugada. (por defecto: 150)|
 | EndGamesTablebases                                                                                         | Seleccione entre la tabla de finales a usar: Ninguna, Syzygy, Gaviota y BitBases. (por defecto: Ninguna)                 |
 | EndGamesTablebasesPath                                                                                     | Para asignar la carpeta/directorio de las tablas de finales. Syzygy, Gaviota y BitBases. (por defecto: Vacío)            |
 | EndGamesTablebasesCache                                                                                    | Para ajustar el tamaño de la cache en MB de las tablas de finales. Gaviota y BitBases. (por defecto: 32MB)               |
 | EndGamesTablebasesLimit                                                                                    | Indica a partir de cuantas piezas busca en la tabla de finales. Syzygy, Gaviota y BitBases. (por defecto: 5)             |
-| NnueUse \*                                                                                                 | Activa/desactiva el uso de redes neuronales. (por defecto: true)                                                         |
-| NnuePath \*                                                                                                | Para asignar la ruta de la red neuronal. (por defecto: nn-a9f9e868162a.nnue)                                             |
-| NnueTechnology \*                                                                                          | Indica el tipo de tecnología que utiliza la red neuronal. AVX2, SSE4.1, SSE3 o SSE2. (por defecto: Auto)                 |
+| NnuePath \*                                                                                                | Para asignar la ruta de la red neuronal. (por defecto: Vació)                                                            |
+| NnueTechnology \*                                                                                          | Indica el tipo de tecnología que utiliza la red neuronal. AVX2, SSE4.1, SSE3 o SSE2. (por defecto: Ninguno)              |
 | UCI\_Chess960 \*\*                                                                                         | Activa/desactiva el modo de juego Chess960. (por defecto: false)                                                         |
 | UCI\_Chess960CastlingSign \*\*                                                                             | Indica si utiliza el enroque estándar del protocolo UCI o el de la GUI Arena (por defecto: UCI)                          |
+
 
 
 \* Opciones disponibles, solo en la versión de 64bits.
@@ -173,15 +176,17 @@ Estoy muy agradecido a las siguientes personas:
 
 - A los archivos de rendimientos .epd de posiciones estratégicas tipo: WAC, IQ6, mes400... En especial a la web [https://sites.google.com/site/strategictestsuite/](https://sites.google.com/site/strategictestsuite/)
 
-- A la web [CCRL 40/4](http://www.computerchess.org.uk/ccrl/404/), [CEGT 40/4](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html), [Chess Engines Diary](https://chessengines.blogspot.com/) por realizar un torneo y darle una clasificación de ELO.
+- A la web [CCRL 40/4](http://www.computerchess.org.uk/ccrl/404/), [CEGT 40/4](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html), [Chess Engines Diary](https://chessengines.blogspot.com/), [Owl Chess Blitz](http://chessowl.blogspot.com/) por realizar un torneo y darle una clasificación de ELO.
+
+
+- Alex Chess del foro talkchess, por el torneo realizado en [chess.com](https://www.chess.com/forum/view/game-analysis/freeware-against-commercial-chess-software-arena-3-5-1-vs-chessbase-fritz-17)
+
 
 - A toda web que haya publicado una clasificación ELO o/y haya añadido un enlace a mi web.
 
 - A Pedro Castro por ser el primero en probar y realizar un torneo. Autor de la web Motores de ajedrez hispanos y autor de DanaSah.
 
 - A la web [Motores de Ajedrez Hispanos](https://sites.google.com/site/motoresdeajedrez/Home) por realizar su primer torneo y darle una clasificación de ELO en su primera versión.
-
-- Alex Chess del foro talkchess, por el torneo realizado en [chess.com](https://www.chess.com/forum/view/game-analysis/freeware-against-commercial-chess-software-arena-3-5-1-vs-chessbase-fritz-17)
 
 - Ronald de Man's, por el proyecto Fathom con el que poder implementar el uso de las tablas de finales Syzygy. [https://github.com/jdart1/Fathom](https://github.com/jdart1/Fathom)
 
