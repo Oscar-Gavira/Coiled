@@ -74,11 +74,12 @@ typedef struct tag_EstructuraBd {
 #ifdef USAR_NNUE
 typedef int (CDECL *NNUE_INIT)(const char* ruta);
 typedef int (CDECL *NNUE_EVALUATE)(int player, int* pieces, int* squares);
+typedef int (CDECL *NNUE_TECHNOLOGY)();
 
 typedef struct tag_nnue {
-	int Usar;															/* Se puede usar la tablas de gaviota (true/false) */
 	int Dll_Cargada;													/* Esta cargada la DLL */
-	int Tecnologia;														/* 1 = SSE2	2 = SSE3	3 = SSE4.1		4 = AVX2 */
+	int Tecnologia;														/* 1 = sse2	2 = ssse3	3 = sse4.1		4 = avx2 */
+	int TecnologiaNueva;												/* Indica si hay cambio de tecnologia en la nnue */
 	char Directorio[MAX_DIR];											/* Obtenemos las rutas a las tablas de finales */
 	int DirectorioNuevo;												/* Indica si el directorio es diferente (Nueva NNUE) */
 } _ST_Nnue;
@@ -89,6 +90,7 @@ typedef struct tag_nnue {
 typedef struct tag_TT_Opciones
 {
 	U64 tt_Mb;
+	int tt_Mb_Nueva;
 	U64 tt_Entradas;
 	U64 tt_Completo;
 	short tt_Edad;
@@ -115,11 +117,13 @@ typedef struct	tag_TT_Cache
 typedef int (CDECL *EGBB_PROBE_EGBB) (int player, int* piece, int* square);
 typedef int (CDECL *EGBB_LOAD_EGBB) (char* path, int cache_size, int load_options);
 
+#ifdef ARC_64BIT
 /* syzygy */
-typedef U64(CDECL *SG_LARGEST);
+typedef U64(CDECL SG_LARGEST);
 typedef int (CDECL *SG_INITS) (const char *ruta);
 typedef void(CDECL *SG_FREE)(void);
 typedef unsigned (CDECL *SG_PROBE_WDL) (U64 white, U64 black, U64 kings, U64 queens, U64 rooks, U64 bishops, U64 knights, U64 pawns, unsigned ep, int turn);
+#endif
 
 /* tbprobe */
 /* Inicia la carga de la informacion */
@@ -145,11 +149,11 @@ typedef const char **(CDECL *TBPATHS_DONE) (const char **ps);
 
 typedef struct tag_TablaDeFinales
 {
-	int Usar;														/* 0 = None		1 = Syzygy		2 = Gaviota		3 = BitBases */
+	int Usar;														/* 0 = none		1 = syzygy		2 = gaviota		3 = BitBases */
 	int UsarNuevo;													/* Indica si hay cambio de tablas de finales */
 	U64 Acierto;													/* Cuando buscamos en la tabla y encontramos resultados, se va incrementando */
-	int Dll_CargadaSg;												/* Esta cargada la DLL Syzygy */
-	int Dll_CargadaGv;												/* Esta cargada la DLL Gaviota */
+	int Dll_CargadaSg;												/* Esta cargada la DLL syzygy */
+	int Dll_CargadaGv;												/* Esta cargada la DLL gaviota */
 	int Dll_CargadaBb;												/* Esta cargada la DLL BitBases */
 	unsigned int Piezas;											/* Que tablas de finales estan disponibles 3 o 4 o 5 o 6 piezas */
 	char Directorio[MAX_DIR];										/* Obtenemos las rutas a las tablas de finales */
@@ -157,7 +161,7 @@ typedef struct tag_TablaDeFinales
 	U64 CacheMB;													/* 32 MB */
 	int CacheNueva;													/* Indica si hay un cambio en el tamana de la cache true/false */
 	int Limite;														/* Indica a partir de que numero de pieza busca en las tablas de finales */
-	const char **paths;												/* Gaviota. Rutas para acceder a las tablas de finales */
+	const char **paths;												/* gaviota. Rutas para acceder a las tablas de finales */
 } _ST_TablaDeFinales;
 #endif
 

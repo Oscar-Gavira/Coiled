@@ -29,19 +29,19 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define SeeReyValor			(10000)								/* Valor del rey */
 
 int See(int *M, int turno);										/* Iniciamos la funcion See */
-int ObtenerAtaquesMenores(int Cs, int turno);					/* Obtenemos piezas atacantes de menor a mayor */
-int SeePeonesB(int Cs);											/* Buscamos defensa/ataque de peon blanco. */
-int SeePeonesN(int Cs);											/* Buscamos defensa/ataque de peon negro. */
-int SeeCaballoB(int Cs);										/* Buscamos defensa/ataque de caballo blanco. */
-int SeeCaballoN(int Cs);										/* Buscamos defensa/ataque de caballo negro. */
-int SeeAlfilB(int Cs);											/* Buscamos defensa/ataque de alfil blanco. */
-int SeeAlfilN(int Cs);											/* Buscamos defensa/ataque de alfil negro. */
-int SeeTorreB(int Cs);											/* Buscamos defensa/ataque de torre blanco. */
-int SeeTorreN(int Cs);											/* Buscamos defensa/ataque de torre negro. */
-int SeeDamaB(int Cs);											/* Buscamos defensa/ataque de dama blanco. */
-int SeeDamaN(int Cs);											/* Buscamos defensa/ataque de dama negro. */
-int SeeReyB(int Cs);											/* Buscamos defensa/ataque de rey blanco. */
-int SeeReyN(int Cs);											/* Buscamos defensa/ataque de rey negro. */
+int ObtenerAtaquesMenores(int Cs, int *turno);					/* Obtenemos piezas atacantes de menor a mayor */
+int SeePeonesB(int *Cs);										/* Buscamos defensa/ataque de peon blanco. */
+int SeePeonesN(int *Cs);										/* Buscamos defensa/ataque de peon negro. */
+int SeeCaballoB(int *Cs);										/* Buscamos defensa/ataque de caballo blanco. */
+int SeeCaballoN(int *Cs);										/* Buscamos defensa/ataque de caballo negro. */
+int SeeAlfilB(int *Cs);											/* Buscamos defensa/ataque de alfil blanco. */
+int SeeAlfilN(int *Cs);											/* Buscamos defensa/ataque de alfil negro. */
+int SeeTorreB(int *Cs);											/* Buscamos defensa/ataque de torre blanco. */
+int SeeTorreN(int *Cs);											/* Buscamos defensa/ataque de torre negro. */
+int SeeDamaB(int *Cs);											/* Buscamos defensa/ataque de dama blanco. */
+int SeeDamaN(int *Cs);											/* Buscamos defensa/ataque de dama negro. */
+int SeeReyB(int *Cs);											/* Buscamos defensa/ataque de rey blanco. */
+int SeeReyN(int *Cs);											/* Buscamos defensa/ataque de rey negro. */
 int SeeHacerMovimiento(int *M);									/* Realiza el movimiento en See */
 void SeeDeshacerMovimiento();									/* Deshace el movimiento de See */
 #endif

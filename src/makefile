@@ -2,32 +2,32 @@
 CC = gcc
 CXX = g++
 
-#################################COMPILAR EN WINDOWS CON MAKEFILE Y CODEBLOCK###########
+#################################32&64 BIT WINDOWS O LINUX##############################
 ifeq ($(WindowsX86),true)
-BIT = 32
-WINDOWS = true
-ICON = windres.exe -J rc -O coff -i 
-ICONFILECOMP = coiled/ver.rc -o coiled/ver.res
-ICONFILE = coiled/ver.res
+    BIT = 32
+    WINDOWS = true
+    ICON = windres.exe -J rc -O coff -i 
+    ICONFILECOMP = coiled/ver.rc -o coiled/ver.res
+    ICONFILE = coiled/ver.res
 else ifeq ($(WindowsX64),true)
-BIT = 64
-WINDOWS = true
-ICON = windres.exe -J rc -O coff -i 
-ICONFILECOMP = coiled/ver.rc -o coiled/ver.res
-ICONFILE = coiled/ver.res
+    BIT = 64
+    WINDOWS = true
+    ICON = windres.exe -J rc -O coff -i 
+    ICONFILECOMP = coiled/ver.rc -o coiled/ver.res
+    ICONFILE = coiled/ver.res
 else ifeq ($(LinuxX86),true)
-BIT = 32
-WINDOWS = false
-ICON =
-ICONFILE =
+    BIT = 32
+    WINDOWS = false
+    ICON =
+    ICONFILE =
 else ifeq ($(LinuxX64),true)
-BIT = 64
-WINDOWS = false
-ICON =
-ICONFILE =
+    BIT = 64
+    WINDOWS = false
+    ICON =
+    ICONFILE =
 endif
 
-##################################WINDOWS O LINUX#########################################
+##################################WINDOWS O LINUX#######################################
 ifdef SystemRoot
 EXT = .dll
 EXT2 = .exe
@@ -53,7 +53,7 @@ DEL8 = rm -rf coiled/*.o
 DEL9 = 
 endif
 
-##################################32 O 64 BIT############################################
+##################################32 O 64 BIT###########################################
 ifeq ($(BIT),64)
 ARCHITECTURE = x64
 X86_64 = -march=x86-64 -mtune=generic
@@ -64,7 +64,7 @@ endif
 
 ################################COILED##################################################
 EXE = Coiled
-VERSION = 1.1
+VERSION = 1.2
 
 ifeq ($(WINDOWS),false)
 LIBS = -lm -ldl
@@ -76,10 +76,13 @@ ifeq ($(BIT),64)
 DEFINES += -DARC_64BIT
 endif
 
-WFLAGS = -g -Wall -Wextra -Wshadow
+WFLAGS = -g -Wshadow -pedantic -Wextra -Wall -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal -Winline -Wunreachable-code -Wmissing-declarations -Wswitch-enum -Wswitch-default -Wmain -pedantic-errors -Wno-pedantic-ms-format
 CFLAGS = -O2 -std=c11 $(X86_64)
+ifeq ($(DEBUG),true)
+CFLAGS += $(WFLAGS)
+endif
 
-#################################EGBBDLL###############################################
+#################################EGBBDLL################################################
 ifeq ($(WINDOWS),false)
 EGBB = libegbb
 EGBBLIBS = -lm -shared
@@ -88,20 +91,22 @@ EGBB = egbb
 EGBBLIBS = -lm -shared -static
 endif
 
-#EGBBDEFINES = -DPARALLEL
 ifeq ($(BIT),64)
-EGBBDEFINES += -DARC_64BIT
+EGBBDEFINES = -DARC_64BIT
 endif
+GBBDEFINES += -DHAS_PREFETCH -DUSE_SPINLOCK
+#EGBBDEFINES += -DPARALLEL
 #GBBDEFINES += -DHAS_POPCNT
-#GBBDEFINES += -DHAS_PREFETCH -DUSE_SPINLOCK
 
 EGBBUNUSED = -Wno-unused-variable -Wno-unused-result 
 EGBBUNUSED += -Wno-unused-but-set-variable -Wno-maybe-uninitialized -Wno-psabi
 
 WEGBBFLAGS = -g -Wall -Wextra -Wshadow -fstrict-aliasing -fno-exceptions -fno-rtti $(EGBBUNUSED)
 CEGBBFLAGS += -O2 -std=c++11 $(X86_64) -fomit-frame-pointer
-
-##############################FATHOM#####################################################
+ifeq ($(DEBUG),true)
+CEGBBFLAGS += $(WEGBBFLAGS)
+endif
+##############################FATHOM####################################################
 ifeq ($(WINDOWS),false)
 FATHOM = libsyzygy
 FATHOMLIBS = -lm -shared
@@ -114,22 +119,28 @@ FATHOMDEFINES = -DTB_NO_THREADS
 
 WFATHOMFLAGS = -g -Wall -Wextra -Wshadow -I..
 CFATHOMFLAGS = -O2 -std=c99 $(X86_64)
-
-##############################GAVIOTA####################################################
+ifeq ($(DEBUG),true)
+CFATHOMFLAGS += $(WFATHOMFLAGS)
+endif
+##############################GAVIOTA###################################################
 ifeq ($(WINDOWS),false)
 GTB = libgtb
 GTBDEFINES = -DGCCLINUX -DNDEBUG -DZ_PREFIX
+GTBLIBS = -shared
 else
 GTB = gtb
 GTBDEFINES = -DMINGW -DNDEBUG -DZ_PREFIX
+GTBLIBS = -shared -static
 endif
 
-GTBLIBS = -shared
+
 
 WGTBFLAGS = -g -Wall -Wextra
 CGTBFLAGS = -std=c99 -O2 $(X86_64)
-
-#############################NNUE########################################################
+ifeq ($(DEBUG),true)
+CGTBFLAGS += $(WGTBFLAGS)
+endif
+#############################NNUE#######################################################
 ifeq ($(WINDOWS),false)
 NNUE = libnnue
 NNUELIBS = -lm -shared
@@ -144,26 +155,26 @@ endif
 
 TECNOLOGY1 = avx2
 TECNOLOGY2 = sse4.1
-TECNOLOGY3 = sse3
+TECNOLOGY3 = ssse3
 TECNOLOGY4 = sse2
 
-NNUEDEFINES1 = $(X86_64) -mavx2 -msse4.1 -msse3 -msse2 -msse -DUSE_AVX2
-NNUEDEFINES2 = $(X86_64) -msse4.1 -msse3 -msse2 -msse -DUSE_SSE41
-NNUEDEFINES3 = $(X86_64) -msse3 -msse2 -msse -DUSE_SSE3
-NNUEDEFINES4 = $(X86_64) -msse2 -msse -DUSE_SSE2
+NNUEDEFINES1 = $(X86_64) -mavx2 -msse4.1 -mssse3 -msse2 -DUSE_AVX2 -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2 -DUSE_SSE $(NNUEDEFINES)
+NNUEDEFINES2 = $(X86_64) -msse4.1 -mssse3 -msse3 -msse2 -msse -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2 -DUSE_SSE $(NNUEDEFINES)
+NNUEDEFINES3 = $(X86_64) -mssse3 -msse3 -msse -DUSE_SSSE3 -DUSE_SSE2 -DUSE_SSE $(NNUEDEFINES)
+NNUEDEFINES4 = $(X86_64) -msse2 -msse -DUSE_SSE2 -DUSE_SSE $(NNUEDEFINES)
 
 WNNUEFLAGS = -g -Wall -Wno-unused-variable -Wno-unused-result -Wno-unused-but-set-variable -Wno-maybe-uninitialized
 CNNUEFLAGS = -std=c++11 -O2 -fomit-frame-pointer -fstrict-aliasing -fno-exceptions -fno-rtti
-
-#########################################################################################
+ifeq ($(DEBUG),true)
+CNNUEFLAGS += $(WNNUEFLAGS)
+endif
+########################################################################################
+.PHONY: all X86 X64 engine egbb syzygy gtb nn clean help
 	
-.PHONY: all
 all: help
 	
-.PHONY: X86
 X86: egbb gtb engine 
 	
-.PHONY: X64
 X64: egbb syzygy gtb nn engine 
 	
 engine:
@@ -218,17 +229,17 @@ nn:
 	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES1) -c -fPIC -o nnue/misc.o nnue/misc.cpp
 	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES1) -c -fPIC -o nnue/nnue.o nnue/nnue.cpp
 	$(CXX) -o $(NNUE)_$(TECNOLOGY1)$(EXT) nnue/misc.o nnue/nnue.o $(NNUELIBS)
-	
+	$(DEL7)
 	
 	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES2) -c -fPIC -o nnue/misc.o nnue/misc.cpp
 	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES2) -c -fPIC -o nnue/nnue.o nnue/nnue.cpp
 	$(CXX) -o $(NNUE)_$(TECNOLOGY2)$(EXT) nnue/misc.o nnue/nnue.o $(NNUELIBS)
-	
+	$(DEL7)
 	
 	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES3) -c -fPIC -o nnue/misc.o nnue/misc.cpp
 	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES3) -c -fPIC -o nnue/nnue.o nnue/nnue.cpp
 	$(CXX) -o $(NNUE)_$(TECNOLOGY3)$(EXT) nnue/misc.o nnue/nnue.o $(NNUELIBS)
-	
+	$(DEL7)
 	
 	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES4) -c -fPIC -o nnue/misc.o nnue/misc.cpp
 	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES4) -c -fPIC -o nnue/nnue.o nnue/nnue.cpp
@@ -252,5 +263,6 @@ help:
 	@echo "3. make WindowsX86=true X86 - Compile all for windows x86"
 	@echo "4. make WindowsX64=true X64 - Compile all for windows x64"
 	@echo "5. make clean - remove all *.o"
+	@echo "6. Add DEBUG=true - Compile in debug mode. Example: make LinuxX86=true X86 DEBUG=true"
 	@echo ""
 	

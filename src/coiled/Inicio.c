@@ -22,7 +22,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include "Hash.h"
 #include "GeneradorDeMovimientos.h"
 #include "Perft.h"
-#include "Cpu.h"
 
 #ifdef USAR_SQLITE
 	#include "LibroAperturas.h"
@@ -34,6 +33,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #endif
 #ifdef USAR_NNUE
 	#include "nnue.h"
+	#include "Cpu.h"
 #endif
 /*******************************************************************************
 									Metodos
@@ -59,6 +59,7 @@ int Salir;														/* Indica al programa que salga, para evitar un "exit(EX
 	_ST_Nnue Nnue;
 	NNUE_INIT NNUE_init;
 	NNUE_EVALUATE NNUE_evaluate;
+	NNUE_TECHNOLOGY NNUE_technology;
 #endif
 #ifdef USAR_SQLITE
 	_ST_EstructuraBd LibroSql;
@@ -75,10 +76,12 @@ int Salir;														/* Indica al programa que salga, para evitar un "exit(EX
 	EGBB_LOAD_EGBB EGBB_load_egbb;					/* Cargamos la tablas de finales. */
 	EGBB_PROBE_EGBB EGBB_probe_egbb;				/* Acceso a las tablas de finales. */
 
+#ifdef ARC_64BIT
 	SG_INITS SG_inits;								/* Inicializa la tabla de finales */
 	SG_FREE SG_free;								/* Libera la tabla de finales */
 	SG_PROBE_WDL SG_probe_wdl;						/* Acceso a las tablas de finales en la busqueda. */
 	SG_LARGEST SG_man;								/* Indica la tablas disponibles. 3, 4, 5, 6 o 7 piezas. */
+#endif
 
 	TBINIT TBinit;									/* Inicializa la tabla de finales */
 	TBIS_INITIALIZED TBis_initialized;				/* Indica si la tabla esta inicializada */
@@ -157,20 +160,21 @@ int main(int argc, char *argv[])
 		if (TablaDeFinales.Dll_CargadaSg == true) Iniciar_Mascara();
 	#endif
 #endif
-#ifdef USAR_NNUE
-	/* Auto configurando Nnue.Tecnologia al mas actual, soportado por la CPU. */
-	ObtenerCpu(&Cpu);
-	if (Cpu.AVX2)
-		Nnue.Tecnologia = 4;
-	else if (Cpu.SSE41)
-		Nnue.Tecnologia = 3;
-	else if (Cpu.SSE3)
-		Nnue.Tecnologia = 2;
-	else if (Cpu.SSE2)
-		Nnue.Tecnologia = 1;
 
-	Nnue.Dll_Cargada = Cargar_nnue_dll();
-	if (Nnue.Dll_Cargada == true) CargarNnue();
+#ifdef USAR_NNUE
+		/* Configurando Nnue.Tecnologia, soportado por la CPU. */
+		ObtenerCpu(&Cpu);
+		Nnue.TecnologiaNueva = true;
+		if (Cpu.avx2)
+			Nnue.Tecnologia = 4;
+		else if (Cpu.sse41)
+			Nnue.Tecnologia = 3;
+		else if (Cpu.ssse3)
+			Nnue.Tecnologia = 2;
+		else if (Cpu.sse2)
+			Nnue.Tecnologia = 1;
+		else
+			Nnue.TecnologiaNueva = false;
 #endif
 
 	UciNewGame();
@@ -251,25 +255,25 @@ void UciEntrada(char *parametro)
 
 #ifdef USAR_TABLAS_DE_FINALES
 		memset(Str, 0, MAX_DIR * sizeof(char));
-		strcat(Str, " var None");
+		strcat(Str, " var none");
 #ifdef ARC_64BIT
-		strcat(Str, " var Syzygy");
+		strcat(Str, " var syzygy");
 #endif
-		strcat(Str, " var Gaviota var Scorpio");
+		strcat(Str, " var gaviota var scorpio");
 
 		switch (TablaDeFinales.Usar)
 		{
 		case 0:
-			printf("option name EndGamesTableBases type combo default None"STRING_FORMAT"\n", Str);
+			printf("option name EndGamesTableBases type combo default none"STRING_FORMAT"\n", Str);
 			break;
 		case 1:
-			printf("option name EndGamesTableBases type combo default Syzygy"STRING_FORMAT"\n", Str);
+			printf("option name EndGamesTableBases type combo default syzygy"STRING_FORMAT"\n", Str);
 			break;
 		case 2:
-			printf("option name EndGamesTableBases type combo default Gaviota"STRING_FORMAT"\n", Str);
+			printf("option name EndGamesTableBases type combo default gaviota"STRING_FORMAT"\n", Str);
 			break;
 		case 3:
-			printf("option name EndGamesTableBases type combo default Scorpio"STRING_FORMAT"\n", Str);
+			printf("option name EndGamesTableBases type combo default scorpio"STRING_FORMAT"\n", Str);
 			break;
 		default:
 			break;
@@ -287,14 +291,6 @@ void UciEntrada(char *parametro)
 #endif
 
 #ifdef USAR_NNUE
-		if (Nnue.Usar == true)
-		{
-			printf("option name NnueUse type check default true\n");
-		}
-		else
-		{
-			printf("option name NnueUse type check default false\n");
-		}
 		fflush(stdout);
 		if (Nnue.Directorio[0] == '\0')
 			printf("option name NnuePath type string default "STRING_FORMAT"\n", "<empty>");
@@ -303,23 +299,47 @@ void UciEntrada(char *parametro)
 		fflush(stdout);
 
 		memset(Str, 0, MAX_DIR * sizeof(char));
-		strcat(Str, " var AVX2");
-		strcat(Str, " var SSE4.1");
-		strcat(Str, " var SSE3");
-		strcat(Str, " var SSE2");
 		switch (Nnue.Tecnologia)
 		{
-		case 1:
-			printf("option name NnueTechnology type combo default SSE2"STRING_FORMAT"\n", Str);
-			break;
-		case 2:
-			printf("option name NnueTechnology type combo default SSE3"STRING_FORMAT"\n", Str);
+		case 4:
+			strcat(Str, " var avx2");
+			strcat(Str, " var sse4.1");
+			strcat(Str, " var ssse3");
+			strcat(Str, " var sse2");
 			break;
 		case 3:
-			printf("option name NnueTechnology type combo default SSE4.1"STRING_FORMAT"\n", Str);
+			strcat(Str, " var sse4.1");
+			strcat(Str, " var ssse3");
+			strcat(Str, " var sse2");
+			break;
+		case 2:
+			strcat(Str, " var ssse3");
+			strcat(Str, " var sse2");
+			break;
+		case 1:
+			strcat(Str, " var sse2");
+			break;
+		default:
+			break;
+		}
+		strcat(Str, " var none");
+
+		switch (Nnue.Tecnologia)
+		{
+		case 0:
+			printf("option name NnueTechnology type combo default none"STRING_FORMAT"\n", Str);
+			break;
+		case 1:
+			printf("option name NnueTechnology type combo default sse2"STRING_FORMAT"\n", Str);
+			break;
+		case 2:
+			printf("option name NnueTechnology type combo default ssse3"STRING_FORMAT"\n", Str);
+			break;
+		case 3:
+			printf("option name NnueTechnology type combo default sse4.1"STRING_FORMAT"\n", Str);
 			break;
 		case 4:
-			printf("option name NnueTechnology type combo default AVX2"STRING_FORMAT"\n", Str);
+			printf("option name NnueTechnology type combo default avx2"STRING_FORMAT"\n", Str);
 			break;
 		default:
 			break;
@@ -360,6 +380,8 @@ void UciEntrada(char *parametro)
 #ifdef USAR_TABLAS_DE_FINALES
 		if (TablaDeFinales.Usar != 0 && (TablaDeFinales.UsarNuevo == true || TablaDeFinales.DirectorioNuevo == true || TablaDeFinales.CacheNueva == true))
 		{
+			printf("EndGamesTableBasesPath: "STRING_FORMAT"\n", TablaDeFinales.Directorio);
+			fflush(stdout);
 #ifdef ARC_64BIT
 			if (TablaDeFinales.Usar == 1) CargarSyzygy();
 #endif
@@ -373,6 +395,25 @@ void UciEntrada(char *parametro)
 		}
 #endif
 
+#ifdef USAR_NNUE
+		if ( (Nnue.DirectorioNuevo == true && Nnue.Tecnologia != 0)
+			|| (Nnue.TecnologiaNueva == true && Nnue.Directorio[0] != '\0'))
+		{
+			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
+			Nnue.Dll_Cargada = Cargar_nnue_dll();
+			if (Nnue.Dll_Cargada == true) CargarNnue();
+		}
+#endif
+
+#ifdef USAR_HASH_TB
+		if (TT_Opciones.tt_Mb_Nueva == true)
+		{
+			TT_Opciones.tt_Mb_Nueva = false;
+			printf("Hash: "U64_FORMAT" MB.\n", TT_Opciones.tt_Mb);
+			fflush(stdout);
+			CrearTransposicion();
+		}
+#endif
 		printf("readyok\n");
 		fflush(stdout);
 		return;
@@ -380,10 +421,12 @@ void UciEntrada(char *parametro)
 #ifdef USAR_HASH_TB
 	else if (strncmp(parametro, "setoption name Hash value ", 26) == 0)
 	{
+		U64 HashOld = TT_Opciones.tt_Mb;
 		parametro += 26;
 		TT_Opciones.tt_Mb = MAX(MB_HASH_TABLE_MIN, (int)atoll(parametro));
 		if (TT_Opciones.tt_Mb > MB_HASH_TABLE_MAX) TT_Opciones.tt_Mb = MB_HASH_TABLE;
-		CrearTransposicion(TT_Opciones.tt_Mb);
+		if (HashOld != TT_Opciones.tt_Mb)
+			TT_Opciones.tt_Mb_Nueva = true;
 	}
 #endif
 
@@ -413,42 +456,31 @@ void UciEntrada(char *parametro)
 	{
 		parametro += 36;
 		TipoJuego.PrevenirTiempoExcedido = MAX(0, (int)atoll(parametro));
-		if (TipoJuego.PrevenirTiempoExcedido > 500) TipoJuego.PrevenirTiempoExcedido = 50;
+		if (TipoJuego.PrevenirTiempoExcedido > 500) TipoJuego.PrevenirTiempoExcedido = 150;
 	}
 #ifdef USAR_TABLAS_DE_FINALES
 	else if (strncmp(parametro, "setoption name EndGamesTableBases value ", 40) == 0)
 	{
 		int Temp = TablaDeFinales.Usar;
 		parametro += 40;
-		if (strcmp(parametro, "None") == 0)
+		if (strcmp(parametro, "none") == 0)
 		{
 			TablaDeFinales.Usar = 0;
 		}
-		else if (strcmp(parametro, "Syzygy") == 0)
+		else if (strcmp(parametro, "syzygy") == 0)
 		{
 			if (TablaDeFinales.Dll_CargadaSg == true)
 				TablaDeFinales.Usar = 1;
-			else
-			{
-#ifdef ARC_64BIT
-				TablaDeFinales.Dll_CargadaSg = Cargar_Syzygy_dll();
-				if (TablaDeFinales.Dll_CargadaSg == true) Iniciar_Mascara();
-#endif
-			}
 		}
-		else if (strcmp(parametro, "Gaviota") == 0)
+		else if (strcmp(parametro, "gaviota") == 0)
 		{
 			if (TablaDeFinales.Dll_CargadaGv == true)
 				TablaDeFinales.Usar = 2;
-			else
-				TablaDeFinales.Dll_CargadaGv = Cargar_gaviota_dll();
 		}
-		else if (strcmp(parametro, "Scorpio") == 0)
+		else if (strcmp(parametro, "scorpio") == 0)
 		{
 			if (TablaDeFinales.Dll_CargadaBb == true)
 				TablaDeFinales.Usar = 3;
-			else
-				TablaDeFinales.Dll_CargadaBb = Cargar_egbb_dll();
 		}
 		if (Temp == TablaDeFinales.Usar)
 			TablaDeFinales.UsarNuevo = false;
@@ -494,17 +526,6 @@ void UciEntrada(char *parametro)
 	}
 #endif
 #ifdef USAR_NNUE
-	else if (strncmp(parametro, "setoption name NnueUse value ", 29) == 0)
-	{
-		parametro += 29;
-		if (strcmp(parametro, "true") == 0)
-		{
-			if (Nnue.Dll_Cargada == true)
-				Nnue.Usar = true;
-		}
-		else if (strcmp(parametro, "false") == 0)
-			Nnue.Usar = false;
-	}
 	else if (strncmp(parametro, "setoption name NnuePath value ", 30) == 0)
 	{
 		parametro += 30;
@@ -512,47 +533,37 @@ void UciEntrada(char *parametro)
 			Nnue.DirectorioNuevo = false;
 		else
 			Nnue.DirectorioNuevo = true;
-		
+
 		if (Nnue.DirectorioNuevo == true)
 		{
-			Descargar_nnue_dll();
 			memset(Nnue.Directorio, 0, MAX_DIR * sizeof(char));
 			strcat(Nnue.Directorio, parametro);
 			VerificarDir(Nnue.Directorio, false);
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
 		}
 	}
 	else if (strncmp(parametro, "setoption name NnueTechnology value ", 36) == 0)
 	{
 		parametro += 36;
-		if (strcmp(parametro, "AVX2") == 0)
+		if (strcmp(parametro, Nnue.Directorio) == 0)
+			Nnue.TecnologiaNueva = false;
+		else
+			Nnue.TecnologiaNueva = true;
+		
+		if (strcmp(parametro, "avx2") == 0)
 		{
 			Nnue.Tecnologia = 4;
-			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
 		}
-		else if (strcmp(parametro, "SSE4.1") == 0)
+		else if (strcmp(parametro, "sse4.1") == 0)
 		{
 			Nnue.Tecnologia = 3;
-			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
 		}
-		else if (strcmp(parametro, "SSE3") == 0)
+		else if (strcmp(parametro, "ssse3") == 0)
 		{
 			Nnue.Tecnologia = 2;
-			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
 		}
-		else if (strcmp(parametro, "SSE2") == 0)
+		else if (strcmp(parametro, "sse2") == 0)
 		{
 			Nnue.Tecnologia = 1;
-			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
 		}
 	}
 #endif
@@ -981,11 +992,11 @@ void IniciarConfiguracion()
 {
 	TipoJuego.Ajedrez960 = false;
 	TipoJuego.Ajedrez960Enroque = false;
-	TipoJuego.PrevenirTiempoExcedido = 50;
+	TipoJuego.PrevenirTiempoExcedido = 100;
 
 #ifdef USAR_HASH_TB
 	TT_Opciones.tt_Mb = MB_HASH_TABLE;
-	CrearTransposicion(TT_Opciones.tt_Mb);
+	TT_Opciones.tt_Mb_Nueva = true;
 #endif
 #ifdef USAR_SQLITE
 	LibroSql.UsarLibro = false;
@@ -1009,15 +1020,10 @@ void IniciarConfiguracion()
 	TablaDeFinales.CacheNueva = false;
 #endif
 #ifdef USAR_NNUE
-	Nnue.Usar = true;
 	Nnue.Dll_Cargada = false;
-	Nnue.Tecnologia = 1;										/* Por defecto SSE2 */
+	Nnue.Tecnologia = 0;
+	Nnue.TecnologiaNueva = false;
 	memset(Nnue.Directorio, 0, MAX_DIR * sizeof(char));
-#ifdef _WIN32
-	strcpy(Nnue.Directorio, "red_neuronal.nnue");
-#else
-	strcpy(Nnue.Directorio, "./red_neuronal.nnue");
-#endif
 	Nnue.DirectorioNuevo = false;
 #endif
 }

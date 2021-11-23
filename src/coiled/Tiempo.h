@@ -22,10 +22,15 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #ifndef TIEMPO_H
 #define TIEMPO_H
 
+/* Obtenemos tiempo */
 U64 ObtenerTiempo();
+/* Obtenemos el tiempo trascurrido */
 U64 TiempoTrascurrido(_ST_TipoJuego *Tiempo);
+/* Configuracion del tiempo */
 void TiempoInicio(_ST_TipoJuego *Tiempo, int Movestogo, int TiempoTotal, int inc);
+/* Incrementamos tiempo y cortamos la busqueda */
 int TiempoActualizar(_ST_TipoJuego *Tiempo, int Valor, int ValorAnterior, int MejorJugada, int MejorJugadaAnterior, int depth);
+/* Tiempo limite */
 int TerminarTiempoLimite(_ST_TipoJuego *Tiempo);
 
 #endif

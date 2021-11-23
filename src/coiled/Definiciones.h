@@ -21,7 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define DEFINICIONES_H
 
 #define NOMBRE "Coiled"
-#define VER  "1.1"
+#define VER  "1.2"
 #define AUTOR  "Oscar Gavira"
 
 #define USAR_SQLITE														/* Para compilar el uso de sqlite. Libro de aperturas. */
@@ -63,6 +63,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include <cpuid.h>
 #include <unistd.h>														/* Necesario para vincular librerias, SqliIte y TbProbe y EntradaStdIn() */
 #include <sys/time.h>													/* Tiempo */
+#include <time.h>														/* Tiempo */
 #include <dlfcn.h>
 #define CDECL
 #define HMODULE void*
@@ -120,7 +121,7 @@ typedef int64_t S64;													/* 9.223.372.036.854.775.807 / -9.223.372.036.8
 #endif
 
 typedef uint32_t U64;
-typedef int S64;														/* 2.147.483.647 / -2.147.483.646. Para el historico. (Si alcanza mucha profundidad en la busqueda FALLOS...) */
+typedef int64_t S64;														/* 2.147.483.647 / -2.147.483.646. Para el historico. (Si alcanza mucha profundidad en la busqueda FALLOS...) */
 
 #endif
 

@@ -26,7 +26,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 /**************************************************************************************
 						ENUMERACIONES/ESTRUCTURA
-			Internas para manejar la tablas bases Gaviota
+			Internas para manejar la tablas bases gaviota
 **************************************************************************************/
 enum TBvalores														/* Valores devueltos por la tabla de finales */
 {

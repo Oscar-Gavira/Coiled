@@ -230,7 +230,6 @@ int IndexOfShift(char *base, char *str, int startIndex) {
 
 void VerificarDir(char *base, int dir)
 {
-	int startIndex = 0;
 	int baselen = strlen(base);
 	int i = 0;
 

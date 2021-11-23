@@ -51,7 +51,7 @@ void ObtenerKey()
 	TableroGlobal.Hash = 0;
 
 	/* Hash posicion de las piezas */
-	for (i = 0; i < 64; ++i)
+	for (i = 0; i < 64; i++)
 	{
 		if (TableroGlobal.Tablero[i] != CasillaVacia)
 		{
@@ -74,19 +74,8 @@ void ObtenerKey()
 }
 
 /* Creamos la tabla de hash aun tamana especifico */
-void CrearTransposicion(U64 MB)
+void CrearTransposicion()
 {
-	if (MB < MB_HASH_TABLE_MIN)
-	{
-		MB = MB_HASH_TABLE_MIN;
-	}
-	if (MB > MB_HASH_TABLE_MAX)
-	{
-		MB = MB_HASH_TABLE_MAX;
-	}
-
-	TT_Opciones.tt_Mb = MB;
-
 	TT_Opciones.tt_Entradas = TT_Opciones.tt_Mb * 1024 * 1024 / sizeof(_ST_TT_Cache);
 
 	LiberarMemoria();

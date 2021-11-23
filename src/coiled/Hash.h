@@ -32,7 +32,7 @@ short GuardarFlag(int d, int e, int f);
 /* Obtengo el hash inicial */
 void ObtenerKey();
 /* Creamos la tabla de hash aun tamana especifico */
-void CrearTransposicion(U64 MB);
+void CrearTransposicion();
 /* Obtengo si la posicion ya a sido analizada y que valores tiene */
 int RecuperarPosicion(int *hPuntos, int *hEv, int *hMov, int *hFlag);
 /* Convertimos puntosa la TT */

@@ -11,10 +11,10 @@
 
 typedef struct tag_CPU
 {
-	int SSE2;
-	int SSE3;
-	int SSE41;
-	int AVX2;
+	int sse2;
+	int ssse3;
+	int sse41;
+	int avx2;
 } _ST_Cpu;
 
 void ObtenerCpu(_ST_Cpu *Cpu);

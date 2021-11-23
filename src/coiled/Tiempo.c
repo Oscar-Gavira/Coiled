@@ -40,17 +40,18 @@ U64 TiempoTrascurrido(_ST_TipoJuego *Tiempo)
 void TiempoInicio(_ST_TipoJuego *Tiempo, int Movestogo, int TiempoTotal, int inc)
 {
     Tiempo->TiempoFactor = 0;
+    TiempoTotal = MAX(TiempoTotal, Tiempo->PrevenirTiempoExcedido);
 
     if (Movestogo != 0)
     {
-        Tiempo->Tiempo = 0.67f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc;
-        Tiempo->TiempoMax1 = 1.00f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc;
-        Tiempo->TiempoMax2 = 2.00f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc;
+        Tiempo->Tiempo = 0.70f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc;
+        Tiempo->TiempoMax1 = 0.90f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc;
+        Tiempo->TiempoMax2 = 1.10f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc;
     }
     else {
         Tiempo->Tiempo = 0.90f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) + 25 * inc) / 50;
-        Tiempo->TiempoMax1 = 2.00f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) + 25 * inc) / 50;
-        Tiempo->TiempoMax2 = 3.00f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) + 25 * inc) / 50;
+        Tiempo->TiempoMax1 = 1.95f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) + 25 * inc) / 50;
+        Tiempo->TiempoMax2 = 2.90f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) + 25 * inc) / 50;
     }
 
     Tiempo->Tiempo = MIN(Tiempo->Tiempo, TiempoTotal - Tiempo->PrevenirTiempoExcedido);

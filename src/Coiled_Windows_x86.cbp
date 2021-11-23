@@ -33,6 +33,22 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Build>
+			<Target title="DebugX86">
+				<Option platforms="Windows;" />
+				<Option output="Coiled_x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<MakeCommands>
+					<Build command="$make -f $makefile WindowsX86=true DEBUG=true X86" />
+					<CompileFile command="$make -f $makefile $file" />
+					<Clean command="$make -f $makefile clean" />
+					<DistClean command="$make -f $makefile distclean$target" />
+					<AskRebuildNeeded command="$make -q -f $makefile WindowsX86=true DEBUG=true X86" />
+					<SilentBuild command="$make -f $makefile $target=true X86 &gt; $(CMD_NULL)" />
+				</MakeCommands>
+			</Target>
+		</Build>
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

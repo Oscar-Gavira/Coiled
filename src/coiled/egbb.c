@@ -141,13 +141,8 @@ int Probar_egbb(int *puntos)
 	memset(TorreC, 0, 10 * sizeof(int));
 	memset(DamaC, 0, 10 * sizeof(int));
 
-	for (i = 0; i < 64; ++i)
+	for (i = 0; i < 64; i++)
 	{
-		if (TableroGlobal.Tablero[i] == CasillaVacia)
-		{
-			continue;
-		}
-
 		switch (TableroGlobal.Tablero[i])
 		{
 		case PeonB:
@@ -200,6 +195,7 @@ int Probar_egbb(int *puntos)
 			VPiezas[1] = EGBB_BKING;
 			break;
 		default:
+			continue;
 			break;
 		}
 	}
@@ -207,13 +203,13 @@ int Probar_egbb(int *puntos)
 	/*		DAMA		*/
 	if (indice_db != 0 || indice_dn != 5)
 	{
-		for (i = 0; i < indice_db; ++i)
+		for (i = 0; i < indice_db; i++)
 		{
 			VCuadros[Npiezas] = DamaC[i];
 			VPiezas[Npiezas] = EGBB_WQUEEN;
 			Npiezas++;
 		}
-		for (i = 5; i < indice_dn; ++i)
+		for (i = 5; i < indice_dn; i++)
 		{
 			VCuadros[Npiezas] = DamaC[i];
 			VPiezas[Npiezas] = EGBB_BQUEEN;
@@ -223,13 +219,13 @@ int Probar_egbb(int *puntos)
 	/*		TORRE		*/
 	if (indice_tb != 0 || indice_tn != 5)
 	{
-		for (i = 0; i < indice_tb; ++i)
+		for (i = 0; i < indice_tb; i++)
 		{
 			VCuadros[Npiezas] = TorreC[i];
 			VPiezas[Npiezas] = EGBB_WROOK;
 			Npiezas++;
 		}
-		for (i = 5; i < indice_tn; ++i)
+		for (i = 5; i < indice_tn; i++)
 		{
 			VCuadros[Npiezas] = TorreC[i];
 			VPiezas[Npiezas] = EGBB_BROOK;
@@ -239,13 +235,13 @@ int Probar_egbb(int *puntos)
 	/*		ALFIL		*/
 	if (indice_ab != 0 || indice_an != 5)
 	{
-		for (i = 0; i < indice_ab; ++i)
+		for (i = 0; i < indice_ab; i++)
 		{
 			VCuadros[Npiezas] = AlfilC[i];
 			VPiezas[Npiezas] = EGBB_WBISHOP;
 			Npiezas++;
 		}
-		for (i = 5; i < indice_an; ++i)
+		for (i = 5; i < indice_an; i++)
 		{
 			VCuadros[Npiezas] = AlfilC[i];
 			VPiezas[Npiezas] = EGBB_BBISHOP;
@@ -255,13 +251,13 @@ int Probar_egbb(int *puntos)
 	/*		CABALLO		*/
 	if (indice_cb != 0 || indice_cn != 5)
 	{
-		for (i = 0; i < indice_cb; ++i)
+		for (i = 0; i < indice_cb; i++)
 		{
 			VCuadros[Npiezas] = CaballoC[i];
 			VPiezas[Npiezas] = EGBB_WKNIGHT;
 			Npiezas++;
 		}
-		for (i = 5; i < indice_cn; ++i)
+		for (i = 5; i < indice_cn; i++)
 		{
 			VCuadros[Npiezas] = CaballoC[i];
 			VPiezas[Npiezas] = EGBB_BKNIGHT;
@@ -271,13 +267,13 @@ int Probar_egbb(int *puntos)
 	/*		PEON		*/
 	if (indice_pb != 0 || indice_pn != 10)
 	{
-		for (i = 0; i < indice_pb; ++i)
+		for (i = 0; i < indice_pb; i++)
 		{
 			VCuadros[Npiezas] = PeonC[i];
 			VPiezas[Npiezas] = EGBB_WPAWN;
 			Npiezas++;
 		}
-		for (i = 10; i < indice_pn; ++i)
+		for (i = 10; i < indice_pn; i++)
 		{
 			VCuadros[Npiezas] = PeonC[i];
 			VPiezas[Npiezas] = EGBB_BPAWN;

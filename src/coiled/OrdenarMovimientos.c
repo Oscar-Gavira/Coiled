@@ -27,7 +27,7 @@ void OrdenarMovimientosTodos(int *Capacidad, int *hMov, _ST_Movimiento *M)
 	int PiezaCoronacion = 0;
 	int _PiezaMovida = 0;
 
-	for (i = 0; i < *Capacidad; ++i)
+	for (i = 0; i < *Capacidad; i++)
 	{
 
 		M[i].Ordenar = 0;

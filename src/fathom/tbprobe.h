@@ -57,7 +57,6 @@ typedef uint8_t bool;
 /*
  * Internal definitions.  Do not call these functions directly.
  */
-extern bool tb_init_impl(const char *_path);
 extern unsigned tb_probe_wdl_impl(
     uint64_t _white,
     uint64_t _black,
@@ -173,12 +172,12 @@ extern unsigned TB_LARGEST;
  *   initialized.  If no tablebase files are found, then `true' is returned
  *   and TB_LARGEST is set to zero.
  */
-bool tb_init(const char *_path);
+extern bool tb_init(const char *_path);
 
 /*
  * Free any resources allocated by tb_init
  */
-void tb_free(void);
+extern void tb_free(void);
 
 /*
  * Probe the Win-Draw-Loss (WDL) table.

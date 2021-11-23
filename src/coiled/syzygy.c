@@ -51,7 +51,7 @@ int Cargar_Syzygy_dll()
 			return false;
 		}
 		SG_man = (SG_LARGEST)GetProcAddress(SG_hmod, "TB_LARGEST");
-		if (SG_man == NULL)
+		if (SG_man == 0)
 		{
 			return false;
 		}
@@ -59,7 +59,7 @@ int Cargar_Syzygy_dll()
 	}
 	else
 	{
-		printf(""INFO_STRING""STRING_FORMAT" not found. Unable to use Syzygy end table.\n", SG_NOMBRE);
+		printf(""INFO_STRING""STRING_FORMAT" not found. Unable to use syzygy end table.\n", SG_NOMBRE);
 		fflush(stdout);
 		TablaDeFinales.Usar = 0;
 		return false;
@@ -74,7 +74,7 @@ void CargarSyzygy()
 		/* Si es posible cargar la DLL */
 		TablaDeFinales.DirectorioNuevo = false;
 		SG_inits(TablaDeFinales.Directorio);
-		if (*SG_man == 0)
+		if (SG_man == 0)
 			printf(""INFO_STRING"Syzygy initialized: FAIL.\n");
 		else
 			printf(""INFO_STRING"Syzygy initialized: OK\n");
@@ -95,7 +95,7 @@ int Descargar_Syzygy_dll()
 	SG_inits = NULL;
 	SG_free = NULL;
 	SG_probe_wdl = NULL;
-	SG_man = NULL;
+	SG_man = 0;
 
 	TablaDeFinales.Dll_CargadaSg = false;
 	return true;
@@ -123,13 +123,8 @@ unsigned ProbarSyzygy()
 	if ((TableroGlobal.EnroqueB > Ninguno || TableroGlobal.EnroqueN > Ninguno) || TableroGlobal.FichaAlPasoPosicion != 0)
 		return SG_RESULT_FAILED;
 
-	for (i = 0; i < 64; ++i)
+	for (i = 0; i < 64; i++)
 	{
-		if (TableroGlobal.Tablero[i] == CasillaVacia)
-		{
-			continue;
-		}
-
 		switch (TableroGlobal.Tablero[i])
 		{
 		case PeonB:
@@ -182,6 +177,7 @@ unsigned ProbarSyzygy()
 			SG_Rey |= SG_Mascara[i];
 			break;
 		default:
+			continue;
 			break;
 		}
 	}

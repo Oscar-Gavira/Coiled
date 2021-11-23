@@ -93,7 +93,7 @@ int See(int *M, int turno)
 		for (i = 0; i < 40; i++)
 		{
 			/* Comprobamos ataques */
-			Total[Indice_Total] = ObtenerAtaquesMenores(Fin, turno);
+			Total[Indice_Total] = ObtenerAtaquesMenores(Fin, &turno);
 			if (Total[Indice_Total] == NO_MOVIMIENTO)
 			{
 				break;
@@ -137,38 +137,38 @@ int See(int *M, int turno)
 	return Temp;
 }
 
-int ObtenerAtaquesMenores(int Cs, int turno)
+int ObtenerAtaquesMenores(int Cs, int *turno)
 {
 	int move = NO_MOVIMIENTO;
 
-	if (turno)
+	if (*turno)
 	{
-		move = SeePeonesB(Cs);
+		move = SeePeonesB(&Cs);
 		if (move)
 		{
 			return move;
 		}
-		move = SeeCaballoB(Cs);
+		move = SeeCaballoB(&Cs);
 		if (move)
 		{
 			return move;
 		}
-		move = SeeAlfilB(Cs);
+		move = SeeAlfilB(&Cs);
 		if (move)
 		{
 			return move;
 		}
-		move = SeeTorreB(Cs);
+		move = SeeTorreB(&Cs);
 		if (move)
 		{
 			return move;
 		}
-		move = SeeDamaB(Cs);
+		move = SeeDamaB(&Cs);
 		if (move)
 		{
 			return move;
 		}
-		move = SeeReyB(Cs);
+		move = SeeReyB(&Cs);
 		if (move)
 		{
 			return move;
@@ -176,32 +176,32 @@ int ObtenerAtaquesMenores(int Cs, int turno)
 	}
 	else
 	{
-		move = SeePeonesN(Cs);
+		move = SeePeonesN(&Cs);
 		if (move)
 		{
 			return move;
 		}
-		move = SeeCaballoN(Cs);
+		move = SeeCaballoN(&Cs);
 		if (move)
 		{
 			return move;
 		}
-		move = SeeAlfilN(Cs);
+		move = SeeAlfilN(&Cs);
 		if (move)
 		{
 			return move;
 		}
-		move = SeeTorreN(Cs);
+		move = SeeTorreN(&Cs);
 		if (move)
 		{
 			return move;
 		}
-		move = SeeDamaN(Cs);
+		move = SeeDamaN(&Cs);
 		if (move)
 		{
 			return move;
 		}
-		move = SeeReyN(Cs);
+		move = SeeReyN(&Cs);
 		if (move)
 		{
 			return move;
@@ -212,7 +212,7 @@ int ObtenerAtaquesMenores(int Cs, int turno)
 }
 
 /* Buscamos defensa de peon. */
-int SeePeonesN(int Cs)
+int SeePeonesN(int *Cs)
 {
 	int i;
 	int destino;
@@ -220,17 +220,17 @@ int SeePeonesN(int Cs)
 
 	for (i = 0; i < 2; i++)
 	{
-		destino = Cs - See_Mov_Pe[i];
+		destino = *Cs - See_Mov_Pe[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		if (TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == PeonN)
+		if (TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == PeonN)
 		{
-			if (TableroGlobal.Tablero[Cs] < CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] < CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], (Cs > 55) ? DamaN : MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], (*Cs > 55) ? DamaN : MFLAGPROM, 0);
 				if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -243,7 +243,7 @@ int SeePeonesN(int Cs)
 	return NO_MOVIMIENTO;
 }
 /* Buscamos defensa de peon. */
-int SeePeonesB(int Cs)
+int SeePeonesB(int *Cs)
 {
 	int i;
 	int destino;
@@ -251,17 +251,17 @@ int SeePeonesB(int Cs)
 
 	for (i = 0; i < 2; i++)
 	{
-		destino = Cs + See_Mov_Pe[i];
+		destino = *Cs + See_Mov_Pe[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		if (TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == PeonB)
+		if (TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == PeonB)
 		{
-			if (TableroGlobal.Tablero[Cs] > CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] > CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], (Cs < 8) ? DamaB : MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], (*Cs < 8) ? DamaB : MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -274,7 +274,7 @@ int SeePeonesB(int Cs)
 	return NO_MOVIMIENTO;
 }
 /* Buscamos defensa de caballo. */
-int SeeCaballoB(int Cs)
+int SeeCaballoB(int *Cs)
 {
 	int i = 0;
 	int destino = 0;
@@ -282,17 +282,17 @@ int SeeCaballoB(int Cs)
 
 	for (i = 0; i < 8; i++)
 	{
-		destino = Cs + See_Mov_Ca[i];
+		destino = *Cs + See_Mov_Ca[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		if (TableroGlobal.TableroColor[Cs] != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CaballoB)
+		if (TableroGlobal.TableroColor[*Cs] != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CaballoB)
 		{
-			if (TableroGlobal.Tablero[Cs] > CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] > CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -305,7 +305,7 @@ int SeeCaballoB(int Cs)
 	return NO_MOVIMIENTO;
 }
 /* Buscamos defensa de caballo. */
-int SeeCaballoN(int Cs)
+int SeeCaballoN(int *Cs)
 {
 	int i = 0;
 	int destino = 0;
@@ -313,17 +313,17 @@ int SeeCaballoN(int Cs)
 
 	for (i = 0; i < 8; i++)
 	{
-		destino = Cs + See_Mov_Ca[i];
+		destino = *Cs + See_Mov_Ca[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		if (TableroGlobal.TableroColor[Cs] != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CaballoN)
+		if (TableroGlobal.TableroColor[*Cs] != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CaballoN)
 		{
-			if (TableroGlobal.Tablero[Cs] < CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] < CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -336,7 +336,7 @@ int SeeCaballoN(int Cs)
 	return NO_MOVIMIENTO;
 }
 /* Buscamos defensa de alfil. */
-int SeeAlfilB(int Cs)
+int SeeAlfilB(int *Cs)
 {
 	int i = 0;
 	int destino = 0;
@@ -344,21 +344,21 @@ int SeeAlfilB(int Cs)
 
 	for ( i = 0; i < 4; i++)
 	{
-		destino = Cs + See_Mov_Al[i];
+		destino = *Cs + See_Mov_Al[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		while ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
+		while ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
 		{
 			destino += See_Mov_Al[i];
 		}
-		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == AlfilB)
+		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == AlfilB)
 		{
-			if (TableroGlobal.Tablero[Cs] > CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] > CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -371,7 +371,7 @@ int SeeAlfilB(int Cs)
 	return NO_MOVIMIENTO;
 }
 /* Buscamos defensa de alfil. */
-int SeeAlfilN(int Cs)
+int SeeAlfilN(int *Cs)
 {
 	int i = 0;
 	int destino = 0;
@@ -379,21 +379,21 @@ int SeeAlfilN(int Cs)
 
 	for ( i = 0; i < 4; i++)
 	{
-		destino = Cs + See_Mov_Al[i];
+		destino = *Cs + See_Mov_Al[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		while ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
+		while ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
 		{
 			destino += See_Mov_Al[i];
 		}
-		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == AlfilN)
+		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == AlfilN)
 		{
-			if (TableroGlobal.Tablero[Cs] < CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] < CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -406,7 +406,7 @@ int SeeAlfilN(int Cs)
 	return NO_MOVIMIENTO;
 }
 /* Buscamos defensa de torre. */
-int SeeTorreB(int Cs)
+int SeeTorreB(int *Cs)
 {
 	int i = 0;
 	int destino = 0;
@@ -415,13 +415,13 @@ int SeeTorreB(int Cs)
 
 	for ( i = 0; i < 4; i++)
 	{
-		destino = Cs + See_Mov_To[i];
+		destino = *Cs + See_Mov_To[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		colorCs = TableroGlobal.TableroColor[Cs];
+		colorCs = TableroGlobal.TableroColor[*Cs];
 
 		while ((destino > -1 && destino < 64) && colorCs != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
 		{
@@ -430,9 +430,9 @@ int SeeTorreB(int Cs)
 		}
 		if ((destino > -1 && destino < 64) && colorCs != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == TorreB)
 		{
-			if (TableroGlobal.Tablero[Cs] > CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] > CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -445,7 +445,7 @@ int SeeTorreB(int Cs)
 	return NO_MOVIMIENTO;
 }
 /* Buscamos defensa de torre. */
-int SeeTorreN(int Cs)
+int SeeTorreN(int *Cs)
 {
 	int i = 0;
 	int destino = 0;
@@ -454,13 +454,13 @@ int SeeTorreN(int Cs)
 
 	for (i = 0; i < 4; i++)
 	{
-		destino = Cs + See_Mov_To[i];
+		destino = *Cs + See_Mov_To[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		colorCs = TableroGlobal.TableroColor[Cs];
+		colorCs = TableroGlobal.TableroColor[*Cs];
 
 		while ((destino > -1 && destino < 64) && colorCs != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
 		{
@@ -469,9 +469,9 @@ int SeeTorreN(int Cs)
 		}
 		if ((destino > -1 && destino < 64) && colorCs != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == TorreN)
 		{
-			if (TableroGlobal.Tablero[Cs] < CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] < CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 				if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -484,7 +484,7 @@ int SeeTorreN(int Cs)
 	return NO_MOVIMIENTO;
 }
 /* Buscamos defensa de dama. */
-int SeeDamaB(int Cs)
+int SeeDamaB(int *Cs)
 {
 	int i = 0;
 	int destino = 0;
@@ -494,21 +494,21 @@ int SeeDamaB(int Cs)
 	/* Diagonales */
 	for (i = 0; i < 4; i++)
 	{
-		destino = Cs + See_Mov_Da[i];
+		destino = *Cs + See_Mov_Da[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		while ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
+		while ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
 		{
 			destino += See_Mov_Da[i];
 		}
-		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == DamaB)
+		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == DamaB)
 		{
-			if (TableroGlobal.Tablero[Cs] > CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] > CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -521,13 +521,13 @@ int SeeDamaB(int Cs)
 
 	for (i = 4; i < 8; i++)
 	{
-		destino = Cs + See_Mov_Da[i];
+		destino = *Cs + See_Mov_Da[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		colorCs = TableroGlobal.TableroColor[Cs];
+		colorCs = TableroGlobal.TableroColor[*Cs];
 
 		while ((destino > -1 && destino < 64) && colorCs != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
 		{
@@ -536,9 +536,9 @@ int SeeDamaB(int Cs)
 		}
 		if ((destino > -1 && destino < 64) && colorCs != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == DamaB)
 		{
-			if (TableroGlobal.Tablero[Cs] > CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] > CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -551,7 +551,7 @@ int SeeDamaB(int Cs)
 	return NO_MOVIMIENTO;
 }
 /* Buscamos defensa de dama. */
-int SeeDamaN(int Cs)
+int SeeDamaN(int *Cs)
 {
 	int i = 0;
 	int destino = 0;
@@ -560,21 +560,21 @@ int SeeDamaN(int Cs)
 
 	for ( i = 0; i < 4; i++)
 	{
-		destino = Cs + See_Mov_Da[i];
+		destino = *Cs + See_Mov_Da[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		while ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
+		while ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
 		{
 			destino += See_Mov_Da[i];
 		}
-		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == DamaN)
+		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == DamaN)
 		{
-			if (TableroGlobal.Tablero[Cs] < CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] < CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -587,13 +587,13 @@ int SeeDamaN(int Cs)
 
 	for ( i = 4; i < 8; i++)
 	{
-		destino = Cs + See_Mov_Da[i];
+		destino = *Cs + See_Mov_Da[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		colorCs = TableroGlobal.TableroColor[Cs];
+		colorCs = TableroGlobal.TableroColor[*Cs];
 
 		while ((destino > -1 && destino < 64) && colorCs != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == CasillaVacia)
 		{
@@ -602,9 +602,9 @@ int SeeDamaN(int Cs)
 		}
 		if ((destino > -1 && destino < 64) && colorCs != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == DamaN)
 		{
-			if (TableroGlobal.Tablero[Cs] < CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] < CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -617,7 +617,7 @@ int SeeDamaN(int Cs)
 	return NO_MOVIMIENTO;
 }
 /* Buscamos defensa de rey. */
-int SeeReyB(int Cs)
+int SeeReyB(int *Cs)
 {
 	int i = 0;
 	int destino = 0;
@@ -625,16 +625,16 @@ int SeeReyB(int Cs)
 
 	for (i = 0; i < 4; i++)
 	{
-		destino = Cs + See_Mov_Da[i];
+		destino = *Cs + See_Mov_Da[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
-		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == ReyB)
+		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == ReyB)
 		{
-			if (TableroGlobal.Tablero[Cs] > CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] > CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -647,16 +647,16 @@ int SeeReyB(int Cs)
 
 	for (i = 4; i < 8; i++)
 	{
-		destino = Cs + See_Mov_Da[i];
+		destino = *Cs + See_Mov_Da[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
-		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == ReyB)
+		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == ReyB)
 		{
-			if (TableroGlobal.Tablero[Cs] > CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] > CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -669,7 +669,7 @@ int SeeReyB(int Cs)
 	return NO_MOVIMIENTO;
 }
 /* Buscamos defensa de rey. */
-int SeeReyN(int Cs)
+int SeeReyN(int *Cs)
 {
 	int i = 0;
 	int destino = 0;
@@ -677,16 +677,16 @@ int SeeReyN(int Cs)
 
 	for ( i = 0; i < 4; i++)
 	{
-		destino = Cs + See_Mov_Da[i];
+		destino = *Cs + See_Mov_Da[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
-		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == ReyN)
+		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] == TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == ReyN)
 		{
-			if (TableroGlobal.Tablero[Cs] < CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] < CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();
@@ -699,17 +699,17 @@ int SeeReyN(int Cs)
 
 	for ( i = 4; i < 8; i++)
 	{
-		destino = Cs + See_Mov_Da[i];
+		destino = *Cs + See_Mov_Da[i];
 		if (destino < 0 || destino > 63)
 		{
 			continue;
 		}
 
-		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[Cs] != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == ReyN)
+		if ((destino > -1 && destino < 64) && TableroGlobal.TableroColor[*Cs] != TableroGlobal.TableroColor[destino] && TableroGlobal.Tablero[destino] == ReyN)
 		{
-			if (TableroGlobal.Tablero[Cs] < CasillaVacia)
+			if (TableroGlobal.Tablero[*Cs] < CasillaVacia)
 			{
-				SeeMov = MOVIMIENTO(destino, Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[Cs], MFLAGPROM, 0);
+				SeeMov = MOVIMIENTO(destino, *Cs, TableroGlobal.Tablero[destino], (TableroGlobal.Tablero[*Cs] == CasillaVacia) ? MFLAGCAP : TableroGlobal.Tablero[*Cs], MFLAGPROM, 0);
 		        if (!SeeHacerMovimiento(&SeeMov))
 				{
 					SeeDeshacerMovimiento();

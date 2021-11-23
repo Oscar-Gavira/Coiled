@@ -8,7 +8,7 @@
 //#ifdef _MSC_VER
 //#  define USE_AVX2   1
 //#  define USE_SSE41  1
-//#  define USE_SSE3   1
+//#  define USE_SSSE3   1
 //#  define USE_SSE2   1
 //#  define USE_SSE    1
 //#  define IS_64BIT   1
@@ -1279,6 +1279,27 @@ DLLExport int _CDECL nnue_init(const char* evalFile)
   //printf("NNUE file not found or Unsupported.\n");
   //fflush(stdout);
   return false;
+}
+
+DLLExport int _CDECL nnue_technology()
+{
+#if defined(USE_AVX2)
+	return 7;
+#elif defined(USE_SSE41)
+	return 6;
+#elif defined(USE_SSSE3)
+	return 5;
+#elif defined(USE_SSE2)
+	return 4;
+#elif defined(USE_SSE)
+	return 3;
+#elif defined(USE_MMX)
+	return 2;
+#elif defined(USE_NEON)
+	return 1;
+#else
+    return 0;
+#endif
 }
 
 DLLExport int _CDECL nnue_evaluate(

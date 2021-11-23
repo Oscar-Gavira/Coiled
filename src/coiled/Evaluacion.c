@@ -50,7 +50,7 @@ int Evaluar()
 	_Valor pGlobal = PuntosCero;
 
 #ifdef USAR_NNUE
-	if (Nnue.Dll_Cargada == true && Nnue.Usar == true)
+	if (Nnue.Dll_Cargada == true && Nnue.Directorio[0] != '\0')
 	{
 		return ProbarNNUE();
 	}

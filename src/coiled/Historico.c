@@ -26,10 +26,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 S64 Historico[64][64];													/* [Origen][Destino] */
 int Historico_Killer[MAX_PLY][2];										/* [MAXPLY][2 jugadas] */
 int Historico_Killer_Mate[MAX_PLY][2];									/* [MAXPLY][2 jugadas] */
-int HistoricoRefutacion[7][64][64];										/* [Pieza][Origen][Destino] */
+int Historico_Refutacion[64][64];										/* [Origen][Destino] */
+int Historico_Contador[64][64];											/* [Origen][Destino] */
 
 S64 Max_Historico = 0;
 S64 Min_Historico = 0;
+S64 Min_Historico_Contador = 0;
+S64 Max_Historico_Contador = 0;
 
 /* Es un movimiento tranquilo */
 int MovimientoTranquilo(int *M)
@@ -75,10 +78,13 @@ void HistoricoIniciar()
 	memset(Historico, 0, 64 * 64 * sizeof(S64));
 	memset(Historico_Killer, 0, MAX_PLY * 2 * sizeof(int));
 	memset(Historico_Killer_Mate, 0, MAX_PLY * 2 * sizeof(int));
-	memset(HistoricoRefutacion, 0, 7 * 64 * 64 * sizeof(int));
+	memset(Historico_Refutacion, 0, 64 * 64 * sizeof(int));
+	memset(Historico_Contador, 0, 64 * 64 * sizeof(int));
 
 	Max_Historico = 0;
 	Min_Historico = 0;
+	Min_Historico_Contador = 0;
+	Max_Historico_Contador = 0;
 }
 
 /* Actualizamos historico y killer */
@@ -89,7 +95,6 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 	int Inicio = 0;
 	int Fin = 0;
 	int Puntos = 0;
-	int PiezaCn = NO_MOVIMIENTO;
 	int DestinoCn = 0;
 	int OrigenCn = 0;
 
@@ -111,21 +116,16 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 		}
 	}
 	/* Refutation */
-	if (*ply > 0 && TableroGlobal.Estado[*ply - 1].Movimiento != NO_MOVIMIENTO)
+	if (*ply - 1 >= 0 && TableroGlobal.Estado[*ply - 1].Movimiento != NO_MOVIMIENTO)
 	{
-		PiezaCn = PIEZAMOVIDA(TableroGlobal.Estado[*ply - 1].Movimiento);
 		DestinoCn = CUADRADO_DESTINO(TableroGlobal.Estado[*ply - 1].Movimiento);
 		OrigenCn = CUADRADO_ORIGEN(TableroGlobal.Estado[*ply - 1].Movimiento);
 
-		if (PiezaCn > NO_MOVIMIENTO && PiezaCn < NoPieza)
-		{
-			if (PiezaCn > CasillaVacia)
-				PiezaCn = PiezaCn - 7;
-
-			HistoricoRefutacion[PiezaCn][OrigenCn][DestinoCn] = M;
-		}
+		if (DestinoCn >= 0 && DestinoCn <= 63)
+			Historico_Refutacion[OrigenCn][DestinoCn] = M;
 	}
-	/* Historico */
+
+	/* Historico, Historico contador */
 	for (i = 0; i < Nmov; i++)
 	{
 		Fin = CUADRADO_DESTINO(ML[i]);
@@ -134,9 +134,17 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 		Puntos = (ML[i] == M) ? (depth * depth) : -(depth * depth);
 
 		Historico[Inicio][Fin] += Puntos;
+		if (DestinoCn >= 0 && DestinoCn <= 63)
+			Historico_Contador[OrigenCn][DestinoCn] += Puntos;
+
 		h = Historico[Inicio][Fin];
 		if (h > Max_Historico) Max_Historico = h;
 		else if (h < Min_Historico) Min_Historico = h;
+
+		h = Historico_Contador[OrigenCn][DestinoCn];
+		if (h > Max_Historico_Contador) Max_Historico_Contador = h;
+		else if (h < Min_Historico_Contador) Min_Historico_Contador = h;
+
 	}
 }
 
@@ -172,21 +180,38 @@ int HistoricoEsMovimientoKillerMate(int *ply, int *M)
 
 int HistoricoMovimientoRefutacion()
 {
-	if (TableroGlobal.Ply - 1 && TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento != NO_MOVIMIENTO)
+	if (TableroGlobal.Ply - 1 >= 0 && TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento != NO_MOVIMIENTO)
 	{
-		int PiezaCn = PIEZAMOVIDA(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
 		int DestinoCn = CUADRADO_DESTINO(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
 		int OrigenCn = CUADRADO_ORIGEN(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
 
-		if (PiezaCn > NO_MOVIMIENTO && PiezaCn < NoPieza)
-		{
-			if (PiezaCn > CasillaVacia)
-				PiezaCn = PiezaCn - 7;
-
-			return HistoricoRefutacion[PiezaCn][OrigenCn][DestinoCn];
-		}
+		if (DestinoCn >= 0 && DestinoCn <= 63)
+			return Historico_Refutacion[OrigenCn][DestinoCn];
 	}
 	return NO_MOVIMIENTO;
+}
+
+int HistoricoMovimientoContador()
+{
+	S64 v = 0;
+
+	if (TableroGlobal.Ply - 1 >= 0 && TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento != NO_MOVIMIENTO)
+	{
+		int DestinoCn = CUADRADO_DESTINO(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
+		int OrigenCn = CUADRADO_ORIGEN(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
+
+		if (DestinoCn >= 0 && DestinoCn <= 63)
+		{
+			v = Historico_Contador[OrigenCn][DestinoCn];
+			if (v > 0 && Max_Historico_Contador != 0)
+				return (int)((S64)((S64)100 * v) / Max_Historico_Contador) + 1;	/* Los decimales 0,02 se convierten en 1. Valor maximo 101 */
+			else if (v < 0 && Min_Historico_Contador != 0)
+				return (int)((S64)((S64)-100 * v) / Min_Historico_Contador) + -1;	/* Los decimales -0,01 se convierten en -1. Valor maximo -101 */
+			else
+				return 0;
+		}
+	}
+	return 0;
 }
 
 /* Historico. Para la ordenacion de movimientos. Devuelve del -102 al 100. Porcentaje en vez de valor*/

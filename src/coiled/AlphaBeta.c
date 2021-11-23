@@ -30,7 +30,7 @@ Variables
 	int lmp[2][9];
 #endif
 #ifdef USAR_FUTILITY_PRUNING_HISTORY
-	int HistoricoFutilityPoda[] = { 81, 10 };
+	int HistoricoFutilityPoda[] = { 0, 0 };
 #endif
 
 int vp_triangular[MAX_PLY][MAX_PLY];
@@ -210,9 +210,8 @@ int AspirationWindows(int depth, int en_jaque, int PuntuacionAnterior)
 	{
 		puntos = AlphaBeta(depth, alpha, beta, en_jaque, false);
 		if (TipoJuego.Interrumpir == true)
-		{
 			return puntos;
-		}
+
 		if (puntos > alpha && puntos < beta)
 		{
 			_lowerbound = MAX(alpha, MIN(puntos, beta)) >= beta ? 1 : MAX(alpha, MIN(puntos, beta)) <= alpha ? -1 : 0;
@@ -229,6 +228,13 @@ int AspirationWindows(int depth, int en_jaque, int PuntuacionAnterior)
 		{
 			beta = MIN(VALOR_MATE, beta + windows);
 			depth = MAX(1, depth - (ABS(puntos) <= VALOR_MATE * 0.5f));
+			/* Control de tiempo, para evitar exceso de tiempo. */
+			if ((TipoJuego.Activo == 1 && TiempoTrascurrido(&TipoJuego) >= TipoJuego.TiempoMax1)
+				|| (TipoJuego.Activo == 2 && TiempoTrascurrido(&TipoJuego) >= TipoJuego.TiempoMax1))
+			{
+				TipoJuego.Interrumpir = true;
+				return puntos;
+			}
 		}
 
 		windows += windows * 0.5f;
@@ -272,7 +278,8 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 	int Mejorando = false;
 #endif
 #ifdef USAR_REDUCTION
-	int Historico = 101;
+	int Historico = 0;
+	int HistoricoContador = 0;
 #endif
 	int hMov = NO_MOVIMIENTO;
 	int hEv = VALOR_TB_VACIO;
@@ -339,14 +346,14 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 
 #ifdef USAR_TABLAS_DE_FINALES
 	/* Comprobamos acceso a las tablas de finales de gaviota, solo en pv */
-	if (TablaDeFinales.Usar == 2 && !Zw && TablaDeFinales.Dll_CargadaGv == true)
+	if (TablaDeFinales.Usar == 2 && beta != VALOR_MATE && !Zw && TablaDeFinales.Dll_CargadaGv == true)
 	{
 		/* Cuantas piezas tenemos */
 		NumeroFichas = Blancas.PeonTotales + Blancas.CaballosTotales + Blancas.AlfilTotales + Blancas.TorresTotales + Blancas.DamasTotales
 			+ Negras.PeonTotales + Negras.CaballosTotales + Negras.AlfilTotales + Negras.TorresTotales + Negras.DamasTotales + 2; /* + 2 son los reyes */
 
 		/* Busqueda. Acceso en depth 1 */
-		if (NumeroFichas <= TablaDeFinales.Limite && Ply > 1 && depth <= 1)
+		if (NumeroFichas <= TablaDeFinales.Limite && Ply > 1 && !(Ply % 2) && depth > 0)
 		{
 			if (Probar_gaviota(&tbPuntos) == true)
 			{
@@ -357,8 +364,8 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 				if (tbPuntos < 0)
 					tbResultado = TB_LOSS;
 
-				tbPuntos = tbResultado == TB_LOSS ? -ABS(beta) + 500 + Ply
-					: tbResultado == TB_WIN ? ABS(beta) - 500 - Ply : 0;
+				tbPuntos = tbResultado == TB_LOSS ? -ABS(beta) - MAX_PLY + Ply
+					: tbResultado == TB_WIN ? ABS(beta) + MAX_PLY - Ply : 0;
 
 				tbFlag = tbResultado == TB_LOSS ? TT_ALPHA
 					: tbResultado == TB_WIN ? TT_BETA : TT_EXACTO;
@@ -367,32 +374,34 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 					|| (tbFlag == TT_BETA && tbPuntos >= beta)
 					|| (tbFlag == TT_ALPHA && tbPuntos <= alpha))
 				{
-					tbResultado = tbPuntos;
-					ConvertirValorTT(&tbPuntos);
-					AlmacenarPosicion(depth, tbPuntos, VALOR_TB_VACIO, tbFlag, NO_MOVIMIENTO);
-					return tbResultado;
+					if (tbPuntos > VALOR_MATE)
+						return VALOR_MATE;
+					if (tbPuntos < -VALOR_MATE)
+						return -VALOR_MATE;
+
+					return tbPuntos;
 				}
 			}
 		}
 	}
 
 #if defined(USAR_TABLAS_DE_FINALES) && defined(ARC_64BIT)
-	/* Comprobamos acceso a las tablas de finales de Syzygy, solo en pv */
-	if (TablaDeFinales.Usar == 1 && !Zw && TablaDeFinales.Dll_CargadaSg == true)
+	/* Comprobamos acceso a las tablas de finales de syzygy, solo en pv */
+	if (TablaDeFinales.Usar == 1 && beta != VALOR_MATE && !Zw && TablaDeFinales.Dll_CargadaSg == true)
 	{
 		NumeroFichas = Blancas.PeonTotales + Blancas.CaballosTotales + Blancas.AlfilTotales + Blancas.TorresTotales + Blancas.DamasTotales
 			+ Negras.PeonTotales + Negras.CaballosTotales + Negras.AlfilTotales + Negras.TorresTotales + Negras.DamasTotales + 2;
 
 		/* Busqueda. Acceso en depth 1 */
-		if (NumeroFichas <= TablaDeFinales.Limite && Ply > 1 && depth <= 1)
+		if (NumeroFichas <= TablaDeFinales.Limite && Ply > 1 && !(Ply % 2) && depth > 0)
 		{
 			tbResultado = ProbarSyzygy();
 			if (tbResultado != SG_RESULT_FAILED)
 			{
 				TablaDeFinales.Acierto++;
 
-				tbPuntos = tbResultado == TB_LOSS ? -ABS(beta) + 500 + Ply
-					: tbResultado == TB_WIN ? ABS(beta) - 500 - Ply : 0;
+				tbPuntos = tbResultado == TB_LOSS ? -ABS(beta) - MAX_PLY + Ply
+					: tbResultado == TB_WIN ? ABS(beta) + MAX_PLY - Ply : 0;
 
 				tbFlag = tbResultado == TB_LOSS ? TT_ALPHA
 					: tbResultado == TB_WIN ? TT_BETA : TT_EXACTO;
@@ -401,10 +410,12 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 					|| (tbFlag == TT_BETA && tbPuntos >= beta)
 					|| (tbFlag == TT_ALPHA && tbPuntos <= alpha))
 				{
-					tbResultado = tbPuntos;
-					ConvertirValorTT(&tbPuntos);
-					AlmacenarPosicion(depth, tbPuntos, VALOR_TB_VACIO, tbFlag, NO_MOVIMIENTO);
-					return tbResultado;
+					if (tbPuntos > VALOR_MATE)
+						return VALOR_MATE;
+					if (tbPuntos < -VALOR_MATE)
+						return -VALOR_MATE;
+
+					return tbPuntos;
 				}
 			}
 		}
@@ -412,14 +423,14 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 #endif
 
 	/* Comprobamos acceso a las tablas de finales de BitBases, solo en pv */
-	if (TablaDeFinales.Usar == 3 && !Zw && TablaDeFinales.Dll_CargadaBb == true)
+	if (TablaDeFinales.Usar == 3 && beta != VALOR_MATE && !Zw && TablaDeFinales.Dll_CargadaBb == true)
 	{
 		/* Cuantas piezas tenemos */
 		NumeroFichas = Blancas.PeonTotales + Blancas.CaballosTotales + Blancas.AlfilTotales + Blancas.TorresTotales + Blancas.DamasTotales
 			+ Negras.PeonTotales + Negras.CaballosTotales + Negras.AlfilTotales + Negras.TorresTotales + Negras.DamasTotales + 2; /* + 2 son los reyes */
 
 		/* Busqueda. Acceso en depth 1 */
-		if (NumeroFichas <= TablaDeFinales.Limite && Ply > 1 && depth <= 1)
+		if (NumeroFichas <= TablaDeFinales.Limite && Ply > 1 && !(Ply % 2) && depth > 0)
 		{
 			if (Probar_egbb(&tbPuntos) == true)
 			{
@@ -430,8 +441,8 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 				if (tbPuntos < 0)
 					tbResultado = TB_LOSS;
 
-				tbPuntos = tbResultado == TB_LOSS ? -ABS(beta) + 500 + Ply
-					: tbResultado == TB_WIN ? ABS(beta) - 500 - Ply : 0;
+				tbPuntos = tbResultado == TB_LOSS ? -ABS(beta) - MAX_PLY + Ply
+					: tbResultado == TB_WIN ? ABS(beta) + MAX_PLY - Ply : 0;
 
 				tbFlag = tbResultado == TB_LOSS ? TT_ALPHA
 					: tbResultado == TB_WIN ? TT_BETA : TT_EXACTO;
@@ -440,6 +451,11 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 					|| (tbFlag == TT_BETA && tbPuntos >= beta)
 					|| (tbFlag == TT_ALPHA && tbPuntos <= alpha))
 				{
+					if (tbPuntos > VALOR_MATE)
+						return VALOR_MATE;
+					if (tbPuntos < -VALOR_MATE)
+						return -VALOR_MATE;
+
 					return tbPuntos;
 				}
 			}
@@ -467,7 +483,6 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 		&& depth > 1
 		&& Ev >= beta
 		&& FigurasAdversarioNull(TableroGlobal.MueveBlancas)
-		//&& FigurasAdversarioNull(TableroGlobal.MueveBlancas) > (depth > 12) /* PROBAR - LOS RESULTADOS MATE OK. A VER CON LOS STS Y PARTIDAS. IDEAS WEISS, IMPLEMENTADA EN berserk Y YO */
 		&& (!hEncontrado || FLAG(hFlag) == TT_BETA || hPuntos >= beta))
 	{
 		nuevo_depth = depth - (4 + depth / 6 + MIN(3, (Ev - beta) / 200));
@@ -507,13 +522,15 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 		}
 #endif
 
-		Historico = EsMovimientoTranquilo == true ? HistoricoValor(&ListaMovimiento[i].Movimiento) : 101;
+		Historico = EsMovimientoTranquilo == true ? HistoricoValor(&ListaMovimiento[i].Movimiento) : 0;
+		HistoricoContador = EsMovimientoTranquilo == true ? HistoricoMovimientoContador() : 0;
 
 #ifdef USAR_FUTILITY_PRUNING_HISTORY
 		if (depth <= 8
 			&& puntos_max > -VALOR_MATE_MIN
 			&& EsMovimientoTranquilo
 			&& Ev + (65 * depth) <= alpha
+			&& Historico != 0
 			&& Historico < HistoricoFutilityPoda[Mejorando])
 		{
 			SaltarTranquilo = true;
@@ -569,11 +586,11 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 		if (depth > 2 && MovimientosLegales > 1 && EsMovimientoTranquilo == true)
 		{
 			reducciones = lmr[MIN(depth, 63)][MIN(MovimientosLegales, 63)];
-
 			reducciones += Zw + !Mejorando;
 			reducciones += (en_jaque && ValorPieza(PIEZAMOVIDA(ListaMovimiento[i].Movimiento)) == SeeReyValor);
 
-			reducciones -= (Historico > 0) ? 1 : (Historico < 0) ? -1 : 0;
+			reducciones -= (HistoricoContador > 70) ? 1 : (HistoricoContador < -70) ? -1 : 0;
+			reducciones -= (Historico > 1) ? 1 : (Historico < -1) ? -1 : 0;
 			reducciones -= EsMovimientoKiller ? 1 : EsMovimientoRefutacion ? 1 : ListaMovimiento[i].Movimiento == hMov ? 1 : 0;
 
 			reducciones = MIN(depth - 1, MAX(reducciones, 1));

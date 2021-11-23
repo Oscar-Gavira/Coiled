@@ -130,7 +130,7 @@ int Cargar_gaviota_dll()
 	}
 	else
 	{
-		printf(""INFO_STRING""STRING_FORMAT" not found. Unable to use Gaviota end table.\n", GTB_NOMBRE);
+		printf(""INFO_STRING""STRING_FORMAT" not found. Unable to use gaviota end table.\n", GTB_NOMBRE);
 		fflush(stdout);
 		TablaDeFinales.Usar = 0;
 		return false;
@@ -189,7 +189,7 @@ void CacheGaviotaTB()
 	if (TablaDeFinales.CacheNueva == true || TBcache_is_on() == false)
 	{
 		TablaDeFinales.CacheNueva = false;
-		TBcache_init(CacheMB, 0); /* 0 = DTM 100% */
+		TBcache_init(CacheMB, 0);
 		if (TBcache_is_on())
 		{
 			printf(""INFO_STRING"Gaviota state cache: Ok\n");
@@ -243,7 +243,6 @@ unsigned Probar_gaviota(int *puntos)
 
 	unsigned int stm;												/* Quien mueve */
 	unsigned int epsquare;											/* Posicion de peon al paso */
-	unsigned int castling;											/* Enroques permitidos, 0 => no enroques */
 	unsigned int ws[17];											/* Lista de cuadrados de las blancas */
 	unsigned int bs[17];											/* Lista de cuadrados de las negras */
 	unsigned char wp[17];											/* Que piezas hay en el cuadrado. Blancas. */
@@ -254,15 +253,15 @@ unsigned Probar_gaviota(int *puntos)
 
 	if (TableroGlobal.EnroqueB == Corto)
 	{
-		enroque |= TBWOO;
+		enroque = TBWOO;
 	}
 	if (TableroGlobal.EnroqueB == Largo)
 	{
-		enroque |= TBWOOO;
+		enroque = TBWOOO;
 	}
 	if (TableroGlobal.EnroqueB == LosDos)
 	{
-		enroque |= TBWOO | TBWOOO;
+		enroque = TBWOO | TBWOOO;
 	}
 	if (TableroGlobal.EnroqueN == Corto)
 	{
@@ -298,14 +297,7 @@ unsigned Probar_gaviota(int *puntos)
 		}
 	}
 
-	castling = enroque;						/* no castling available, otherwise combine all
-											the castling possibilities with '|', for instance
-											white could castle both sides, black can't:
-											castling = TBWOO | TBWOOO;
-											both could castle on the king side:
-											castling = TBWOO | TBWOO;
-											etc.
-											*/
+
 
 	memset(ws, 0, 17 * sizeof(unsigned int));
 	memset(wp, 0, 17 * sizeof(unsigned char));
@@ -314,13 +306,8 @@ unsigned Probar_gaviota(int *puntos)
 
 	pliestomate = 0;
 
-	for (i = 0; i < 64; ++i)
+	for (i = 0; i < 64; i++)
 	{
-		if (TableroGlobal.Tablero[i] == CasillaVacia)
-		{
-			continue;
-		}
-
 		switch (TableroGlobal.Tablero[i])
 		{
 		case PeonB:
@@ -385,6 +372,7 @@ unsigned Probar_gaviota(int *puntos)
 			NpiezasN++;
 			break;
 		default:
+			continue;
 			break;
 		}
 	}
@@ -396,10 +384,10 @@ unsigned Probar_gaviota(int *puntos)
 	bp[NpiezasN] = TBNOPIECE;
 
 	/* Comprobamos en memoria/cache */
-	TBavailable = TBprobe_soft(stm, epsquare, castling, ws, bs, wp, bp, &info, &pliestomate);
+	TBavailable = TBprobe_soft(stm, epsquare, enroque, ws, bs, wp, bp, &info, &pliestomate);
 	/* Comprobamos en el HDD */
 	if (TBavailable == false)
-		TBavailable = TBprobe_hard(stm, epsquare, castling, ws, bs, wp, bp, &info, &pliestomate);
+		TBavailable = TBprobe_hard(stm, epsquare, enroque, ws, bs, wp, bp, &info, &pliestomate);
 
 	if (TBavailable == true)
 	{

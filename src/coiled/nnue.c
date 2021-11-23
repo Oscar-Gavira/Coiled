@@ -30,11 +30,14 @@ int Cargar_nnue_dll()
 #ifdef _WIN32
 	switch (Nnue.Tecnologia)
 	{
+	case 0:
+		return false;
+		break;
 	case 1:
 		strcpy(NNUE_NOMBRE, "nnue_sse2.dll");
 		break;
 	case 2:
-		strcpy(NNUE_NOMBRE, "nnue_sse3.dll");
+		strcpy(NNUE_NOMBRE, "nnue_ssse3.dll");
 		break;
 	case 3:
 		strcpy(NNUE_NOMBRE, "nnue_sse4.1.dll");
@@ -52,7 +55,7 @@ int Cargar_nnue_dll()
 		strcpy(NNUE_NOMBRE, "./libnnue_sse2.so");
 		break;
 	case 2:
-		strcpy(NNUE_NOMBRE, "./libnnue_sse3.so");
+		strcpy(NNUE_NOMBRE, "./libnnue_ssse3.so");
 		break;
 	case 3:
 		strcpy(NNUE_NOMBRE, "./libnnue_sse4.1.so");
@@ -77,6 +80,50 @@ int Cargar_nnue_dll()
 		{
 			return false;
 		}
+		NNUE_technology = (NNUE_TECHNOLOGY)GetProcAddress(NNUE_hmod, "nnue_technology");
+		if (NNUE_technology == NULL)
+		{
+			return false;
+		}
+
+		switch (NNUE_technology())
+		{
+		case 0:
+			printf("NNUE technology activated: none\n");
+			break;
+
+		case 1:
+			//printf("NNUE technology activated: NEON\n");
+			break;
+
+		case 2:
+			//printf("NNUE technology activated: MMX\n");
+			break;
+
+		case 3:
+			printf("NNUE technology activated: sse\n");
+			break;
+
+		case 4:
+			printf("NNUE technology activated: sse2\n");
+			break;
+
+		case 5:
+			printf("NNUE technology activated: ssse3\n");
+			break;
+
+		case 6:
+			printf("NNUE technology activated: sse4.1\n");
+			break;
+
+		case 7:
+			printf("NNUE technology activated: avx2\n");
+			break;
+		default:
+			break;
+		}
+
+		Nnue.TecnologiaNueva = false;
 
 		return true;
 	}
@@ -88,23 +135,22 @@ int Cargar_nnue_dll()
 		switch (Nnue.Tecnologia)
 		{
 		case 1:
-			printf("SSE2.");
+			printf("sse2.");
 			break;
 		case 2:
-			printf("SSE3.");
+			printf("ssse3.");
 			break;
 		case 3:
-			printf("SSE4.1.");
+			printf("sse4.1.");
 			break;
 		case 4:
-			printf("AVX2.");
+			printf("avx2.");
 			break;
 		default:
 			break;
 		}
 		printf(" Try another NnueTechnology.\n");
 		fflush(stdout);
-		Nnue.Usar = false;
 		return false;
 	}
 }
@@ -115,15 +161,15 @@ void CargarNnue()
 	if (Nnue.Dll_Cargada == true && Nnue.Directorio[0] != '\0')
 	{
 		/* Si es posible cargar la DLL */
-		Nnue.DirectorioNuevo = false;
 		if (NNUE_init(Nnue.Directorio) == false)
 		{
-			Nnue.Usar = false;
 			printf(""INFO_STRING"NNUE file not found or Unsupported.\n");
 			fflush(stdout);
 		}
 		else
 		{
+			Nnue.DirectorioNuevo = false;
+			Nnue.TecnologiaNueva = false;
 			printf(""INFO_STRING"Loading NNUE: "STRING_FORMAT"\n", Nnue.Directorio);
 			fflush(stdout);
 		}
@@ -142,6 +188,7 @@ int Descargar_nnue_dll()
 	NNUE_hmod = NULL;
 	NNUE_init = NULL;
 	NNUE_evaluate = NULL;
+	NNUE_technology = NULL;
 
 	Nnue.Dll_Cargada = false;
 	return true;
@@ -176,13 +223,8 @@ int ProbarNNUE()
 	memset(TorreC, 0, 10 * sizeof(int));
 	memset(DamaC, 0, 10 * sizeof(int));
 
-	for (i = 0; i < 64; ++i)
+	for (i = 0; i < 64; i++)
 	{
-		if (TableroGlobal.Tablero[i] == CasillaVacia)
-		{
-			continue;
-		}
-
 		switch (TableroGlobal.Tablero[i])
 		{
 		case PeonB:
@@ -235,6 +277,7 @@ int ProbarNNUE()
 			VPiezas[1] = Nnue_bking;
 			break;
 		default:
+			continue;
 			break;
 		}
 	}
@@ -245,13 +288,13 @@ int ProbarNNUE()
 	/*		DAMA		*/
 	if (indice_db != 0 || indice_dn != 5)
 	{
-		for (i = 0; i < indice_db; ++i)
+		for (i = 0; i < indice_db; i++)
 		{
 			VCuadros[Npiezas] = DamaC[i];
 			VPiezas[Npiezas] = Nnue_wqueen;
 			Npiezas++;
 		}
-		for (i = 5; i < indice_dn; ++i)
+		for (i = 5; i < indice_dn; i++)
 		{
 			VCuadros[Npiezas] = DamaC[i];
 			VPiezas[Npiezas] = Nnue_bqueen;
@@ -261,13 +304,13 @@ int ProbarNNUE()
 	/*		TORRE		*/
 	if (indice_tb != 0 || indice_tn != 5)
 	{
-		for (i = 0; i < indice_tb; ++i)
+		for (i = 0; i < indice_tb; i++)
 		{
 			VCuadros[Npiezas] = TorreC[i];
 			VPiezas[Npiezas] = Nnue_wrook;
 			Npiezas++;
 		}
-		for (i = 5; i < indice_tn; ++i)
+		for (i = 5; i < indice_tn; i++)
 		{
 			VCuadros[Npiezas] = TorreC[i];
 			VPiezas[Npiezas] = Nnue_brook;
@@ -277,13 +320,13 @@ int ProbarNNUE()
 	/*		ALFIL		*/
 	if (indice_ab != 0 || indice_an != 5)
 	{
-		for (i = 0; i < indice_ab; ++i)
+		for (i = 0; i < indice_ab; i++)
 		{
 			VCuadros[Npiezas] = AlfilC[i];
 			VPiezas[Npiezas] = Nnue_wbishop;
 			Npiezas++;
 		}
-		for (i = 5; i < indice_an; ++i)
+		for (i = 5; i < indice_an; i++)
 		{
 			VCuadros[Npiezas] = AlfilC[i];
 			VPiezas[Npiezas] = Nnue_bbishop;
@@ -293,13 +336,13 @@ int ProbarNNUE()
 	/*		CABALLO		*/
 	if (indice_cb != 0 || indice_cn != 5)
 	{
-		for (i = 0; i < indice_cb; ++i)
+		for (i = 0; i < indice_cb; i++)
 		{
 			VCuadros[Npiezas] = CaballoC[i];
 			VPiezas[Npiezas] = Nnue_wknight;
 			Npiezas++;
 		}
-		for (i = 5; i < indice_cn; ++i)
+		for (i = 5; i < indice_cn; i++)
 		{
 			VCuadros[Npiezas] = CaballoC[i];
 			VPiezas[Npiezas] = Nnue_bknight;
@@ -309,13 +352,13 @@ int ProbarNNUE()
 	/*		PEON		*/
 	if (indice_pb != 0 || indice_pn != 10)
 	{
-		for (i = 0; i < indice_pb; ++i)
+		for (i = 0; i < indice_pb; i++)
 		{
 			VCuadros[Npiezas] = PeonC[i];
 			VPiezas[Npiezas] = Nnue_wpawn;
 			Npiezas++;
 		}
-		for (i = 10; i < indice_pn; ++i)
+		for (i = 10; i < indice_pn; i++)
 		{
 			VCuadros[Npiezas] = PeonC[i];
 			VPiezas[Npiezas] = Nnue_bpawn;

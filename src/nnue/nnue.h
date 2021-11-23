@@ -101,6 +101,8 @@ int nnue_evaluate_pos(Position* pos);
 DLLExport int _CDECL nnue_init(const char * evalFile);             /** Path to NNUE file */
 
 
+DLLExport int _CDECL nnue_technology();                            /** technology use */
+
 /**
 * Evaluate on FEN string
 * Returns

@@ -86,6 +86,7 @@ extern _ST_Nnue Nnue;
 extern int ProbarNNUE();
 extern NNUE_INIT NNUE_init;
 extern NNUE_EVALUATE NNUE_evaluate;
+extern NNUE_TECHNOLOGY NNUE_technology;
 #endif
 
 /************************************************************************************
@@ -98,11 +99,13 @@ extern _ST_TablaDeFinales TablaDeFinales;
 extern EGBB_LOAD_EGBB EGBB_load_egbb;				/* Cargamos la tablas de finales. */
 extern EGBB_PROBE_EGBB EGBB_probe_egbb;				/* Acceso a las tablas de finales. */
 
+#ifdef ARC_64BIT
 /* syzygy */
 extern SG_INITS SG_inits;							/* Inicializa la tabla de finales */
 extern SG_FREE SG_free;						    	/* Libera la tabla de finales */
 extern SG_PROBE_WDL SG_probe_wdl;					/* Acceso a las tablas de finales en la busqueda. */
 extern SG_LARGEST SG_man;							/* Indica la tablas disponibles. 3, 4, 5, 6 o 7 piezas. */
+#endif
 
 /* tbprobe */
 extern TBINIT TBinit;								/* Inicializa la tabla de finales */
