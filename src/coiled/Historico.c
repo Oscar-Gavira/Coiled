@@ -27,7 +27,7 @@ S64 Historico[64][64];													/* [Origen][Destino] */
 int Historico_Killer[MAX_PLY][2];										/* [MAXPLY][2 jugadas] */
 int Historico_Killer_Mate[MAX_PLY][2];									/* [MAXPLY][2 jugadas] */
 int Historico_Refutacion[64][64];										/* [Origen][Destino] */
-int Historico_Contador[64][64];											/* [Origen][Destino] */
+int Historico_Contador[64][64][64];										/* [Origen][Origen][Destino] */
 
 S64 Max_Historico = 0;
 S64 Min_Historico = 0;
@@ -79,7 +79,7 @@ void HistoricoIniciar()
 	memset(Historico_Killer, 0, MAX_PLY * 2 * sizeof(int));
 	memset(Historico_Killer_Mate, 0, MAX_PLY * 2 * sizeof(int));
 	memset(Historico_Refutacion, 0, 64 * 64 * sizeof(int));
-	memset(Historico_Contador, 0, 64 * 64 * sizeof(int));
+	memset(Historico_Contador, 0, 64 * 64 * 64 * sizeof(int));
 
 	Max_Historico = 0;
 	Min_Historico = 0;
@@ -95,8 +95,8 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 	int Inicio = 0;
 	int Fin = 0;
 	int Puntos = 0;
-	int DestinoCn = 0;
-	int OrigenCn = 0;
+	int DestinoCn = -1;
+	int OrigenCn = -1;
 
 	/* Killer */
 	if (kMate)
@@ -135,16 +135,17 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 
 		Historico[Inicio][Fin] += Puntos;
 		if (DestinoCn >= 0 && DestinoCn <= 63)
-			Historico_Contador[OrigenCn][DestinoCn] += Puntos;
+		{
+			Historico_Contador[Inicio][OrigenCn][DestinoCn] += -Puntos;
+
+			h = Historico_Contador[Inicio][OrigenCn][DestinoCn];
+			if (h > Max_Historico_Contador) Max_Historico_Contador = h;
+			else if (h < Min_Historico_Contador) Min_Historico_Contador = h;
+		}
 
 		h = Historico[Inicio][Fin];
 		if (h > Max_Historico) Max_Historico = h;
 		else if (h < Min_Historico) Min_Historico = h;
-
-		h = Historico_Contador[OrigenCn][DestinoCn];
-		if (h > Max_Historico_Contador) Max_Historico_Contador = h;
-		else if (h < Min_Historico_Contador) Min_Historico_Contador = h;
-
 	}
 }
 
@@ -191,7 +192,7 @@ int HistoricoMovimientoRefutacion()
 	return NO_MOVIMIENTO;
 }
 
-int HistoricoMovimientoContador()
+int HistoricoMovimientoContador(int *M)
 {
 	S64 v = 0;
 
@@ -202,7 +203,7 @@ int HistoricoMovimientoContador()
 
 		if (DestinoCn >= 0 && DestinoCn <= 63)
 		{
-			v = Historico_Contador[OrigenCn][DestinoCn];
+			v = Historico_Contador[CUADRADO_ORIGEN(*M)][OrigenCn][DestinoCn];
 			if (v > 0 && Max_Historico_Contador != 0)
 				return (int)((S64)((S64)100 * v) / Max_Historico_Contador) + 1;	/* Los decimales 0,02 se convierten en 1. Valor maximo 101 */
 			else if (v < 0 && Min_Historico_Contador != 0)
@@ -222,7 +223,7 @@ int HistoricoValor(int *M)
 	if (v > 0 && Max_Historico != 0)
 		return (int)((S64)((S64)100 * v) / Max_Historico) + 1;	/* Los decimales 0,02 se convierten en 1. Valor maximo 101 */
 	else if (v < 0 && Min_Historico != 0)
-		return (int)((S64)((S64 )-100 * v) / Min_Historico) + -1;	/* Los decimales -0,01 se convierten en -1. Valor maximo -101 */
+		return (int)((S64)((S64)-100 * v) / Min_Historico) + -1;	/* Los decimales -0,01 se convierten en -1. Valor maximo -101 */
 	else
 		return 0;
 }

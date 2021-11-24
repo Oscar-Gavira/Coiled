@@ -522,8 +522,17 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 		}
 #endif
 
-		Historico = EsMovimientoTranquilo == true ? HistoricoValor(&ListaMovimiento[i].Movimiento) : 0;
-		HistoricoContador = EsMovimientoTranquilo == true ? HistoricoMovimientoContador() : 0;
+		switch (EsMovimientoTranquilo)
+		{
+		case true:
+			Historico = HistoricoValor(&ListaMovimiento[i].Movimiento);
+			HistoricoContador = HistoricoMovimientoContador(&ListaMovimiento[i].Movimiento);
+			break;
+		default:
+			Historico = 0;
+			HistoricoContador = 0;
+			break;
+		}
 
 #ifdef USAR_FUTILITY_PRUNING_HISTORY
 		if (depth <= 8
@@ -586,11 +595,11 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 		if (depth > 2 && MovimientosLegales > 1 && EsMovimientoTranquilo == true)
 		{
 			reducciones = lmr[MIN(depth, 63)][MIN(MovimientosLegales, 63)];
-			reducciones += Zw + !Mejorando;
+			reducciones += !Mejorando;
 			reducciones += (en_jaque && ValorPieza(PIEZAMOVIDA(ListaMovimiento[i].Movimiento)) == SeeReyValor);
 
-			reducciones -= (HistoricoContador > 70) ? 1 : (HistoricoContador < -70) ? -1 : 0;
-			reducciones -= (Historico > 1) ? 1 : (Historico < -1) ? -1 : 0;
+			reducciones -= (HistoricoContador > 0) ? 1 : (HistoricoContador < 0) ? -1 : 0;
+			reducciones -= (Historico > 0) ? 1 : (Historico < 0) ? -1 : 0;
 			reducciones -= EsMovimientoKiller ? 1 : EsMovimientoRefutacion ? 1 : ListaMovimiento[i].Movimiento == hMov ? 1 : 0;
 
 			reducciones = MIN(depth - 1, MAX(reducciones, 1));

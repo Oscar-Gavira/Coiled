@@ -31,6 +31,6 @@ int HistoricoEsMovimientoKiller(int *ply, int *M);									/* Indica si el movim
 int HistoricoEsMovimientoKillerMate(int *ply, int *M);								/* Indica si el movimiento es un killer mate */
 int HistoricoValor(int *M);															/* Historico valor de los movimientos */
 int HistoricoMovimientoRefutacion();												/* Obtenemos el movimiento refutacion */
-int HistoricoMovimientoContador();
+int HistoricoMovimientoContador(int *M);
 
 #endif
