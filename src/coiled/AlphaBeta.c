@@ -279,7 +279,8 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 #endif
 #ifdef USAR_REDUCTION
 	int Historico = 0;
-	int HistoricoContador = 0;
+	int Historico_Adversario = 0;
+	int Historico_Anterior = 0;
 #endif
 	int hMov = NO_MOVIMIENTO;
 	int hEv = VALOR_TB_VACIO;
@@ -522,16 +523,17 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 		}
 #endif
 
-		switch (EsMovimientoTranquilo)
+		if (EsMovimientoTranquilo)
 		{
-		case true:
 			Historico = HistoricoValor(&ListaMovimiento[i].Movimiento);
-			HistoricoContador = HistoricoMovimientoContador(&ListaMovimiento[i].Movimiento);
-			break;
-		default:
+			Historico_Adversario = HistoricoValorAdversario(&ListaMovimiento[i].Movimiento);
+			Historico_Anterior = HistoricoValorAnterior(&ListaMovimiento[i].Movimiento);
+		}
+		else
+		{
 			Historico = 0;
-			HistoricoContador = 0;
-			break;
+			Historico_Adversario = 0;
+			Historico_Anterior = 0;
 		}
 
 #ifdef USAR_FUTILITY_PRUNING_HISTORY
@@ -565,6 +567,7 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 
 			PiezaCap = PiezaCap - SeeMargen;
 			if (PiezaCap < 0) continue;
+
 			PiezaCap -= ValorPieza(PiezaMov);
 			if (PiezaCap < 0)
 				if (See(&ListaMovimiento[i].Movimiento, TableroGlobal.MueveBlancas) < 0)
@@ -595,14 +598,14 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 		if (depth > 2 && MovimientosLegales > 1 && EsMovimientoTranquilo == true)
 		{
 			reducciones = lmr[MIN(depth, 63)][MIN(MovimientosLegales, 63)];
-			reducciones += !Mejorando;
+			reducciones += Zw + !Mejorando;
 			reducciones += (en_jaque && ValorPieza(PIEZAMOVIDA(ListaMovimiento[i].Movimiento)) == SeeReyValor);
+			if (Historico < 0 && Historico_Anterior > 0) reducciones += 1;
 
-			reducciones -= (HistoricoContador > 0) ? 1 : (HistoricoContador < 0) ? -1 : 0;
 			reducciones -= (Historico > 0) ? 1 : (Historico < 0) ? -1 : 0;
 			reducciones -= EsMovimientoKiller ? 1 : EsMovimientoRefutacion ? 1 : ListaMovimiento[i].Movimiento == hMov ? 1 : 0;
 
-			reducciones = MIN(depth - 1, MAX(reducciones, 1));
+			reducciones = MIN(nuevo_depth - 1, MAX(reducciones, 1));
 		}
 #endif
 
