@@ -77,7 +77,7 @@ int See(int *M, int turno)
 		return 1;
 
 	/* Ordenacion. No se ha realizado el movimiento. */
-	if (TableroGlobal.Tablero[Fin] == PiezaCapturada)
+	if (TableroGlobal.Tablero[Fin] == PiezaCapturada || PiezaCapturada == MFLAGCAP)
 	{
 		if (!SeeHacerMovimiento(M))
 		{
@@ -88,7 +88,7 @@ int See(int *M, int turno)
 		turno = !turno;
 	}
 
-	if (PiezaCapturada != MFLAGCAP)
+	if (PiezaCapturada != MFLAGCAP || PiezaCapturada == MFLAGCAP)
 	{
 		for (i = 0; i < 40; i++)
 		{
@@ -112,7 +112,7 @@ int See(int *M, int turno)
 		SeeDeshacerMovimiento();
 	}
 
-	if (PiezaCapturada != MFLAGCAP)
+	if (PiezaCapturada != MFLAGCAP || PiezaCapturada == MFLAGCAP)
 	{
 		if (Total[0] != NO_MOVIMIENTO)
 		{
@@ -770,6 +770,7 @@ void SeeDeshacerMovimiento()
 	int M = SeeMove.Estado[SeeMove.Ply-1].Movimiento;
 	int Inicio = CUADRADO_ORIGEN(M);
 	int Fin = CUADRADO_DESTINO(M);
+	int Cap = CAPTURADA(M);
 
 	SeeMove.Ply--;
 
@@ -777,7 +778,7 @@ void SeeDeshacerMovimiento()
 	TableroGlobal.Tablero[Inicio] = TableroGlobal.Tablero[Fin];
 	TableroGlobal.Tablero[Fin] = CasillaVacia;
 
-	TableroGlobal.Tablero[Fin] = CAPTURADA(M);
+	TableroGlobal.Tablero[Fin] = Cap == MFLAGCAP ? CasillaVacia : Cap;
 
 	if (CORONACION(M) != MFLAGPROM)
 	{

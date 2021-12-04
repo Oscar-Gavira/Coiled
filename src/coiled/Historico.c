@@ -27,12 +27,15 @@ S64 Historico[64][64];													/* [Origen][Destino] */
 int Historico_Killer[MAX_PLY][2];										/* [MAXPLY][2 jugadas] */
 int Historico_Killer_Mate[MAX_PLY][2];									/* [MAXPLY][2 jugadas] */
 int Historico_Refutacion[64][64];										/* [Origen][Destino] */
-int Historico_Contador[64][64][64];										/* [Origen][Origen][Destino] */
+int Historico_Adversario[64][64][64];									/* [Origen][Destino][Origen] */
+int Historico_Anterior[64][64][64];										/* [Origen][Destino][Origen] */
 
 S64 Max_Historico = 0;
 S64 Min_Historico = 0;
-S64 Min_Historico_Contador = 0;
-S64 Max_Historico_Contador = 0;
+S64 Min_Historico_Adv = 0;
+S64 Max_Historico_Adv = 0;
+S64 Min_Historico_Ant = 0;
+S64 Max_Historico_Ant = 0;
 
 /* Es un movimiento tranquilo */
 int MovimientoTranquilo(int *M)
@@ -79,12 +82,15 @@ void HistoricoIniciar()
 	memset(Historico_Killer, 0, MAX_PLY * 2 * sizeof(int));
 	memset(Historico_Killer_Mate, 0, MAX_PLY * 2 * sizeof(int));
 	memset(Historico_Refutacion, 0, 64 * 64 * sizeof(int));
-	memset(Historico_Contador, 0, 64 * 64 * 64 * sizeof(int));
+	memset(Historico_Adversario, 0, 64 * 64 * 64 * sizeof(int));
+	memset(Historico_Anterior, 0, 64 * 64 * 64 * sizeof(int));
 
 	Max_Historico = 0;
 	Min_Historico = 0;
-	Min_Historico_Contador = 0;
-	Max_Historico_Contador = 0;
+	Min_Historico_Adv = 0;
+	Max_Historico_Adv = 0;
+	Min_Historico_Ant = 0;
+	Max_Historico_Ant = 0;
 }
 
 /* Actualizamos historico y killer */
@@ -97,6 +103,7 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 	int Puntos = 0;
 	int DestinoCn = -1;
 	int OrigenCn = -1;
+	int OrigenAnt = -1;
 
 	/* Killer */
 	if (kMate)
@@ -125,6 +132,11 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 			Historico_Refutacion[OrigenCn][DestinoCn] = M;
 	}
 
+	if (*ply - 2 >= 0 && TableroGlobal.Estado[*ply - 2].Movimiento != NO_MOVIMIENTO)
+	{
+		OrigenAnt = CUADRADO_ORIGEN(TableroGlobal.Estado[*ply - 2].Movimiento);
+	}
+
 	/* Historico, Historico contador */
 	for (i = 0; i < Nmov; i++)
 	{
@@ -133,19 +145,31 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 
 		Puntos = (ML[i] == M) ? (depth * depth) : -(depth * depth);
 
+		/* Historico */
 		Historico[Inicio][Fin] += Puntos;
-		if (DestinoCn >= 0 && DestinoCn <= 63)
-		{
-			Historico_Contador[Inicio][OrigenCn][DestinoCn] += -Puntos;
-
-			h = Historico_Contador[Inicio][OrigenCn][DestinoCn];
-			if (h > Max_Historico_Contador) Max_Historico_Contador = h;
-			else if (h < Min_Historico_Contador) Min_Historico_Contador = h;
-		}
-
 		h = Historico[Inicio][Fin];
 		if (h > Max_Historico) Max_Historico = h;
 		else if (h < Min_Historico) Min_Historico = h;
+
+		/* Historico Counter Move */
+		if (OrigenCn >= 0 && OrigenCn <= 63)
+		{
+			Historico_Adversario[Inicio][Fin][OrigenCn] += Puntos;
+
+			h = Historico_Adversario[Inicio][Fin][OrigenCn];
+			if (h > Max_Historico_Adv) Max_Historico_Adv = h;
+			else if (h < Min_Historico_Adv) Min_Historico_Adv = h;
+		}
+
+		/* Historico Followup Move */
+		if (OrigenAnt >= 0 && OrigenAnt <= 63)
+		{
+			Historico_Anterior[Inicio][Fin][OrigenAnt] += Puntos;
+
+			h = Historico_Anterior[Inicio][Fin][OrigenAnt];
+			if (h > Max_Historico_Ant) Max_Historico_Ant = h;
+			else if (h < Min_Historico_Ant) Min_Historico_Ant = h;
+		}
 	}
 }
 
@@ -192,22 +216,42 @@ int HistoricoMovimientoRefutacion()
 	return NO_MOVIMIENTO;
 }
 
-int HistoricoMovimientoContador(int *M)
+int HistoricoValorAdversario(int *M)
 {
 	S64 v = 0;
 
 	if (TableroGlobal.Ply - 1 >= 0 && TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento != NO_MOVIMIENTO)
 	{
-		int DestinoCn = CUADRADO_DESTINO(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
 		int OrigenCn = CUADRADO_ORIGEN(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
 
-		if (DestinoCn >= 0 && DestinoCn <= 63)
+		if (OrigenCn >= 0 && OrigenCn <= 63)
 		{
-			v = Historico_Contador[CUADRADO_ORIGEN(*M)][OrigenCn][DestinoCn];
-			if (v > 0 && Max_Historico_Contador != 0)
-				return (int)((S64)((S64)100 * v) / Max_Historico_Contador) + 1;	/* Los decimales 0,02 se convierten en 1. Valor maximo 101 */
-			else if (v < 0 && Min_Historico_Contador != 0)
-				return (int)((S64)((S64)-100 * v) / Min_Historico_Contador) + -1;	/* Los decimales -0,01 se convierten en -1. Valor maximo -101 */
+			v = Historico_Adversario[CUADRADO_ORIGEN(*M)][CUADRADO_DESTINO(*M)][OrigenCn];
+			if (v > 0 && Max_Historico_Adv != 0)
+				return (int)((S64)((S64)100 * v) / Max_Historico_Adv) + 1;	/* Los decimales 0,02 se convierten en 1. Valor maximo 101 */
+			else if (v < 0 && Min_Historico_Adv != 0)
+				return (int)((S64)((S64)-100 * v) / Min_Historico_Adv) + -1;	/* Los decimales -0,01 se convierten en -1. Valor maximo -101 */
+			else
+				return 0;
+		}
+	}
+	return 0;
+}
+int HistoricoValorAnterior(int *M)
+{
+	S64 v = 0;
+
+	if (TableroGlobal.Ply - 2 >= 0 && TableroGlobal.Estado[TableroGlobal.Ply - 2].Movimiento != NO_MOVIMIENTO)
+	{
+		int OrigenCn = CUADRADO_ORIGEN(TableroGlobal.Estado[TableroGlobal.Ply - 2].Movimiento);
+
+		if (OrigenCn >= 0 && OrigenCn <= 63)
+		{
+			v = Historico_Anterior[CUADRADO_ORIGEN(*M)][CUADRADO_DESTINO(*M)][OrigenCn];
+			if (v > 0 && Max_Historico_Ant != 0)
+				return (int)((S64)((S64)100 * v) / Max_Historico_Ant) + 1;	/* Los decimales 0,02 se convierten en 1. Valor maximo 101 */
+			else if (v < 0 && Min_Historico_Ant != 0)
+				return (int)((S64)((S64)-100 * v) / Min_Historico_Ant) + -1;	/* Los decimales -0,01 se convierten en -1. Valor maximo -101 */
 			else
 				return 0;
 		}
