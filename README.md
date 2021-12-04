@@ -1,10 +1,9 @@
 ![Release](https://img.shields.io/github/v/release/Oscar-Gavira/Coiled)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-
 # ![imagen](https://user-images.githubusercontent.com/33672268/136560248-95e1ebf4-9405-414c-9827-6f1f3cf76b05.png) Coiled - Motor de ajedrez.
 
-## 📋 Características
+## :clipboard: Características
 
 |                            |    CARACTERISTICAS                                                                              |
 | -------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -20,13 +19,13 @@
 | Lenguaje de programación   | C                                                                                               |
 | Ponder                     | No                                                                                              |
 | Multihilo                  | No                                                                                              |
-| ELO estimado               | ± 3325 NNUE. ± 2600 Interna.                                                                    |
+| ELO estimado               | ± 3325 NNUE. ± 2700 Interna.                                                                    |
 
 
 - Tablas de finales disponibles en internet. [http://oics.olympuschess.com/tracker/](http://oics.olympuschess.com/tracker/)
 
 
-## 🚀 Introducción
+## :rocket: Introducción
 
 Coiled es un motor de ajedrez de protocolo UCI escrito en C. Es un programa de línea de comandos (Aplicación de consola), que no está diseñado para usarse directamente, sino a través de una interfaz de usuario o GUI, con capacidad para tratar el protocolo UCI, como: Cute Chess, Tarrasch, Banksia, Arena, Fritz...
 
@@ -41,15 +40,15 @@ Actualmente Coiled es capaz de jugar a la variante Chess960 de usar tablas de fi
 Para leer más sobre algunas de las técnicas utilizadas en Coiled, consulte la página Wiki de programación de ajedrez de [Coiled.](https://www.chessprogramming.org/Coiled) (inglés)
 
 
-## ☑️ Requisitos mínimo
+## :ballot_box_with_check: Requisitos mínimo
 
-| SISTEMA OPERATIVO | Windows 32 bit             | Windows 64 bit.                           |
-| ----------------- | -------------------------- | ----------------------------------------- |
-| PROCESADOR        | Intel Pentium Pro o Amd K7 | Intel o Ahtlon con soporte MMX, SSE, SSE2 |
-| RAM               | 16MB.                      | 64MB.                                    |
+| SISTEMA OPERATIVO | Windows 32 bit             | Windows 64 bit.                                           |
+| ----------------- | -------------------------- | --------------------------------------------------------- |
+| PROCESADOR        | Intel Pentium Pro o Amd K7 | Intel Core 2 o Ahtlon 64 con soporte MMX, SSE, SSE2, SSE3 |
+| RAM               | 16 MB.                     | 16 MB.                                                    |
 
 
-## 🔩 Redes neuronales (NNUE)
+## :nut_and_bolt: Redes neuronales (NNUE)
 
 
 Actualmente Coiled utiliza la red neuronal de Fisherman.
@@ -60,7 +59,7 @@ Actualmente Coiled utiliza la red neuronal de Fisherman.
 
 
 
-## 🔧 Instalación
+## :wrench: Instalación
 
 GUI de entornos gratuito:
 
@@ -77,7 +76,7 @@ GUI de entornos gratuito:
 Consultar el manual de instalación de un motor de ajedrez en dicha GUI.
 
 
-## <img src="https://github.githubassets.com/images/icons/emoji/unicode/1f3c5.png" width="32" height="32" /> Clasificación ELO 
+## :trophy: Clasificación ELO 
 
 
 | VERSION NNUE |   ELO  |
@@ -90,23 +89,25 @@ Consultar el manual de instalación de un motor de ajedrez en dicha GUI.
 
 - [CCRL (40/4)](http://ccrl.chessdom.com/ccrl/404/)
 
-| VERSION      |   ELO  |
-| ------------ | ------ |
-| Coiled 0.1a  | 1694 ± |
-| Coiled 0.2b  | 1996 ± |
-| Coiled 0.4   | 2508 ± |
-| Coiled 0.5   | 2600 ± |
+| VERSION NO NNUE     |   ELO  |
+| ------------------- | ------ |
+| Coiled 0.1a         | 1694 ± |
+| Coiled 0.2b         | 1996 ± |
+| Coiled 0.4          | 2508 ± |
+| Coiled 0.5          | 2600 ± |
+| Coiled 1.1          | 2725 ± |
+
 
 - [CEGT (40/4)](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)
 
-| VERSION      |   ELO  |
-| ------------ | ------ |
-| Coiled 0.2b  | 1824 ± |
-| Coiled 0.4   | 2334 ± |
-| Coiled 0.6   | 2446 ± |
+| VERSION NO NNUE     |   ELO  |
+| ------------------- | ------ |
+| Coiled 0.2b         | 1824 ± |
+| Coiled 0.4          | 2334 ± |
+| Coiled 0.6          | 2446 ± |
 
 
-## ⚙ Opciones Uci
+## :gear: Opciones Uci
 |                                    OPCIONES                                                                |                                          DESCRIPCION                                                                     |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Hash                                                                                                       | Para ajustar el tamaño de la tabla hash en MB.                                                                           |
@@ -128,7 +129,7 @@ Consultar el manual de instalación de un motor de ajedrez en dicha GUI.
 
 \*\* Si activa UCI\_Chess960 y utiliza la GUI de Arena, en la opción UCI\_Chess960CastlingSign debes seleccionar la configuración: O-O/O-O-O. Para un correcto funcionamiento con la GUI Arena.
 
-## ⌨️ Comandos adicionales no oficiales UCI
+## :open_book: Comandos adicionales no oficiales UCI
 
 - perft [x]: Ejecutando perft hasta [profundidad] en la posición actual.
 
@@ -138,7 +139,7 @@ Consultar el manual de instalación de un motor de ajedrez en dicha GUI.
 
 Estas opciones también están disponibles para el modo Chess960, solo has de activar el modo UCI_Chess960.
     
-## 🛠️ Construido y compilado con
+## :hammer_and_wrench: Construido y compilado con
 
 * [CodeBlocks](https://www.codeblocks.org/)
 * [Visual Studio](https://visualstudio.microsoft.com/es/)
@@ -150,11 +151,11 @@ Estas opciones también están disponibles para el modo Chess960, solo has de ac
 - Para compilar en Windows 32 bit: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile) con [codeblocks](https://github.com/Oscar-Gavira/Coiled/blob/master/src/Coiled_Windows_x86.cbp)
 - Para compilar en Windows 64 bit: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile) con [codeblocks](https://github.com/Oscar-Gavira/Coiled/blob/master/src/Coiled_Windows_x64.cbp)
 
-<img src="https://github.com/Oscar-Gavira/Coiled/blob/master/src/codeblocks_makefile.jpg" width="50%" height="50%" />
+<img src="https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile_codeblocks.jpg" width="50%" height="50%" />
 
 
 
-## 📖 Términos de Uso
+## :pencil: Términos de Uso
 
 Coiled es gratuito y se distribuye bajo la licencia pública general GNU versión 3 (GPL v3). Básicamente, esto significa que eres libre de hacer casi exactamente lo que quieras con el programa, incluso distribuirlo entre tus amigos, hacer que esté disponible para descargarlo de tu sitio web, venderlo (ya sea solo o como parte de algún paquete de software más grande), o utilizándolo como punto de partida para un proyecto de software propio.
 
@@ -162,7 +163,7 @@ La única limitación real es que siempre que distribuya Coiled de alguna manera
 
 Para obtener todos los detalles, lea la copia de la GPL v3 que se encuentra en el archivo llamado [LICENSE](https://github.com/Oscar-Gavira/Coiled/blob/master/LICENSE).
 
-## 🎁 Agradecimientos
+## :gift: Agradecimientos
 
 Estoy muy agradecido a las siguientes personas:
 
@@ -176,11 +177,9 @@ Estoy muy agradecido a las siguientes personas:
 
 - A los archivos de rendimientos .epd de posiciones estratégicas tipo: WAC, IQ6, mes400... En especial a la web [https://sites.google.com/site/strategictestsuite/](https://sites.google.com/site/strategictestsuite/)
 
-- A la web [CCRL 40/4](http://www.computerchess.org.uk/ccrl/404/), [CEGT 40/4](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html), [Chess Engines Diary](https://chessengines.blogspot.com/), [Owl Chess Blitz](http://chessowl.blogspot.com/) por realizar un torneo y darle una clasificación de ELO.
-
+- A la web [CCRL 40/4](http://www.computerchess.org.uk/ccrl/404/), [CEGT 40/4](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html), [Chess Engines Diary](https://chessengines.blogspot.com/), [Owl Chess Blitz](http://chessowl.blogspot.com/), [BRUCE - Bullet Rating of UCI](https://e4e6.com/) por realizar un torneo y darle una clasificación de ELO.
 
 - Alex Chess del foro talkchess, por el torneo realizado en [chess.com](https://www.chess.com/forum/view/game-analysis/freeware-against-commercial-chess-software-arena-3-5-1-vs-chessbase-fritz-17)
-
 
 - A toda web que haya publicado una clasificación ELO o/y haya añadido un enlace a mi web.
 
@@ -197,5 +196,5 @@ Estoy muy agradecido a las siguientes personas:
 Seleccionar la red neuronal descargada mediante las opciones UCI o renombrar el archivo a red_neuronal.nnue (Nombre por defecto) y colóquelo en el mismo directorio del motor Coiled.
 
 ---
-⌨️ con ❤️ por [Oscar](https://github.com/Oscar-Gavira) 😊
+con :heart: por [Oscar](https://github.com/Oscar-Gavira) 😊
 

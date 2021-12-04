@@ -158,9 +158,9 @@ TECNOLOGY2 = sse4.1
 TECNOLOGY3 = ssse3
 TECNOLOGY4 = sse2
 
-NNUEDEFINES1 = $(X86_64) -mavx2 -msse4.1 -mssse3 -msse2 -DUSE_AVX2 -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2 -DUSE_SSE $(NNUEDEFINES)
+NNUEDEFINES1 = $(X86_64) -mavx2 -msse4.1 -mssse3 -msse3 -msse2 -msse -DUSE_AVX2 -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2 -DUSE_SSE $(NNUEDEFINES)
 NNUEDEFINES2 = $(X86_64) -msse4.1 -mssse3 -msse3 -msse2 -msse -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2 -DUSE_SSE $(NNUEDEFINES)
-NNUEDEFINES3 = $(X86_64) -mssse3 -msse3 -msse -DUSE_SSSE3 -DUSE_SSE2 -DUSE_SSE $(NNUEDEFINES)
+NNUEDEFINES3 = $(X86_64) -mssse3 -msse3 -msse2 -msse -DUSE_SSSE3 -DUSE_SSE2 -DUSE_SSE $(NNUEDEFINES)
 NNUEDEFINES4 = $(X86_64) -msse2 -msse -DUSE_SSE2 -DUSE_SSE $(NNUEDEFINES)
 
 WNNUEFLAGS = -g -Wall -Wno-unused-variable -Wno-unused-result -Wno-unused-but-set-variable -Wno-maybe-uninitialized

@@ -600,7 +600,8 @@ int AlphaBeta(int depth, int alpha, int beta, int en_jaque, int Es_Nulo)
 			reducciones = lmr[MIN(depth, 63)][MIN(MovimientosLegales, 63)];
 			reducciones += Zw + !Mejorando;
 			reducciones += (en_jaque && ValorPieza(PIEZAMOVIDA(ListaMovimiento[i].Movimiento)) == SeeReyValor);
-			if (Historico < 0 && Historico_Anterior > 0) reducciones += 1;
+			if (Historico_Adversario > 0 && Historico > 0)
+				reducciones += 1;
 
 			reducciones -= (Historico > 0) ? 1 : (Historico < 0) ? -1 : 0;
 			reducciones -= EsMovimientoKiller ? 1 : EsMovimientoRefutacion ? 1 : ListaMovimiento[i].Movimiento == hMov ? 1 : 0;
