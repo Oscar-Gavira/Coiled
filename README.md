@@ -151,7 +151,7 @@ Estas opciones también están disponibles para el modo Chess960, solo has de ac
 - Para compilar en Windows 32 bit: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile) con [codeblocks](https://github.com/Oscar-Gavira/Coiled/blob/master/src/Coiled_Windows_x86.cbp)
 - Para compilar en Windows 64 bit: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile) con [codeblocks](https://github.com/Oscar-Gavira/Coiled/blob/master/src/Coiled_Windows_x64.cbp)
 
-<img src="https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile_codeblocks.jpg" width="50%" height="50%" />
+<img src="/src/makefile_codeblocks.jpg" width="50%" height="50%" />
 
 
 
