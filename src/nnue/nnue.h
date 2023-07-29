@@ -1,80 +1,36 @@
 #ifndef NNUE_H
 #define NNUE_H
 
-#ifndef __cplusplus
-#ifndef _MSC_VER
 #include <stdalign.h>
-#endif
-#endif
-
-/**
-* Calling convention
-*/
-#ifdef __cplusplus
-#   define EXTERNC extern "C"
-#else
-#   define EXTERNC
-#endif
-
-#if defined (_WIN32)
-#   define _CDECL __cdecl
-#ifdef DLL_EXPORT
-#   define DLLExport EXTERNC __declspec(dllexport)
-#else
-#   define DLLExport EXTERNC __declspec(dllimport)
-#endif
-#else
-#   define _CDECL
-#   define DLLExport EXTERNC
-#endif
-
-/**
-* Internal piece representation
-*     wking=1, wqueen=2, wrook=3, wbishop= 4, wknight= 5, wpawn= 6,
-*     bking=7, bqueen=8, brook=9, bbishop=10, bknight=11, bpawn=12
-*
-* Make sure the piecesyou pass to the library from your engine
-* use this format.
-*/
-enum colors {
-    white,black
-};
-enum pieces {
-    blank=0,wking,wqueen,wrook,wbishop,wknight,wpawn,
-            bking,bqueen,brook,bbishop,bknight,bpawn
-};
-
-/**
-* nnue data structure
-*/
 
 typedef struct DirtyPiece {
-  int dirtyNum;
-  int pc[3];
-  int from[3];
-  int to[3];
+    int dirtyNum;
+    int pc[3];
+    int from[3];
+    int to[3];
 } DirtyPiece;
 
 typedef struct Accumulator {
-  alignas(64) int16_t accumulation[2][256];
-  int computedAccumulation;
+#ifndef _MSC_VER
+    alignas(64) short accumulation[2][256];
+#else
+    short accumulation[2][256];
+#endif
+    int computedAccumulation;
 } Accumulator;
 
 typedef struct NNUEdata {
-  Accumulator accumulator;
-  DirtyPiece dirtyPiece;
+    Accumulator accumulator;
+    DirtyPiece dirtyPiece;
 } NNUEdata;
 
-/**
-* position data structure passed to core subroutines
-*  See @nnue_evaluate for a description of parameters
-*/
 typedef struct Position {
-  int player;
-  int* pieces;
-  int* squares;
-  NNUEdata* nnue[3];
+    int player;
+    int* pieces;
+    int* squares;
+    NNUEdata* nnue[3];
 } Position;
+
 
 int nnue_evaluate_pos(Position* pos);
 
@@ -98,17 +54,8 @@ int nnue_evaluate_pos(Position* pos);
 /**
 * Load NNUE file
 */
-DLLExport int _CDECL nnue_init(const char * evalFile);             /** Path to NNUE file */
-
-
-/**
-* Evaluate on FEN string
-* Returns
-*   Score relative to side to move in approximate centi-pawns
-*/
-DLLExport int _CDECL nnue_evaluate_fen(
-  const char* fen                   /** FEN string to probe evaluation for */
-);
+int nnue_init(const char* evalFile);             /** Path to NNUE file */
+int nnue_technology();                            /** technology use */
 
 /**
 * Evaluation subroutine suitable for chess engines.
@@ -128,27 +75,16 @@ DLLExport int _CDECL nnue_evaluate_fen(
 * Returns
 *   Score relative to side to move in approximate centi-pawns
 */
-DLLExport int _CDECL nnue_evaluate(
-  int player,                       /** Side to move: white=0 black=1 */
-  int* pieces,                      /** Array of pieces */
-  int* squares                      /** Corresponding array of squares each piece stands on */
+int nnue_evaluate(
+    int player,                       /** Side to move: white=0 black=1 */
+    int* pieces,                      /** Array of pieces */
+    int* squares                      /** Corresponding array of squares each piece stands on */
 );
 
-/**
-* Incremental NNUE evaluation function.
-* -------------------------------------------------
-* First three parameters and return type are as in @nnue_evaluate
-*
-* nnue_data
-*    nnue_data[0] is pointer to NNUEdata for ply i.e. current position
-*    nnue_data[1] is pointer to NNUEdata for ply - 1
-*    nnue_data[2] is pointer to NNUEdata for ply - 2
-*/
-DLLExport int _CDECL nnue_evaluate_incremental(
-  int player,                       /** Side to move: white=0 black=1 */
-  int* pieces,                      /** Array of pieces */
-  int* squares,                     /** Corresponding array of squares each piece stands on */
-  NNUEdata** nnue_data              /** Pointer to NNUEdata* for current and previous plies */
-);
 
 #endif
+
+
+
+
+

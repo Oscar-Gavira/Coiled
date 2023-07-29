@@ -1,7 +1,6 @@
 /*
-Coiled is a UCI chess playing engine authored by Oscar Gavira.
-Copyright (C) 2013-2021 Oscar Gavira.
-<https://github.com/Oscar-Gavira/Coiled>
+Coiled is a UCI compliant chess engine written in C
+Copyright (C) 2023 Oscar Gavira. <https://github.com/Oscar-Gavira/Coiled>
 
 Coiled is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,83 +17,50 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "Externo.h"
-#include "Fen.h"
 #include "Hash.h"
 #include "GeneradorDeMovimientos.h"
-#include "Perft.h"
-#include "Cpu.h"
-
-#ifdef USAR_SQLITE
-	#include "LibroAperturas.h"
-#endif
-#ifdef USAR_TABLAS_DE_FINALES
-	#include "tbprobe.h"
-	#include "syzygy.h"
-	#include "egbb.h"
-#endif
+#include "AlphaBeta.h"
+#include "Utilidades.h"
 #ifdef USAR_NNUE
-	#include "nnue.h"
+	#include "nn.h"
 #endif
+
 /*******************************************************************************
 									Metodos
 *******************************************************************************/
-void UciEntrada(char *ptr);									/* Procesa las entradas */
-void LeerComandos(char *entrada, int longitud);				/* Lee las entradas */
-void InicioBusqueda(char *ptr);								/* Empieza a analizar */
-void UciNewGame();											/* Inicia las variables */
-void IniciarConfiguracion();								/* Inicia la configuracion */
+void UciEntrada();															/* Procesa las entradas */
+void LeerComandos(char *entrada, int longitud);								/* Lee las entradas */
+int PrepararGo(int *Turno, char *ptr);										/* Empieza a analizar */
+void InicioBusqueda();
+void IniciarConfiguracion();												/* Inicia la configuracion */
+void InformacionUci();
+void Movimiento(_ST_TableroX64 *Tablero, char *ptr, int *Ok, int Ultimo);	/* Realiza un movimiento y comprobamos si es legal. */
+void Position_Fen_Startpos(_ST_TableroX64 *Tablero, char *ptr);				/* Carga una posicion FEN */
+void UciNewGame(_ST_TableroX64 *Tablero);									/* Inicia las variables */
+int CargarFen(_ST_TableroX64 *Tablero, char *fen);							/* Cargamos una posicion FEN */
 
 /******************************************************************************
 Iniciamos las variables globales
 *******************************************************************************/
 
-_ST_TableroX64 TableroGlobal;									/* Tablero actual. */
-_ST_TipoJuego TipoJuego;										/* Almacena informacion del juego por tiempo. */
-_ST_Puntos Blancas;												/* Almacenamos informacion de la evaluacion de las blancas */
-_ST_Puntos Negras;												/* Almacenamos informacion de la evaluacion de las negras */
+THREAD_ID *SubProcesos;
+_ST_TableroX64 *TableroGlobal;
+_ST_TipoJuego TipoJuego;
 _ST_TT_Opciones TT_Opciones;
-int Salir;														/* Indica al programa que salga, para evitar un "exit(EXIT_FAILURE)" sin liberar la tabla hash */
+
+int Salir;														/* Indica al programa que salga, para evitar un "exit(EXIT_FAILURE)" sin liberar la memoria */
+
 #ifdef USAR_NNUE
-	_ST_Cpu Cpu;
 	_ST_Nnue Nnue;
-	NNUE_INIT NNUE_init;
-	NNUE_EVALUATE NNUE_evaluate;
 #endif
-#ifdef USAR_SQLITE
-	_ST_EstructuraBd LibroSql;
-	SQLITE3_OPEN_V2 sqlite3_open_v2;
-	SQLITE_PREPARE_V2 sqlite3_prepare_v2;
-	SQLITE_STEP sqlite3_step;
-	SQLITE_COLUMN_TEXT sqlite3_column_text;
-	SQLITE_RESET sqlite3_reset;
-	SQLITE_CLOSE_V2 sqlite3_close_v2;
+#ifdef PERFT
+	_ST_Perft *Perft_Divide_Total;
+
+	void P_Perft(void *arg);
+	void P_Todo(void *arg);
+	void P_MiniMax(_ST_TableroX64 *Tablero, int depth, int *P_Mov, _ST_Perft *Perft);
+	int P_EsJaqueMate(_ST_TableroX64 *Tablero);
 #endif
-#ifdef USAR_TABLAS_DE_FINALES
-	_ST_TablaDeFinales TablaDeFinales;
-
-	EGBB_LOAD_EGBB EGBB_load_egbb;					/* Cargamos la tablas de finales. */
-	EGBB_PROBE_EGBB EGBB_probe_egbb;				/* Acceso a las tablas de finales. */
-
-	SG_INITS SG_inits;								/* Inicializa la tabla de finales */
-	SG_FREE SG_free;								/* Libera la tabla de finales */
-	SG_PROBE_WDL SG_probe_wdl;						/* Acceso a las tablas de finales en la busqueda. */
-	SG_LARGEST SG_man;								/* Indica la tablas disponibles. 3, 4, 5, 6 o 7 piezas. */
-
-	TBINIT TBinit;									/* Inicializa la tabla de finales */
-	TBIS_INITIALIZED TBis_initialized;				/* Indica si la tabla esta inicializada */
-	TBRESTART TBrestart;							/* Reinicia la tabla de finales */
-	TBDONE TBdone;									/* Libera la tabla de finales */
-	TBPROBE_HARD TBprobe_hard;						/* Acceso a las tablas de finales en root. En HDD. (DTM) */
-	TBPROBE_SOFT TBprobe_soft;						/* Acceso a las tablas de finales en root. En Cache. (DTM) */
-	TBAVAILABILITY TBavailability;					/* Indica la tablas disponibles */
-	TBCACHE_INIT TBcache_init;						/* Inicia la cache y fraccion */
-	TBCACHE_DONE TBcache_done;						/* Borra la cache */
-	TBCACHE_IS_ON TBcache_is_on;
-	TBPATHS_INIT TBpaths_init;						/* Inicializa las rutas */
-	TBPATHS_ADD TBpaths_add;						/* Anade rutas */
-	TBPATHS_DONE TBpaths_done;						/* Libera ruta */
-#endif
-
 #ifdef ARC_64BIT
 U64 zobrist_Tablero[14][64] = {
 { (U64)0xBFACF94C33349DBA, (U64)0x378D114F3610E99D, (U64)0xC58162EA0F809985, (U64)0x30953FE760210A01, (U64)0x5A98784C5FA58438, (U64)0x695A3AC1EC390F0A, (U64)0x5129CB6753161046, (U64)0x1BEEB565D35CEE74, (U64)0xC6D009B391738BB8, (U64)0x600964F3CDD3FF77, (U64)0xF0219E3696C30BC6, (U64)0x4739D25AFA560D0B, (U64)0x65F891F2957ED27A, (U64)0x1AFEC31D7ECC190B, (U64)0x51D2EDBB8C51744, (U64)0x1CFEDCD809BF7177, (U64)0xC159600F598AC8F9, (U64)0x54318D0EE5AC7D34, (U64)0xA11DD589F45C1CA6, (U64)0x160933F41AC9934A, (U64)0x3051795F3F194779, (U64)0x4FE6CBA2D2078D49, (U64)0xA35C46430880526, (U64)0x68D22507A3E27735, (U64)0xB56F8D52F74D5EBB, (U64)0x9D156430236F6A34, (U64)0xDE9D7C75588F1AA5, (U64)0x2B854B09100A8148, (U64)0x1471CA1AAC25D39, (U64)0xD04A2A1F18108E0B, (U64)0x7F81BDB8967B9B67, (U64)0x7772C4BB23216174, (U64)0x624775EDAE5640A9, (U64)0xEA8C1CED8BB07477, (U64)0x4AA18CC892E884E7, (U64)0x6CB4A2B5FA55870B, (U64)0xCEEFE53C40875B4A, (U64)0xA47BD7E3BAFB100A, (U64)0xAEC954055EB59D65, (U64)0x66FE806CDDFF276, (U64)0x7FD354510C81D7C8, (U64)0xFFAAF94101C1F215, (U64)0x3DC1E176383397E6, (U64)0x589A4FEA77B6126B, (U64)0xBADB8D80C87CCC48, (U64)0xE555BF5CF3AC0668, (U64)0x996DB96A74A6C826, (U64)0x53CD11F864DCF494, (U64)0xEFBBDACA6EAD5CA, (U64)0x880210FEEA06E014, (U64)0x745F08ABA976D1A4, (U64)0x8B2A3F57D5EB08E8, (U64)0xADF3647F6ABBDA09, (U64)0xDAC556C05D67416B, (U64)0xC55789D6AF795A06, (U64)0xDCF1F8657E03AAD5, (U64)0x495FC1326E3DC389, (U64)0x903628027E5DB756, (U64)0x417FF117478D47C6, (U64)0xF626D6EB0D284EAA, (U64)0xDC6791C226A0D80B, (U64)0x8FA927BDE5B2D32B, (U64)0xB25B606B0B1A5C45, (U64)0xA89190D19C503DD7 },
@@ -134,514 +100,306 @@ U64 zobrist_Tablero[14][64] = {
 /*******************************************************************************
 					INICIO PROGRAMA
 *******************************************************************************/
+
 int main(int argc, char *argv[])
 {
-	char command[8192];
-
 	Salir = false;
+	setvbuf(stdin, NULL, _IONBF, 0);
+	setvbuf(stdout, NULL, _IONBF, 0);
+	IniciarConfiguracion();
+
+#ifdef USAR_HASH_TB
+	CrearTransposicion();
+#endif
+/* Obtenemos el numero de procesadores logicos (CPU). En mi Ryzen 2600 / FX 6350 / i3 6006U.  va bien. */
+/* En caso de error, el maximo se establece en 4. */
+#ifdef _WIN32
+	SYSTEM_INFO systeminfo;
+	GetSystemInfo(&systeminfo);
+	TipoJuego.NumeroDeSubProcesosMax = (int)systeminfo.dwNumberOfProcessors;
+	if (TipoJuego.NumeroDeSubProcesosMax < 1) TipoJuego.NumeroDeSubProcesosMax = 4;
+#else
+	TipoJuego.NumeroDeSubProcesosMax = (int)sysconf(_SC_NPROCESSORS_ONLN);
+	if (TipoJuego.NumeroDeSubProcesosMax < 1) TipoJuego.NumeroDeSubProcesosMax = 4;
+#endif
 
 	Iniciar_AlphaBeta();
-	Inicializar_See();
-	IniciarConfiguracion();
 	CargarEvaluacion();
-
-	/* Cargamos DLL */
-#ifdef USAR_SQLITE
-	LibroSql.Dll_Cargada = Cargar_sqlite_dll();
-#endif
-#ifdef USAR_TABLAS_DE_FINALES
-	TablaDeFinales.Dll_CargadaBb = Cargar_egbb_dll();
-	TablaDeFinales.Dll_CargadaGv = Cargar_gaviota_dll();
-	#ifdef ARC_64BIT
-		TablaDeFinales.Dll_CargadaSg = Cargar_Syzygy_dll();
-		if (TablaDeFinales.Dll_CargadaSg == true) Iniciar_Mascara();
-	#endif
-#endif
-#ifdef USAR_NNUE
-	/* Auto configurando Nnue.Tecnologia al mas actual, soportado por la CPU. */
-	ObtenerCpu(&Cpu);
-	if (Cpu.AVX2)
-		Nnue.Tecnologia = 4;
-	else if (Cpu.SSE41)
-		Nnue.Tecnologia = 3;
-	else if (Cpu.SSE3)
-		Nnue.Tecnologia = 2;
-	else if (Cpu.SSE2)
-		Nnue.Tecnologia = 1;
-
-	Nnue.Dll_Cargada = Cargar_nnue_dll();
-	if (Nnue.Dll_Cargada == true) CargarNnue();
-#endif
-
-	UciNewGame();
-
-	for (;;)
-	{
-		memset(command, 0, 8192 * sizeof(char));
-		LeerComandos(command, 8192);
-
-		UciEntrada(command);
-
-		if (Salir)
-		{
-			break;
-		}
-	}
+	UciEntrada();
 
 #ifdef USAR_HASH_TB
 	LiberarMemoria();
 #endif
-#ifdef USAR_TABLAS_DE_FINALES
-	Descargar_gaviota_dll();
-	Descargar_egbb_dll();
-	#ifdef ARC_64BIT
-		Descargar_Syzygy_dll();
-	#endif
-#endif
-#ifdef USAR_SQLITE
-	Descargar_sqlite_dll();
-#endif
 
-    exit(EXIT_SUCCESS);
+	free(TableroGlobal);
+	free(SubProcesos);
+
+	exit(EXIT_SUCCESS);
 }
 
-void UciEntrada(char *parametro)
+void UciEntrada()
 {
-	char Str[MAX_DIR];
+	int i = 0;
+	char *buffer;
+	char *position;
 
-	if (strncmp(parametro, "ucinewgame", 10) == 0)
+	THREAD_ID *SubProcesoP;
+
+	buffer = (char*)calloc(8192, sizeof(char));
+	position = (char*)calloc(8192, sizeof(char));
+	TableroGlobal = (_ST_TableroX64*)calloc(TipoJuego.NumeroDeSubProcesos, sizeof(_ST_TableroX64));
+	SubProcesos = (THREAD_ID*)calloc(TipoJuego.NumeroDeSubProcesos, sizeof(THREAD_ID));
+
+	SubProcesoP = (THREAD_ID*)calloc(1, sizeof(THREAD_ID));
+
+	for (i = 0; i < TipoJuego.NumeroDeSubProcesos; i++)
 	{
-		UciNewGame();
-		return;
+		TableroGlobal[i].IdSubProcesos = i;
+		UciNewGame(&TableroGlobal[i]);
 	}
-	else if (strncmp(parametro, "uci", 3) == 0)
-	{
-		printf("id name "NOMBRE" "VER"");
-#ifdef ARC_64BIT
-		printf(""STRING_FORMAT"\n", " x64");
-#else
-		printf(""STRING_FORMAT"\n", " x86");
-#endif
-		fflush(stdout);
-		printf("id author "AUTOR"\n"); fflush(stdout);
-#ifdef USAR_HASH_TB
-		printf("option name Hash type spin default "U64_FORMAT" min "S32_FORMAT" max "S32_FORMAT"\n", TT_Opciones.tt_Mb, MB_HASH_TABLE_MIN, MB_HASH_TABLE_MAX);
-		fflush(stdout);
-#endif
 
-#ifdef USAR_SQLITE
-		if (LibroSql.Dll_Cargada == true)
+	for (;;)
+	{
+		memset(buffer, '\0', 8192 * sizeof(char));
+		LeerComandos(buffer, 8192);
+		
+		if (strncmp(buffer, "ucinewgame", 10) == 0)
 		{
-			if (LibroSql.UsarLibro == true)
+			if (TipoJuego.SubProcesosActivo) continue;
+
+			for (i = 0; i < TipoJuego.NumeroDeSubProcesos; i++)
 			{
-				printf("option name OwnBook type check default true\n");
+				UciNewGame(&TableroGlobal[i]);
+			}
+		}
+		else if (strncmp(buffer, "uci", 3) == 0)
+		{
+			InformacionUci();
+		}
+		else if (strncmp(buffer, "position", 8) == 0)
+		{
+			if (TipoJuego.SubProcesosActivo) continue;
+
+			SubString(buffer, 9);
+			if (TipoJuego.NumeroDeSubProcesos > 1)
+			{
+				for (i = 0; i < TipoJuego.NumeroDeSubProcesos; i++)
+				{
+					memset(position, '\0', 8192 * sizeof(char));
+					strcpy(position, buffer);
+					Position_Fen_Startpos(&TableroGlobal[i], position);
+				}
 			}
 			else
 			{
-				printf("option name OwnBook type check default false\n");
+				Position_Fen_Startpos(&TableroGlobal[0], buffer);
 			}
-			fflush(stdout);
-			printf("option name OwnBookLimit type spin default "S32_FORMAT" min 2 max 10\n", LibroSql.LimiteJugadas);
-			fflush(stdout);
 		}
-#endif
-
-		printf("option name PreventTimeout type spin default "S32_FORMAT" min 0 max 500\n", TipoJuego.PrevenirTiempoExcedido);
-		fflush(stdout);
-
-#ifdef USAR_TABLAS_DE_FINALES
-		memset(Str, 0, MAX_DIR * sizeof(char));
-		strcat(Str, " var None");
-#ifdef ARC_64BIT
-		strcat(Str, " var Syzygy");
-#endif
-		strcat(Str, " var Gaviota var Scorpio");
-
-		switch (TablaDeFinales.Usar)
+		else if (strncmp(buffer, "go", 2) == 0)
 		{
-		case 0:
-			printf("option name EndGamesTableBases type combo default None"STRING_FORMAT"\n", Str);
-			break;
-		case 1:
-			printf("option name EndGamesTableBases type combo default Syzygy"STRING_FORMAT"\n", Str);
-			break;
-		case 2:
-			printf("option name EndGamesTableBases type combo default Gaviota"STRING_FORMAT"\n", Str);
-			break;
-		case 3:
-			printf("option name EndGamesTableBases type combo default Scorpio"STRING_FORMAT"\n", Str);
-			break;
-		default:
+			if (TipoJuego.SubProcesosActivo) continue;
+
+			SubString(buffer, 3);
+			if (PrepararGo(&TableroGlobal[0].MueveBlancas, buffer) == true)
+			{
+				CREAR_SUBPROCESO(SubProcesoP[0], InicioBusqueda, NULL);
+				#ifndef _MSC_VER
+				pthread_detach(SubProcesoP[0]);
+				#endif
+			}
+		}
+		else if (strncmp(buffer, "isready", 7) == 0)
+		{
+			printf("readyok\n");
+			fflush(stdout);
+		}
+		else if (strncmp(buffer, "stop", 4) == 0)
+		{
+			TipoJuego.Interrumpir = true;
+		}
+		else if (strncmp(buffer, "quit", 4) == 0)
+		{
+			TipoJuego.Interrumpir = true;
+			Salir = true;
 			break;
 		}
-		fflush(stdout);
-		if (TablaDeFinales.Directorio[0] == '\0')
-			printf("option name EndGamesTableBasesPath type string default "STRING_FORMAT"\n", "<empty>");
-		else
-			printf("option name EndGamesTableBasesPath type string default "STRING_FORMAT"\n", TablaDeFinales.Directorio);
-		fflush(stdout);
-		printf("option name EndGamesTableBasesLimit type spin default "S32_FORMAT" min 3 max 7\n", TablaDeFinales.Limite);
-		fflush(stdout);
-		printf("option name EndGamesTableBasesCache type spin default "U64_FORMAT" min "S32_FORMAT" max "S32_FORMAT"\n", TablaDeFinales.CacheMB, MB_TABLAS_CACHE_MIN, MB_TABLAS_CACHE_MAX);
-		fflush(stdout);
-#endif
+		else if (strncmp(buffer, "setoption name Hash value ", 26) == 0)
+		{
+		#ifdef USAR_HASH_TB
+			U64 HashOld = TT_Opciones.tt_Mb;
+			SubString(buffer, 26);
+			TT_Opciones.tt_Mb = MAX(MB_HASH_TABLE_MIN, (int)atoll(buffer));
+			if (TT_Opciones.tt_Mb > MB_HASH_TABLE_MAX) TT_Opciones.tt_Mb = MB_HASH_TABLE;
+			if (HashOld != TT_Opciones.tt_Mb)
+			{
+				if (CrearTransposicion() == true)
+				{
+					printf(""INFO_STRING"Hash: "U64_FORMAT" MB.\n", TT_Opciones.tt_Mb);
+					fflush(stdout);
+				}
+			}
+		#endif
+		}
+		else if (strncmp(buffer, "setoption name Threads value ", 29) == 0)
+		{
+			if (TipoJuego.SubProcesosActivo) continue;
 
+			SubString(buffer, 29);
+			TipoJuego.NumeroDeSubProcesos = MAX(1, (int)atoll(buffer));
+			if (TipoJuego.NumeroDeSubProcesos > TipoJuego.NumeroDeSubProcesosMax) TipoJuego.NumeroDeSubProcesos = TipoJuego.NumeroDeSubProcesosMax;
+
+			free(TableroGlobal);
+			free(SubProcesos);
+
+			TableroGlobal = (_ST_TableroX64*)calloc(TipoJuego.NumeroDeSubProcesos, sizeof(_ST_TableroX64));
+			SubProcesos = (THREAD_ID*)calloc(TipoJuego.NumeroDeSubProcesos, sizeof(THREAD_ID));
+
+			if (TableroGlobal == NULL || SubProcesos == NULL)
+			{
+				printf(""INFO_STRING"Insufficient memory for threads.\n");
+				fflush(stdout);
+				break;
+			}
+			else
+			{
+				printf(""INFO_STRING"Threads: "S32_FORMAT".\n", TipoJuego.NumeroDeSubProcesos);
+				fflush(stdout);
+
+				for (i = 0; i < TipoJuego.NumeroDeSubProcesos; i++)
+				{
+					TableroGlobal[i].IdSubProcesos = i;
+					UciNewGame(&TableroGlobal[i]);
+				}
+			}
+		}
+		else if (strncmp(buffer, "setoption name MoveOverhead value ", 35) == 0)
+		{
+			SubString(buffer, 35);
+			TipoJuego.PrevenirTiempoExcedido = MAX(0, (int)atoll(buffer));
+			if (TipoJuego.PrevenirTiempoExcedido > PREVENIR_TIEMPO_EXCEDIDO_MAX) TipoJuego.PrevenirTiempoExcedido = PREVENIR_TIEMPO_EXCEDIDO_DEFECTO;
+			printf(""INFO_STRING"MoveOverhead: "S32_FORMAT" ms.\n", TipoJuego.PrevenirTiempoExcedido);
+			fflush(stdout);
+		}
 #ifdef USAR_NNUE
-		if (Nnue.Usar == true)
+		else if (strncmp(buffer, "setoption name NnueFile value ", 30) == 0)
 		{
-			printf("option name NnueUse type check default true\n");
-		}
-		else
-		{
-			printf("option name NnueUse type check default false\n");
-		}
-		fflush(stdout);
-		if (Nnue.Directorio[0] == '\0')
-			printf("option name NnuePath type string default "STRING_FORMAT"\n", "<empty>");
-		else
-			printf("option name NnuePath type string default "STRING_FORMAT"\n", Nnue.Directorio);
-		fflush(stdout);
+		#ifdef USAR_NNUE
+			SubString(buffer, 30);
+			if (strlen(buffer) == 0 || strncmp(buffer, "<empty>", 7) == 0)
+			{
+				Nnue.DirectorioNuevo = false;
+				Nnue.Usar = false;
+				memset(Nnue.ArchivoNnue, '\0', MAX_DIR * sizeof(char));
+				continue;
+			}
 
-		memset(Str, 0, MAX_DIR * sizeof(char));
-		strcat(Str, " var AVX2");
-		strcat(Str, " var SSE4.1");
-		strcat(Str, " var SSE3");
-		strcat(Str, " var SSE2");
-		switch (Nnue.Tecnologia)
-		{
-		case 1:
-			printf("option name NnueTechnology type combo default SSE2"STRING_FORMAT"\n", Str);
-			break;
-		case 2:
-			printf("option name NnueTechnology type combo default SSE3"STRING_FORMAT"\n", Str);
-			break;
-		case 3:
-			printf("option name NnueTechnology type combo default SSE4.1"STRING_FORMAT"\n", Str);
-			break;
-		case 4:
-			printf("option name NnueTechnology type combo default AVX2"STRING_FORMAT"\n", Str);
-			break;
-		default:
-			break;
+			VerificarDir(buffer, false);
+			if (strcmp(buffer, Nnue.ArchivoNnue) == 0)
+				Nnue.DirectorioNuevo = false;
+			else
+				Nnue.DirectorioNuevo = true;
+
+			if (Nnue.DirectorioNuevo == true)
+			{
+				memset(Nnue.ArchivoNnue, '\0', MAX_DIR * sizeof(char));
+				strcat(Nnue.ArchivoNnue, buffer);
+
+				if (CargarNnue() == false)
+				{
+					printf(""INFO_STRING"notready\n");
+					fflush(stdout);
+					continue;
+				}
+			}
+		#endif
 		}
-		fflush(stdout);
+#endif
+		else if (strncmp(buffer, "setoption name UCI_Chess960 value ", 34) == 0)
+		{
+			SubString(buffer, 34);
+			if (strcmp(buffer, "true") == 0)
+			{
+				TipoJuego.Ajedrez960 = true;
+				printf(""INFO_STRING"Chess960: Enabled.\n");
+				fflush(stdout);
+			}
+			else if (strcmp(buffer, "false") == 0)
+			{
+				TipoJuego.Ajedrez960 = false;
+				printf(""INFO_STRING"Chess960: Disabled.\n");
+				fflush(stdout);
+			}
+		}
+#ifdef PERFT
+		else if (strncmp(buffer, "perft ", 6) == 0)
+		{
+			if (TipoJuego.SubProcesosActivo) continue;
+			SubString(buffer, 6);
+			int d = MAX(1, (int)atoll(buffer));
+			CREAR_SUBPROCESO(SubProcesoP[0], P_Perft, &d);
+#ifndef _MSC_VER
+			pthread_detach(SubProcesoP[0]);
+#endif
+		}
+#endif
+		if (Salir == true)
+			break;
+	}
+
+	free(SubProcesoP);
+	free(buffer);
+	free(position);
+}
+
+void InformacionUci()
+{
+	printf("id name "NOMBRE" "VER"");
+#ifdef ARC_64BIT
+	printf(" x64 - 10th anniversary\n");
+#else
+	printf(" x86 - 10th anniversary\n");
+#endif
+	fflush(stdout);
+
+	printf("id author "AUTOR"\n");
+	fflush(stdout);
+#ifdef USAR_HASH_TB
+	printf("option name Hash type spin default "U64_FORMAT" min "S32_FORMAT" max "S32_FORMAT"\n", TT_Opciones.tt_Mb, MB_HASH_TABLE_MIN, MB_HASH_TABLE_MAX);
+	fflush(stdout);
+#endif
+	printf("option name Threads type spin default "S32_FORMAT" min 1 max "S32_FORMAT"\n", TipoJuego.NumeroDeSubProcesos, TipoJuego.NumeroDeSubProcesosMax);
+	fflush(stdout);
+	printf("option name MoveOverhead type spin default "S32_FORMAT" min 0 max "S32_FORMAT"\n", TipoJuego.PrevenirTiempoExcedido, PREVENIR_TIEMPO_EXCEDIDO_MAX);
+	fflush(stdout);
+#ifdef USAR_NNUE
+	if (Nnue.ArchivoNnue[0] != '\0')
+		printf("option name NnueFile type string default "STRING_FORMAT"\n", Nnue.ArchivoNnue);
+	else
+		printf("option name NnueFile type string default <empty>\n");
+
+	fflush(stdout);
 #endif
 
 #ifdef USAR_AJEDREZ960
-		if (TipoJuego.Ajedrez960 == true)
-		{
-			printf("option name UCI_Chess960 type check default true\n");
-		}
-		else
-		{
-			printf("option name UCI_Chess960 type check default false\n");
-		}
-		fflush(stdout);
-		switch (TipoJuego.Ajedrez960Enroque)
-		{
-		case false:
-			printf("option name UCI_Chess960CastlingSign type combo default UCI var UCI var O-O/O-O-O\n");
-			break;
-		case true:
-			printf("option name UCI_Chess960CastlingSign type combo default O-O/O-O-O var UCI var O-O/O-O-O\n");
-			break;
-		default:
-			break;
-		}
-		fflush(stdout);
+	if (TipoJuego.Ajedrez960 == true)
+	{
+		printf("option name UCI_Chess960 type check default true\n");
+	}
+	else
+	{
+		printf("option name UCI_Chess960 type check default false\n");
+	}
+	fflush(stdout);
 #endif
-
-		printf("uciok\n");
-		fflush(stdout);
-		return;
-	}
-	else if (strncmp(parametro, "isready", 7) == 0)
-	{
-#ifdef USAR_TABLAS_DE_FINALES
-		if (TablaDeFinales.Usar != 0 && (TablaDeFinales.UsarNuevo == true || TablaDeFinales.DirectorioNuevo == true || TablaDeFinales.CacheNueva == true))
-		{
-#ifdef ARC_64BIT
-			if (TablaDeFinales.Usar == 1) CargarSyzygy();
-#endif
-			if (TablaDeFinales.Usar == 2)
-			{
-				if (TablaDeFinales.paths != NULL)
-					TBpaths_done(TablaDeFinales.paths);
-				CargarGaviotaTB();
-			}
-			if (TablaDeFinales.Usar == 3) CargarEgbb();
-		}
-#endif
-
-		printf("readyok\n");
-		fflush(stdout);
-		return;
-	}
-#ifdef USAR_HASH_TB
-	else if (strncmp(parametro, "setoption name Hash value ", 26) == 0)
-	{
-		parametro += 26;
-		TT_Opciones.tt_Mb = MAX(MB_HASH_TABLE_MIN, (int)atoll(parametro));
-		if (TT_Opciones.tt_Mb > MB_HASH_TABLE_MAX) TT_Opciones.tt_Mb = MB_HASH_TABLE;
-		CrearTransposicion(TT_Opciones.tt_Mb);
-	}
-#endif
-
-#ifdef USAR_SQLITE
-	else if (strncmp(parametro, "setoption name OwnBook value ", 29) == 0)
-	{
-		parametro += 29;
-		if (LibroSql.Dll_Cargada == true)
-		{
-			if (strcmp(parametro, "true") == 0)
-			{
-				LibroSql.UsarLibro = true;
-				LibroSql.UsarLibro = ComprobarAccesoLibro();
-			}
-			else if (strcmp(parametro, "false") == 0)
-				LibroSql.UsarLibro = false;
-		}
-	}
-	else if (strncmp(parametro, "setoption name OwnBookLimit value ", 34) == 0)
-	{
-		parametro += 34;
-		LibroSql.LimiteJugadas = MAX(2, (int)atoll(parametro));
-		if (LibroSql.LimiteJugadas > 10) LibroSql.LimiteJugadas = 8;
-	}
-#endif
-	else if (strncmp(parametro, "setoption name PreventTimeout value ", 36) == 0)
-	{
-		parametro += 36;
-		TipoJuego.PrevenirTiempoExcedido = MAX(0, (int)atoll(parametro));
-		if (TipoJuego.PrevenirTiempoExcedido > 500) TipoJuego.PrevenirTiempoExcedido = 50;
-	}
-#ifdef USAR_TABLAS_DE_FINALES
-	else if (strncmp(parametro, "setoption name EndGamesTableBases value ", 40) == 0)
-	{
-		int Temp = TablaDeFinales.Usar;
-		parametro += 40;
-		if (strcmp(parametro, "None") == 0)
-		{
-			TablaDeFinales.Usar = 0;
-		}
-		else if (strcmp(parametro, "Syzygy") == 0)
-		{
-			if (TablaDeFinales.Dll_CargadaSg == true)
-				TablaDeFinales.Usar = 1;
-			else
-			{
-#ifdef ARC_64BIT
-				TablaDeFinales.Dll_CargadaSg = Cargar_Syzygy_dll();
-				if (TablaDeFinales.Dll_CargadaSg == true) Iniciar_Mascara();
-#endif
-			}
-		}
-		else if (strcmp(parametro, "Gaviota") == 0)
-		{
-			if (TablaDeFinales.Dll_CargadaGv == true)
-				TablaDeFinales.Usar = 2;
-			else
-				TablaDeFinales.Dll_CargadaGv = Cargar_gaviota_dll();
-		}
-		else if (strcmp(parametro, "Scorpio") == 0)
-		{
-			if (TablaDeFinales.Dll_CargadaBb == true)
-				TablaDeFinales.Usar = 3;
-			else
-				TablaDeFinales.Dll_CargadaBb = Cargar_egbb_dll();
-		}
-		if (Temp == TablaDeFinales.Usar)
-			TablaDeFinales.UsarNuevo = false;
-		else
-			TablaDeFinales.UsarNuevo = true;
-	}
-	else if (strncmp(parametro, "setoption name EndGamesTableBasesPath value ", 44) == 0)
-	{
-		parametro += 44;
-		if (strcmp(parametro, TablaDeFinales.Directorio) == 0)
-			TablaDeFinales.DirectorioNuevo = false;
-		else
-			TablaDeFinales.DirectorioNuevo = true;
-
-		if (TablaDeFinales.DirectorioNuevo == true)
-		{
-			memset(TablaDeFinales.Directorio, 0, MAX_DIR * sizeof(char));
-			strcat(TablaDeFinales.Directorio, parametro);
-			
-			VerificarDir(TablaDeFinales.Directorio, true);
-		}
-	}
-	else if (strncmp(parametro, "setoption name EndGamesTableBasesLimit value ", 45) == 0)
-	{
-		parametro += 45;
-		TablaDeFinales.Limite = MAX(3, (int)atoll(parametro));
-		if (TablaDeFinales.Usar == 1 && TablaDeFinales.Limite > 7) TablaDeFinales.Limite = 5;
-		if (TablaDeFinales.Usar == 2 && TablaDeFinales.Limite > 5) TablaDeFinales.Limite = 5;
-		if (TablaDeFinales.Usar == 3 && TablaDeFinales.Limite > 6) TablaDeFinales.Limite = 5;
-	}
-	else if (strncmp(parametro, "setoption name EndGamesTableBasesCache value ", 45) == 0)
-	{
-		parametro += 45;
-		int Temp = (int)TablaDeFinales.CacheMB;
-		TablaDeFinales.CacheMB = MAX(MB_TABLAS_CACHE_MIN, atoll(parametro));
-		/* Compruebo diferencia de cache */
-		if (Temp == (int)TablaDeFinales.CacheMB)
-			TablaDeFinales.CacheNueva = false;
-		else
-			TablaDeFinales.CacheNueva = true;
-		/* Esta fuera de lo permitido */
-		if (TablaDeFinales.CacheMB > MB_TABLAS_CACHE_MAX) TablaDeFinales.CacheMB = MB_TABLAS_CACHE;
-	}
-#endif
-#ifdef USAR_NNUE
-	else if (strncmp(parametro, "setoption name NnueUse value ", 29) == 0)
-	{
-		parametro += 29;
-		if (strcmp(parametro, "true") == 0)
-		{
-			if (Nnue.Dll_Cargada == true)
-				Nnue.Usar = true;
-		}
-		else if (strcmp(parametro, "false") == 0)
-			Nnue.Usar = false;
-	}
-	else if (strncmp(parametro, "setoption name NnuePath value ", 30) == 0)
-	{
-		parametro += 30;
-		if (strcmp(parametro, Nnue.Directorio) == 0)
-			Nnue.DirectorioNuevo = false;
-		else
-			Nnue.DirectorioNuevo = true;
-		
-		if (Nnue.DirectorioNuevo == true)
-		{
-			Descargar_nnue_dll();
-			memset(Nnue.Directorio, 0, MAX_DIR * sizeof(char));
-			strcat(Nnue.Directorio, parametro);
-			VerificarDir(Nnue.Directorio, false);
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
-		}
-	}
-	else if (strncmp(parametro, "setoption name NnueTechnology value ", 36) == 0)
-	{
-		parametro += 36;
-		if (strcmp(parametro, "AVX2") == 0)
-		{
-			Nnue.Tecnologia = 4;
-			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
-		}
-		else if (strcmp(parametro, "SSE4.1") == 0)
-		{
-			Nnue.Tecnologia = 3;
-			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
-		}
-		else if (strcmp(parametro, "SSE3") == 0)
-		{
-			Nnue.Tecnologia = 2;
-			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
-		}
-		else if (strcmp(parametro, "SSE2") == 0)
-		{
-			Nnue.Tecnologia = 1;
-			if (Nnue.Dll_Cargada) Descargar_nnue_dll();
-			Nnue.Dll_Cargada = Cargar_nnue_dll();
-			if (Nnue.Dll_Cargada == true) CargarNnue();
-		}
-	}
-#endif
-#ifdef USAR_SQLITE
-	else if (strncmp(parametro, "setoption name UCI_Chess960 value ", 34) == 0)
-	{
-		parametro += 34;
-		if (strcmp(parametro, "true") == 0)
-		{
-			TipoJuego.Ajedrez960 = true;
-#ifdef USAR_SQLITE
-			/* Libro de aperturas */
-			LibroSql.AperturaEstandar = false;
-			memset(LibroSql.SqlTabla, 0, 9 * sizeof(char));
-			memset(LibroSql.Variante, 0, 9 * sizeof(char));
-			strcpy(LibroSql.SqlTabla, "Chess960");
-#endif
-		}
-		else if (strcmp(parametro, "false") == 0)
-		{
-			TipoJuego.Ajedrez960 = false;
-#ifdef USAR_SQLITE
-			/* Libro de aperturas */
-			LibroSql.AperturaEstandar = true;
-			memset(LibroSql.SqlTabla, 0, 9 * sizeof(char));
-			memset(LibroSql.Variante, 0, 9 * sizeof(char));
-			strcpy(LibroSql.SqlTabla, "Book");
-#endif
-		}
-	}
-	else if (strncmp(parametro, "setoption name UCI_Chess960CastlingSign value ", 46) == 0)
-	{
-		parametro += 46;
-		if (strcmp(parametro, "UCI") == 0)
-		{
-			TipoJuego.Ajedrez960Enroque = false;
-		}
-		else if (strcmp(parametro, "O-O/O-O-O") == 0)
-		{
-			TipoJuego.Ajedrez960Enroque = true;
-		}
-	}
-#endif
-	else if (strncmp(parametro, "position", 8) == 0)
-	{
-		parametro += 9;	/* position */
-		Position_Fen_Startpos(parametro);
-		return;
-	}
-	else if (strncmp(parametro, "go", 2) == 0)
-	{
-		parametro += 3;	/* go */
-		if (TipoJuego.JugadaIlegal == false)
-			InicioBusqueda(parametro);
-
-		return;
-	}
-#ifdef USAR_SQLITE
-	else if (strncmp(parametro, "book", 4) == 0 && LibroSql.Dll_Cargada == true)
-	{
-		VerificarLibroApertura();
-		return;
-	}
-#endif
-	else if (strncmp(parametro, "perftdiv", 8) == 0)
-	{
-		parametro += 9;	/* perftdiv */
-		TipoJuego.MaxDepth = MAX(1, (int)atoll(parametro));
-		Perft(true);
-	}
-	else if (strncmp(parametro, "perft", 5) == 0)
-	{
-		parametro += 6;	/* perft */
-		TipoJuego.MaxDepth = MAX(1, (int)atoll(parametro));
-		Perft(false);
-	}
-	else if (strncmp(parametro, "quit", 4) == 0)
-	{
-		Salir = true;
-		return;
-	}
+	
+	printf("uciok\n");
+	fflush(stdout);
 }
-
 void LeerComandos(char *entrada, int longitud)
 {
-	/* Si en la entrada no contiene nada */
 	if (fgets(entrada, longitud, stdin) == NULL)
 	{
-		Salir = true;
+		printf(""INFO_STRING"ERROR.\n");
 		return;
 	}
 
@@ -652,45 +410,39 @@ void LeerComandos(char *entrada, int longitud)
 			entrada[strlen(entrada) - 1] = '\0';
 		}
 	}
-	if (strchr(entrada, '\r') != NULL)
+	else if (strchr(entrada, '\r') != NULL)
 	{
 		if (strlen(entrada) > 0)
 		{
 			entrada[strlen(entrada) - 1] = '\0';
 		}
 	}
-}
+	else
+	{
+		if (strlen(entrada) > 0)
+		{
+			entrada[strlen(entrada) - 1] = '\0';
+		}
+	}
 
-void Position_Fen_Startpos(char *ptr)
+}
+void Position_Fen_Startpos(_ST_TableroX64 *Tablero, char *ptr)
 {
 	char contenedor[MAX_DIR];
-	char fen[MAX_DIR];
+	char fen[MAX_DIR] = { '\0', '\0'};
 	int Ok = false;
 	char buffer[MAX_DIR];
-#ifdef USAR_SQLITE
-	char *Var = LibroSql.Variante;
-#else
-	char *Var = NULL;
-#endif
 
-	LimpiarPuntuacion(true);
-	memset(contenedor, 0, MAX_DIR * sizeof(char));
-	TableroGlobal.Regla_50_Movimiento = 0;
-#ifdef USAR_HASH_TB
-	TableroGlobal.Hply = 0;
-#endif
-
+	memset(contenedor, '\0', MAX_DIR * sizeof(char));
 	SplitString(ptr, contenedor, MAX_DIR);
 	if (strcmp(contenedor, "fen") == 0)
 	{
-		memset(fen, 0, MAX_DIR * sizeof(char));
-		fen[strlen(fen)] = '\0';
-
+		memset(fen, '\0', MAX_DIR * sizeof(char));
 		for (;;)
 		{
-			memset(contenedor, 0, MAX_DIR * sizeof(char));
+			memset(contenedor, '\0', MAX_DIR * sizeof(char));
 			SplitString(ptr, contenedor, MAX_DIR);
-			if (*contenedor == '\0' || strcmp(contenedor, "moves") == 0)
+			if (contenedor[0] == '\0' || strcmp(contenedor, "moves") == 0)
 			{
 				break;
 			}
@@ -702,146 +454,475 @@ void Position_Fen_Startpos(char *ptr)
 			}
 
 		}
-		if (!CargarFen(fen, Var))
+		if (!CargarFen(Tablero, fen))
 		{
 			printf(""INFO_STRING"FEN format incorrect.\n");
 			fflush(stdout);
-			memset(buffer, 0, MAX_DIR * sizeof(char));
+			memset(buffer, '\0', MAX_DIR * sizeof(char));
 			strcpy(buffer, START_POS);
-			Position_Fen_Startpos(buffer);
+			Position_Fen_Startpos(Tablero, buffer);
 			return;
 		}
-#ifdef USAR_SQLITE
-		/* Desde una posicion Fen, el libro no encuentra variaciones de aperturas, lo finalizamos */
-		if (TipoJuego.Ajedrez960 == false)
-			LibroSql.FinVariacion = true;
-#endif
 	}
-	else /* Posicion inicial (STARTPOS) */
+	else
 	{
-		memset(contenedor, 0, MAX_DIR * sizeof(char));
+		memset(contenedor, '\0', MAX_DIR * sizeof(char));
 		SplitString(ptr, contenedor, MAX_DIR);
-		memset(buffer, 0, MAX_DIR * sizeof(char));
+		memset(buffer, '\0', MAX_DIR * sizeof(char));
 		strcpy(buffer, START_POS);
-		if (!CargarFen(buffer, Var))
+		if (!CargarFen(Tablero, buffer))
 		{
 			Salir = true;
 			return;
 		}
-#ifdef USAR_SQLITE
-		LibroSql.FinVariacion = false;
-#endif
 	}
 
 #ifdef USAR_HASH_TB
-	/* Obtenemos el key del tablero */
-	ObtenerKey();
+	ObtenerKey(Tablero);
 #endif
 
-	/* Existen movimientos */
 	if (strcmp(contenedor, "moves") == 0)
 	{
-		/* Reiniciamos el libro de aperturas */
-#ifdef USAR_SQLITE
-		if (*ptr != '\0' && LibroSql.Dll_Cargada == true && LibroSql.UsarLibro == true)
-		{
-			if (ptr[0] == ' ') ptr++;
-			ListaJugadas(ptr, strlen(ptr));
-		}
-#endif
 		for (;;)
 		{
-			memset(contenedor, 0, MAX_DIR * sizeof(char));
+			memset(contenedor, '\0', MAX_DIR * sizeof(char));
 			SplitString(ptr, contenedor, MAX_DIR);
-			if (*contenedor == '\0' || contenedor[0] == '\0')
+			if (contenedor[0] == '\0')
 			{
 				break;
 			}
 
-			Movimiento(contenedor, &Ok, (!strlen(ptr)));
+			Movimiento(Tablero, contenedor, &Ok, (!strlen(ptr)));
 			Ok = false;
+
+			if (Tablero->Regla_50_Movimiento == 0)
+				Tablero->Hply = 0;
 		}
 	}
+	Tablero->Ply = 0;
 }
+int CargarFen(_ST_TableroX64 *Tablero, char *epd)
+{
+	char TableroCoordenadas[3];
+	char pieza_char[] = { ' ','P','N','B','R','Q','K',' ','p','n','b','r','q','k',' ' };
+	int i = 0;
+	int j = 0;
+	int pieza = 0;
+	char contenedor[MAX_DIR];
+	memset(contenedor, '\0', MAX_DIR * sizeof(char));
+	memset(TableroCoordenadas, '\0', 3 * sizeof(char));
 
-void InicioBusqueda(char *ptr) {
+	char Ajedrez960Enroque[] = { 'A','B','C','D','E','F','G','H','a','b','c','d','e','f','g','h' };
+	char FenEnroque[] = { 'Q','z','z','z','z','z','z','K','q','z','z','z','z','z','z','k' };
+	int Ajedrez960TableroTorre[] = { 56, 57, 58, 59, 60, 61, 62, 63, 0, 1, 2, 3, 4, 5, 6, 7 };
+	int cas = 0;
+
+	LimpiarPuntuacion(Tablero, true);
+
+	Tablero->EnroqueB = Ninguno;
+	Tablero->EnroqueN = Ninguno;
+	Tablero->FichaAlPasoPosicion = 0;
+	Tablero->PosicionReyB = 0;
+	Tablero->PosicionReyN = 0;
+	Tablero->Ajedrez960.TorreNegraA = 0;
+	Tablero->Ajedrez960.TorreNegraH = 0;
+	Tablero->Ajedrez960.TorreBlancaA = 0;
+	Tablero->Ajedrez960.TorreBlancaH = 0;
+	Tablero->Ply = 0;
+	Tablero->Hply = 0;
+	Tablero->Regla_50_Movimiento = 0;
+	Tablero->MueveBlancas = true;
+
+	for (i = 0; i < 64; i += 8)
+	{
+		j = 0;
+		while (j < 8)
+		{
+			if (*epd >= '1' && *epd <= '8')
+			{
+				for (pieza = 0; pieza < *epd - '0'; pieza++)
+				{
+					Tablero->Tablero[i + j] = CasillaVacia;
+					j++;
+				}
+			}
+			else
+			{
+				for (pieza = 0; (pieza_char[pieza] != *epd); pieza++)
+				{
+					if (pieza >= NoPieza)
+					{
+						return false;
+					}
+				}
+				if (pieza >= NoPieza)
+				{
+					return false;
+				}
+				Tablero->Tablero[i + j] = pieza;
+
+				switch (pieza)
+				{
+				case PeonB:
+					Tablero->Blancas.PeonTotales++;
+					break;
+				case CaballoB:
+					Tablero->Blancas.CaballosTotales++;
+					break;
+				case AlfilB:
+					Tablero->Blancas.AlfilTotales++;
+					break;
+				case TorreB:
+					Tablero->Blancas.TorresTotales++;
+					break;
+				case DamaB:
+					Tablero->Blancas.DamasTotales++;
+					break;
+				case ReyB:
+					Tablero->PosicionReyB = i + j;
+					break;
+
+				case PeonN:
+					Tablero->Negras.PeonTotales++;
+					break;
+				case CaballoN:
+					Tablero->Negras.CaballosTotales++;
+					break;
+				case AlfilN:
+					Tablero->Negras.AlfilTotales++;
+					break;
+				case TorreN:
+					Tablero->Negras.TorresTotales++;
+					break;
+				case DamaN:
+					Tablero->Negras.DamasTotales++;
+					break;
+				case ReyN:
+					Tablero->PosicionReyN = i + j;
+					break;
+				default:
+					return false;
+					break;
+				}
+				j++;
+			}
+			if (strcmp(epd, "") != 0)
+			{
+				epd++;
+			}
+		}
+		if (pieza >= NoPieza)
+		{
+			return false;
+		}
+		if (strcmp(epd, "") != 0)
+		{
+			epd++;
+		}
+	}
+
+	if (pieza >= NoPieza)
+	{
+		return false;
+	}
+
+	if (strcmp(epd, "") != 0)
+	{
+		if (*epd++ == 'w')
+		{
+			Tablero->MueveBlancas = true;
+		}
+		else
+		{
+			Tablero->MueveBlancas = false;
+		}
+	}
+	else
+	{
+		return false;
+	}
+
+	if (strcmp(epd, "") != 0)
+	{
+		epd++;
+	}
+
+	if (*epd == '-')
+	{
+		if (strcmp(epd, "") != 0)
+		{
+			epd++;
+		}
+	}
+	else
+	{
+		for (cas = 0; cas < 16; cas++)
+		{
+			if (*epd == FenEnroque[cas])
+			{
+				if (cas < 8)
+				{
+					if (COLUMNA(cas) < COLUMNA(Tablero->PosicionReyB))
+					{
+						for (i = Ajedrez960TableroTorre[cas]; i > -1; i -= 8)
+						{
+							if (Tablero->Tablero[i] == TorreB)
+							{
+								if (HORIZONTAL(Ajedrez960TableroTorre[cas]) == 0)
+								{
+									Tablero->Ajedrez960.TorreBlancaA = Ajedrez960TableroTorre[cas];
+									break;
+								}
+							}
+						}
+
+						Tablero->EnroqueB = Tablero->EnroqueB + Largo;
+						if (strcmp(epd, "") != 0)
+						{
+							epd++;
+						}
+						cas = -1;
+					}
+					else/* enroque corto*/
+					{
+						for (i = Ajedrez960TableroTorre[cas]; i > -1; i -= 8)
+						{
+							if (Tablero->Tablero[i] == TorreB)
+							{
+								if (HORIZONTAL(Ajedrez960TableroTorre[cas]) == 0)
+								{
+									Tablero->Ajedrez960.TorreBlancaH = Ajedrez960TableroTorre[cas];
+									break;
+								}
+							}
+						}
+
+						Tablero->EnroqueB = Tablero->EnroqueB + Corto;
+						if (strcmp(epd, "") != 0)
+						{
+							epd++;
+						}
+						cas = -1;
+					}
+				}
+				else /* negras */
+				{
+					if (COLUMNA(cas) < COLUMNA(Tablero->PosicionReyN))
+					{
+						for (i = Ajedrez960TableroTorre[cas]; i < 64; i += 8)
+						{
+							if (Tablero->Tablero[i] == TorreN)
+							{
+								if (HORIZONTAL(Ajedrez960TableroTorre[cas]) == 7)
+								{
+									Tablero->Ajedrez960.TorreNegraA = Ajedrez960TableroTorre[cas];
+									break;
+								}
+							}
+						}
+
+						Tablero->EnroqueN = Tablero->EnroqueN + Largo;
+						if (strcmp(epd, "") != 0)
+						{
+							epd++;
+						}
+						cas = -1;
+					}
+					else/* enroque corto*/
+					{
+						for (i = Ajedrez960TableroTorre[cas]; i < 64; i += 8)
+						{
+							if (Tablero->Tablero[i] == TorreN)
+							{
+								if (HORIZONTAL(Ajedrez960TableroTorre[cas]) == 7)
+								{
+									Tablero->Ajedrez960.TorreNegraH = Ajedrez960TableroTorre[cas];
+									break;
+								}
+							}
+						}
+
+						Tablero->EnroqueN = Tablero->EnroqueN + Corto;
+						if (strcmp(epd, "") != 0)
+						{
+							epd++;
+						}
+						cas = -1;
+					}
+				}
+			}
+		}
+
+		/* XFEN - de Ajedrez960 AHah */
+		for (cas = 0; cas < 16; cas++)
+		{
+			if (*epd == Ajedrez960Enroque[cas])
+			{
+				if (cas < 8)
+				{
+					if (COLUMNA(cas) < COLUMNA(Tablero->PosicionReyB))
+					{
+						for (i = Ajedrez960TableroTorre[cas]; i > -1; i -= 8)
+						{
+							if (Tablero->Tablero[i] == TorreB)
+							{
+								if (HORIZONTAL(Ajedrez960TableroTorre[cas]) == 0)
+								{
+									Tablero->Ajedrez960.TorreBlancaA = Ajedrez960TableroTorre[cas];
+									break;
+								}
+							}
+						}
+
+						Tablero->EnroqueB = Tablero->EnroqueB + Largo;
+						if (strcmp(epd, "") != 0)
+						{
+							epd++;
+						}
+						cas = -1;
+					}
+					else/* enroque corto*/
+					{
+						for (i = Ajedrez960TableroTorre[cas]; i > -1; i -= 8)
+						{
+							if (Tablero->Tablero[i] == TorreB)
+							{
+								if (HORIZONTAL(Ajedrez960TableroTorre[cas]) == 0)
+								{
+									Tablero->Ajedrez960.TorreBlancaH = Ajedrez960TableroTorre[cas];
+									break;
+								}
+							}
+						}
+
+						Tablero->EnroqueB = Tablero->EnroqueB + Corto;
+						if (strcmp(epd, "") != 0)
+						{
+							epd++;
+						}
+						cas = -1;
+					}
+				}
+				else /* negras */
+				{
+					if (COLUMNA(cas) < COLUMNA(Tablero->PosicionReyN))
+					{
+						for (i = Ajedrez960TableroTorre[cas]; i < 64; i += 8)
+						{
+							if (Tablero->Tablero[i] == TorreN)
+							{
+								if (HORIZONTAL(Ajedrez960TableroTorre[cas]) == 7)
+								{
+									Tablero->Ajedrez960.TorreNegraA = Ajedrez960TableroTorre[cas];
+									break;
+								}
+							}
+						}
+
+						Tablero->EnroqueN = Tablero->EnroqueN + Largo;
+						if (strcmp(epd, "") != 0)
+						{
+							epd++;
+						}
+						cas = -1;
+					}
+					else/* enroque corto*/
+					{
+						for (i = Ajedrez960TableroTorre[cas]; i < 64; i += 8)
+						{
+							if (Tablero->Tablero[i] == TorreN)
+							{
+								if (HORIZONTAL(Ajedrez960TableroTorre[cas]) == 7)
+								{
+									Tablero->Ajedrez960.TorreNegraH = Ajedrez960TableroTorre[cas];
+									break;
+								}
+							}
+						}
+
+						Tablero->EnroqueN = Tablero->EnroqueN + Corto;
+						if (strcmp(epd, "") != 0)
+						{
+							epd++;
+						}
+						cas = -1;
+					}
+				}
+			}
+		}
+	}
+
+	if (strcmp(epd, "") != 0)
+	{
+		epd++;
+	}
+
+	SplitString(epd, contenedor, sizeof(contenedor));
+	if (strcmp(contenedor, "-") == 0)
+	{
+		Tablero->FichaAlPasoPosicion = 0;
+	}
+	else
+	{
+		for (i = 0; i < 64; i++)
+		{
+			TableroCoordenadas[0] = 'a' + COLUMNA(i);
+			TableroCoordenadas[1] = '1' + HORIZONTAL(i);
+			TableroCoordenadas[2] = '\0';
+			if (strcmp(contenedor, TableroCoordenadas) == 0)
+			{
+				break;
+			}
+		}
+
+		if (i >= 40 && i <= 47)
+		{
+			Tablero->FichaAlPasoPosicion = i - 8;				/* Blancas */
+		}
+		if (i >= 16 && i <= 23)
+		{
+			Tablero->FichaAlPasoPosicion = i + 8;				/* Negras */
+		}
+	}
+
+	memset(contenedor, '\0', MAX_DIR * sizeof(char));
+	SplitString(epd, contenedor, sizeof(contenedor));
+
+	if (strcmp(epd, "") != 0)
+	{
+		memset(contenedor, '\0', MAX_DIR * sizeof(char));
+		SplitString(epd, contenedor, sizeof(contenedor));
+		Tablero->Regla_50_Movimiento = MAX(0, (int)atoll(contenedor));
+		if (Tablero->Regla_50_Movimiento > 100) Tablero->Regla_50_Movimiento = 100;
+#ifdef USAR_HASH_TB
+		//Tablero->Hply = Tablero->Regla_50_Movimiento;
+#endif
+	}
+
+	if (Tablero->Regla_50_Movimiento < 0 || Tablero->Regla_50_Movimiento > 100)
+	{
+#ifdef USAR_HASH_TB
+		Tablero->Hply = 0;
+#endif
+		Tablero->Regla_50_Movimiento = 0;
+	}
+
+	return true;
+}
+int PrepararGo(int *Turno, char *ptr) {
 	char contenedor[MAX_DIR];
 	int wtime = 0;
 	int btime = 0;
 	int winc = 0;
 	int binc = 0;
-	U64 inc = 0;
-	U64 time = 0;
-	U64 movetime = 0;
+	int inc = 0;
+	int time = 0;
+	int movetime = 0;
 	int NJugadasTotales = 0;
 	int Ok = false;
 	int mate = false;
 
-	TipoJuego.BuscarMate = 0;
-
-	/*Buscamos en el libro de aperturas */
-#ifdef USAR_SQLITE
-	if (LibroSql.Dll_Cargada == true)
-	{
-		char move[6];
-		memset(move, 0, 5 * sizeof(char));
-
-		if (LibroSql.UsarLibro == true && BuscarJugadaLibro(LibroSql.Apertura))
-		{
-			ObtenerJugadaLibro(move);
-			printf("bestmove ");
-
-#ifdef USAR_AJEDREZ960
-			if (TipoJuego.Ajedrez960 == true)
-			{
-				if (TipoJuego.Ajedrez960Enroque == true)
-				{
-					_ST_Movimiento ListaMovimiento[MAX_JUGADAS];
-					int NumeroDeMovimientos = 0;
-					int j = 0;
-					char mov[6];
-
-					NumeroDeMovimientos = GenerarMovimientos(Todos, ListaMovimiento);
-
-					for (j = 0; j < NumeroDeMovimientos; j++)
-					{
-						memset(mov, 0, 6 * sizeof(char));
-
-						MovimientoCoordenadas(CUADRADO_ORIGEN(ListaMovimiento[j].Movimiento), CUADRADO_DESTINO(ListaMovimiento[j].Movimiento), CORONACION(ListaMovimiento[j].Movimiento), mov);
-
-						if (strcmp(move, mov) == 0)
-						{
-							if (ENROQUE(ListaMovimiento[j].Movimiento) == MFLAGCA)
-							{
-								if (CUADRADO_ORIGEN(ListaMovimiento[j].Movimiento) < CUADRADO_DESTINO(ListaMovimiento[j].Movimiento))
-								{
-									memset(move, 0, 6 * sizeof(char));
-									strcat(move, "O-O");
-								}
-								else/* Enroque largo */
-								{
-									memset(move, 0, 6 * sizeof(char));
-									strcat(move, "O-O-O");
-								}
-								break;
-							}
-						}
-					}
-				}
-			}
-#endif
-
-			printf(""STRING_FORMAT"\n", move);
-			fflush(stdout);
-			return;
-		}
-	}
-#endif
-
-	memset(contenedor, 0, MAX_DIR * sizeof(char));
-
-	TipoJuego.MaxDepth = 0;
-	TipoJuego.Infinito = false;
+	memset(contenedor, '\0', MAX_DIR * sizeof(char));
 
 	for (;;)
 	{
@@ -853,111 +934,90 @@ void InicioBusqueda(char *ptr) {
 
 		if (strcmp(contenedor, "mate") == 0)
 		{
+			memset(contenedor, '\0', MAX_DIR * sizeof(char));
 			SplitString(ptr, contenedor, MAX_DIR);
-			TipoJuego.BuscarMate = MAX(1, (int)atoll(contenedor));
+			TipoJuego.BuscarMate = MAX(1, atoi(contenedor));
 			mate = true;
 		}
 
 		if (strcmp(contenedor, "wtime") == 0)
 		{
+			memset(contenedor, '\0', MAX_DIR * sizeof(char));
 			SplitString(ptr, contenedor, MAX_DIR);
-			wtime = MAX(1, (int)atoll(contenedor));
+			wtime = MAX(1, atoi(contenedor));
 			mate = false;
 		}
 		else if (strcmp(contenedor, "btime") == 0)
 		{
+			memset(contenedor, '\0', MAX_DIR * sizeof(char));
 			SplitString(ptr, contenedor, MAX_DIR);
-			btime = MAX(1, (int)atoll(contenedor));
+			btime = MAX(1, atoi(contenedor));
 			mate = false;
 		}
 		else if (strcmp(contenedor, "winc") == 0)
 		{
+			memset(contenedor, '\0', MAX_DIR * sizeof(char));
 			SplitString(ptr, contenedor, MAX_DIR);
-			winc = MAX(1, (int)atoll(contenedor));
+			winc = MAX(1, atoi(contenedor));
 			mate = false;
 		}
 		else if (strcmp(contenedor, "binc") == 0)
 		{
+			memset(contenedor, '\0', MAX_DIR * sizeof(char));
 			SplitString(ptr, contenedor, MAX_DIR);
-			binc = MAX(1, (int)atoll(contenedor));
+			binc = MAX(1, atoi(contenedor));
 			mate = false;
 		}
 		else if (strcmp(contenedor, "infinite") == 0)
 		{
-			TipoJuego.Infinito = true;
 			TipoJuego.MaxDepth = MAX_PLY / 2;
 		}
 		else if (strcmp(contenedor, "depth") == 0)
 		{
+			memset(contenedor, '\0', MAX_DIR * sizeof(char));
 			SplitString(ptr, contenedor, MAX_DIR);
-			TipoJuego.MaxDepth = MAX(2, (int)atoll(contenedor) + 1);
+			TipoJuego.MaxDepth = MAX(1, atoi(contenedor));
 			if (TipoJuego.MaxDepth > MAX_PLY / 2)
 				TipoJuego.MaxDepth = MAX_PLY / 2;
 			mate = false;
 		}
 		else if (strcmp(contenedor, "movestogo") == 0)
 		{
+			memset(contenedor, '\0', MAX_DIR * sizeof(char));
 			SplitString(ptr, contenedor, MAX_DIR);
-			NJugadasTotales = MAX(1, (int)atoll(contenedor));
+			NJugadasTotales = MAX(1, atoi(contenedor));
 			mate = false;
 		}
 		else if (strcmp(contenedor, "movetime") == 0)
 		{
-			 SplitString(ptr, contenedor, MAX_DIR);
-			movetime = MAX(1, (int)atoll(contenedor));
+			memset(contenedor, '\0', MAX_DIR * sizeof(char));
+			SplitString(ptr, contenedor, MAX_DIR);
+			movetime = MAX(1, atoi(contenedor));
 			mate = false;
 		}
 
-		if (mate == true) /* Sin tiempo ni limite, hasta encontrar el mate. */
-		{
-			TipoJuego.Infinito = true;
-			TipoJuego.MaxDepth = MAX_PLY / 2;
-		}
+		if (mate == true) TipoJuego.MaxDepth = MAX_PLY / 2;
 	}
 
-	time = TableroGlobal.MueveBlancas == true ? wtime : btime;
-	inc = TableroGlobal.MueveBlancas == true ? winc : binc;
+	time = *Turno == true ? wtime : btime;
+	inc = *Turno == true ? winc : binc;
 
-	/***************************************************************************************************
-								Partida por profundidad fija
-	***************************************************************************************************/
 	if (TipoJuego.MaxDepth != 0)
 	{
-		/* Ya obtenemos la profundidad indicada */
 		TipoJuego.Activo = 0;
 		Ok = true;
 	}
-	/**************************************************************************************************
-								Partida con tiempo fijo por movimiento
-								go movetime 6000 - Tiempo por jugada
-	**************************************************************************************************/
 	if (movetime != 0)
 	{
 		TipoJuego.MaxDepth = MAX_PLY / 2;
 		TipoJuego.Activo = 2;
-		TipoJuego.Tiempo = movetime - TipoJuego.PrevenirTiempoExcedido;
-		TipoJuego.TiempoMax1 = movetime - TipoJuego.PrevenirTiempoExcedido;
-		TipoJuego.TiempoMax2 = movetime - TipoJuego.PrevenirTiempoExcedido;
+		TipoJuego.TiempoIdeal = MAX(TipoJuego.PrevenirTiempoExcedido, movetime - TipoJuego.PrevenirTiempoExcedido);
+		TipoJuego.TiempoMed = MAX(TipoJuego.PrevenirTiempoExcedido, movetime - TipoJuego.PrevenirTiempoExcedido);
+		TipoJuego.TiempoMax = MAX(TipoJuego.PrevenirTiempoExcedido, movetime - TipoJuego.PrevenirTiempoExcedido * 2);
 
 		Ok = true;
 	}
-	/**************************************************************************************************
-								Partida con tiempo y movimientos a realizar
-							go wtime 298908 btime 300000 winc 0 binc 0 movestogo 49
-	**************************************************************************************************/
-	if (NJugadasTotales != 0 && wtime != 0 && btime != 0)
-	{
-		TipoJuego.MaxDepth = MAX_PLY / 2;
-		TipoJuego.Activo = 1;
-		TiempoInicio(&TipoJuego, NJugadasTotales, time, inc);
-		Ok = true;
-	}
-	/**************************************************************************************************
-								Partida con tiempo y movimientos a realizar
-								go wtime 298908 btime 300000 winc 0 binc 0
-								go wtime 298908 btime 300000 winc 2000 binc 2000
-	**************************************************************************************************/
-	if (NJugadasTotales == 0 && wtime != 0 && btime != 0)
+	if (wtime != 0 && btime != 0)
 	{
 		TipoJuego.MaxDepth = MAX_PLY / 2;
 		TipoJuego.Activo = 1;
@@ -965,71 +1025,96 @@ void InicioBusqueda(char *ptr) {
 		Ok = true;
 	}
 
-	/* Lanzamos la busqueda */
-	if (Ok == true)
-	{
-		Buscar();
-	}
-	else
-	{
-		return;
-	}
-
+	return Ok;
 }
+void InicioBusqueda()
+{
+	int i = 0;
+	int ElMejor = 0;
+	int ElMejor_D = 0;
+	int ElMejor_P = 0;
+	int Otro_D = 0;
+	int Otro_P = 0;
+	int MejorJugada = NO_MOVIMIENTO;
+	int MejorJugadaAdv = NO_MOVIMIENTO;
 
+	TipoJuego.Interrumpir = false;
+	TipoJuego.Inicio = ObtenerTiempo();
+
+	TipoJuego.SubProcesosActivo = true;
+
+	for (i = 1; i < TipoJuego.NumeroDeSubProcesos; i++)
+	{
+		TableroGlobal[i].IdSubProcesos = i;
+		CREAR_SUBPROCESO(SubProcesos[i], Buscar, (void*)&TableroGlobal[i]);
+		Sleep(7);
+	}
+	TableroGlobal[0].IdSubProcesos = 0;
+	Buscar((void*)&TableroGlobal[0]);
+	TipoJuego.Interrumpir = true;
+	for (i = 1; i < TipoJuego.NumeroDeSubProcesos; i++)
+	{
+		ESPERAR_SUBPROCESO(SubProcesos[i]);
+	}
+
+	ElMejor_D = TableroGlobal[ElMejor].DepthAct;
+	ElMejor_P = TableroGlobal[ElMejor].Puntos;
+
+	for (i = 1; i < TipoJuego.NumeroDeSubProcesos; i++)
+	{
+		Otro_D = TableroGlobal[i].DepthAct;
+		Otro_P = TableroGlobal[i].Puntos;
+
+		if (Otro_P > ElMejor_P && (Otro_D >= ElMejor_D || Otro_P >= VALOR_MATE_MAX))
+		{
+			ElMejor_D = Otro_D;
+			ElMejor_P = Otro_P;
+			ElMejor = i;
+		}
+	}
+
+	if (ElMejor != 0)
+	{
+		ImprimirVp(&TableroGlobal[ElMejor], TableroGlobal[ElMejor].Puntos);
+	}
+
+	MejorJugada = TableroGlobal[ElMejor].Vp.vp_terminada[0];
+	MejorJugadaAdv = TableroGlobal[ElMejor].Vp.vp_terminada[1];
+
+	for (i = 0; i < TipoJuego.NumeroDeSubProcesos; i++)
+	{
+		A_Inicio(false, &TableroGlobal[i]);
+	}
+
+	ImprimirMejorJugada(MejorJugada, MejorJugadaAdv);
+}
 void IniciarConfiguracion()
 {
 	TipoJuego.Ajedrez960 = false;
-	TipoJuego.Ajedrez960Enroque = false;
-	TipoJuego.PrevenirTiempoExcedido = 50;
+	TipoJuego.PrevenirTiempoExcedido = PREVENIR_TIEMPO_EXCEDIDO_DEFECTO;
+	TipoJuego.NumeroDeSubProcesos = 1;
+	TipoJuego.Activo = 0;
+	TipoJuego.BuscarMate = 0;
+	TipoJuego.SubProcesosActivo = false;
+	TipoJuego.Inicio = 0;
+	TipoJuego.Interrumpir = false;
 
 #ifdef USAR_HASH_TB
 	TT_Opciones.tt_Mb = MB_HASH_TABLE;
-	CrearTransposicion(TT_Opciones.tt_Mb);
-#endif
-#ifdef USAR_SQLITE
-	LibroSql.UsarLibro = false;
-	LibroSql.LimiteJugadas = 8;
-	memset(LibroSql.SqlTabla, 0, 9 * sizeof(char));
-	memset(LibroSql.Variante, 0, 9 * sizeof(char));
-	LibroSql.AperturaEstandar = true;
-	strcpy(LibroSql.SqlTabla, "Book");
-#endif
-#ifdef USAR_TABLAS_DE_FINALES
-	TablaDeFinales.Usar = false;
-	TablaDeFinales.UsarNuevo = false;
-	TablaDeFinales.Acierto = 0;
-	TablaDeFinales.Dll_CargadaSg = false;
-	TablaDeFinales.Dll_CargadaGv = false;
-	TablaDeFinales.Dll_CargadaBb = false;
-	memset(TablaDeFinales.Directorio, 0, MAX_DIR * sizeof(char));
-	TablaDeFinales.DirectorioNuevo = false;
-	TablaDeFinales.Limite = 5;
-	TablaDeFinales.CacheMB = MB_TABLAS_CACHE;
-	TablaDeFinales.CacheNueva = false;
 #endif
 #ifdef USAR_NNUE
-	Nnue.Usar = true;
-	Nnue.Dll_Cargada = false;
-	Nnue.Tecnologia = 1;										/* Por defecto SSE2 */
-	memset(Nnue.Directorio, 0, MAX_DIR * sizeof(char));
-#ifdef _WIN32
-	strcpy(Nnue.Directorio, "red_neuronal.nnue");
-#else
-	strcpy(Nnue.Directorio, "./red_neuronal.nnue");
-#endif
+	Nnue.Usar = false;
+	memset(Nnue.ArchivoNnue, '\0', MAX_DIR * sizeof(char));
 	Nnue.DirectorioNuevo = false;
 #endif
 }
-
-void UciNewGame()
+void UciNewGame(_ST_TableroX64 *Tablero)
 {
 	int i = 0;
 	int blanconegro = 0;
 	char buffer[MAX_DIR];
-	memset(buffer, 0, MAX_DIR * sizeof(char));
+	memset(buffer, '\0', MAX_DIR * sizeof(char));
 
-	/* Iniciamos el tablero de los colores del tablero */
 	for (i = 0; i < 64; i++)
 	{
 		if (i == 0)
@@ -1065,71 +1150,47 @@ void UciNewGame()
 			blanconegro = 1;
 		}
 
-		TableroGlobal.TableroColor[i] = blanconegro = !blanconegro;
+		Tablero->TableroColor[i] = blanconegro = !blanconegro;
 	}
 
-#ifdef USAR_SQLITE
-	LibroSql.FinVariacion = false;
-#endif
+	A_Inicio(true, Tablero);
 
-	TableroGlobal.MueveBlancas = true;
-	TableroGlobal.Regla_50_Movimiento = 0;
-
-#ifdef USAR_HASH_TB
-	memset(TableroGlobal.Historico, 0, MAX_HISTORICO * sizeof(U64));
-	TableroGlobal.Hply = 0;
-#endif
-
-	A_Inicio(true);
-
-	TipoJuego.Activo = 0;
-	TipoJuego.Infinito = false;
-	TipoJuego.Tiempo = 0.0f;
-	TipoJuego.TiempoMax1 = 0.0f;
-	TipoJuego.TiempoMax2 = 0.0f;
-	TipoJuego.TiempoFactor = 0;
-	TipoJuego.TiempoTrascurrido = 0;
-	TipoJuego.Inicio = 0;
-	TipoJuego.Interrumpir = false;
-	TipoJuego.MaxDepth = MAX_PLY / 2;
 	strcpy(buffer, START_POS);
-	Position_Fen_Startpos(buffer);
+	Position_Fen_Startpos(Tablero, buffer);
 }
-
-void Movimiento(char *ptr, int *Ok, int Ultimo)
+void Movimiento(_ST_TableroX64 *Tablero, char *ptr, int *Ok, int Ultimo)
 {
-	_ST_Movimiento ListaMovimiento[MAX_JUGADAS];
-	int NumeroDeMovimientos = 0;
+	_ST_Movimiento ListaMovimiento;
 	int j = 0;
 	char mov[6];
 	char _Enroque[6];
 	int Legal = false;
 
-	TableroGlobal.Ply = 0;
-	NumeroDeMovimientos = GenerarMovimientos(Todos, ListaMovimiento);
+	Tablero->Ply = 0;
+	GenerarMovimientos(Tablero, Todos, &ListaMovimiento);
 
-	for (j = 0; j < NumeroDeMovimientos; j++)
+	for (j = 0; j < ListaMovimiento.CantidadDeMovimiento; j++)
 	{
-		memset(mov, 0, 6 * sizeof(char));
-		memset(_Enroque, 0, 6 * sizeof(char));
+		memset(mov, '\0', 6 * sizeof(char));
+		memset(_Enroque, '\0', 6 * sizeof(char));
 #ifdef USAR_AJEDREZ960
 		if (TipoJuego.Ajedrez960 == true)
 		{
 			if (strcmp(ptr, "O-O") == 0)
 			{
-				memset(_Enroque, 0, 6 * sizeof(char));
-				if (TableroGlobal.MueveBlancas == true)
+				memset(_Enroque, '\0', 6 * sizeof(char));
+				if (Tablero->MueveBlancas == true)
 				{
-					MovimientoCoordenadas(TableroGlobal.PosicionReyB, TableroGlobal.Ajedrez960.TorreBlancaH, 0, _Enroque);
+					MovimientoCoordenadas(Tablero->PosicionReyB, Tablero->Ajedrez960.TorreBlancaH, 0, _Enroque);
 				}
 				else
 				{
-					MovimientoCoordenadas(TableroGlobal.PosicionReyN, TableroGlobal.Ajedrez960.TorreNegraH, 0, _Enroque);
+					MovimientoCoordenadas(Tablero->PosicionReyN, Tablero->Ajedrez960.TorreNegraH, 0, _Enroque);
 				}
 
-				if (ENROQUE(ListaMovimiento[j].Movimiento) == MFLAGCA)
+				if (ENROQUE(ListaMovimiento.Movimiento[j]) == MFLAGCA)
 				{
-					MovimientoCoordenadas(CUADRADO_ORIGEN(ListaMovimiento[j].Movimiento), CUADRADO_DESTINO(ListaMovimiento[j].Movimiento), CORONACION(ListaMovimiento[j].Movimiento), mov);
+					MovimientoCoordenadas(CUADRADO_ORIGEN(ListaMovimiento.Movimiento[j]), CUADRADO_DESTINO(ListaMovimiento.Movimiento[j]), CORONACION(ListaMovimiento.Movimiento[j]), mov);
 				}
 				else
 				{
@@ -1138,19 +1199,19 @@ void Movimiento(char *ptr, int *Ok, int Ultimo)
 			}
 			else if (strcmp(ptr, "O-O-O") == 0)
 			{
-				memset(_Enroque, 0, 6 * sizeof(char));
-				if (TableroGlobal.MueveBlancas == true)
+				memset(_Enroque, '\0', 6 * sizeof(char));
+				if (Tablero->MueveBlancas == true)
 				{
-					MovimientoCoordenadas(TableroGlobal.PosicionReyB, TableroGlobal.Ajedrez960.TorreBlancaA, 0, _Enroque);
+					MovimientoCoordenadas(Tablero->PosicionReyB, Tablero->Ajedrez960.TorreBlancaA, 0, _Enroque);
 				}
 				else
 				{
-					MovimientoCoordenadas(TableroGlobal.PosicionReyN, TableroGlobal.Ajedrez960.TorreNegraA, 0, _Enroque);
+					MovimientoCoordenadas(Tablero->PosicionReyN, Tablero->Ajedrez960.TorreNegraA, 0, _Enroque);
 				}
 
-				if (ENROQUE(ListaMovimiento[j].Movimiento) == MFLAGCA)
+				if (ENROQUE(ListaMovimiento.Movimiento[j]) == MFLAGCA)
 				{
-					MovimientoCoordenadas(CUADRADO_ORIGEN(ListaMovimiento[j].Movimiento), CUADRADO_DESTINO(ListaMovimiento[j].Movimiento), CORONACION(ListaMovimiento[j].Movimiento), mov);
+					MovimientoCoordenadas(CUADRADO_ORIGEN(ListaMovimiento.Movimiento[j]), CUADRADO_DESTINO(ListaMovimiento.Movimiento[j]), CORONACION(ListaMovimiento.Movimiento[j]), mov);
 				}
 				else
 				{
@@ -1159,7 +1220,7 @@ void Movimiento(char *ptr, int *Ok, int Ultimo)
 			}
 			else
 			{
-				MovimientoCoordenadas(CUADRADO_ORIGEN(ListaMovimiento[j].Movimiento), CUADRADO_DESTINO(ListaMovimiento[j].Movimiento), CORONACION(ListaMovimiento[j].Movimiento), mov);
+				MovimientoCoordenadas(CUADRADO_ORIGEN(ListaMovimiento.Movimiento[j]), CUADRADO_DESTINO(ListaMovimiento.Movimiento[j]), CORONACION(ListaMovimiento.Movimiento[j]), mov);
 			}
 
 			_Enroque[strlen(_Enroque)] = '\0';
@@ -1167,11 +1228,10 @@ void Movimiento(char *ptr, int *Ok, int Ultimo)
 
 			if (strcmp(ptr, mov) == 0 || strcmp(_Enroque, mov) == 0)
 			{
-				Legal = HacerMovimiento(ListaMovimiento[j].Movimiento, Ultimo);
+				Legal = HacerMovimiento(Tablero, &ListaMovimiento.Movimiento[j], Ultimo);
 				if (Legal == false)
 				{
 					printf(""INFO_STRING"Illegal move: "STRING_FORMAT"\n", ptr);
-					TipoJuego.JugadaIlegal = true;
 					fflush(stdout);
 					break;
 				}
@@ -1182,14 +1242,13 @@ void Movimiento(char *ptr, int *Ok, int Ultimo)
 		else
 		{
 #endif
-			MovimientoCoordenadas(CUADRADO_ORIGEN(ListaMovimiento[j].Movimiento), CUADRADO_DESTINO(ListaMovimiento[j].Movimiento), CORONACION(ListaMovimiento[j].Movimiento), mov);
+			MovimientoCoordenadas(CUADRADO_ORIGEN(ListaMovimiento.Movimiento[j]), CUADRADO_DESTINO(ListaMovimiento.Movimiento[j]), CORONACION(ListaMovimiento.Movimiento[j]), mov);
 			if (strcmp(ptr, mov) == 0)
 			{
-				Legal = HacerMovimiento(ListaMovimiento[j].Movimiento, Ultimo);
+				Legal = HacerMovimiento(Tablero, &ListaMovimiento.Movimiento[j], Ultimo);
 				if (Legal == false)
 				{
 					printf(""INFO_STRING"Illegal move: "STRING_FORMAT"\n", ptr);
-					TipoJuego.JugadaIlegal = true;
 					fflush(stdout);
 					break;
 				}
@@ -1201,3 +1260,224 @@ void Movimiento(char *ptr, int *Ok, int Ultimo)
 #endif
 	}
 }
+#ifdef PERFT
+void P_Perft(void* arg)
+{
+	int i = 0;
+	int p = 0;
+	int pp = 0;
+	int* Depth = (int*)arg;
+	_ST_Perft Perft_Total;
+	U64 A_Nodos = 0;
+	int TotalP = 0;
+#ifdef _WIN32
+	int Dormir = 5;
+#else
+	struct timespec rqtp, rmtp = { 0, 5000000 };
+#endif
+	Perft_Divide_Total = (_ST_Perft*)calloc(TipoJuego.NumeroDeSubProcesos, sizeof(_ST_Perft));
+
+	if (Perft_Divide_Total == NULL) return;
+
+	for (i = 0; i < TipoJuego.NumeroDeSubProcesos; i++)
+	{
+		TableroGlobal[i].Nodos = 0;
+		Perft_Divide_Total[i].A_Capturas = 0;
+		Perft_Divide_Total[i].A_Ep = 0;
+		Perft_Divide_Total[i].A_Enroques = 0;
+		Perft_Divide_Total[i].A_Coronacion = 0;
+		Perft_Divide_Total[i].A_Jaque = 0;
+		Perft_Divide_Total[i].A_JaqueMate = 0;
+		Perft_Divide_Total[i].MaxDepth = *Depth;
+	}
+	Perft_Total.A_Capturas = 0;
+	Perft_Total.A_Ep = 0;
+	Perft_Total.A_Enroques = 0;
+	Perft_Total.A_Coronacion = 0;
+	Perft_Total.A_Jaque = 0;
+	Perft_Total.A_JaqueMate = 0;
+	Perft_Total.MaxDepth = *Depth;
+	Perft_Total.Tiempo = ObtenerTiempo();
+
+	_ST_Movimiento ListaMovimiento;
+
+	GenerarMovimientos(&TableroGlobal[0], Todos, &ListaMovimiento);
+
+	i = 0;
+	printf("========================================\n");
+	fflush(stdout);
+	for (p = 0; p < TipoJuego.NumeroDeSubProcesos; p++)
+	{
+		TableroGlobal[p].IdSubProcesos = p;
+		TableroGlobal[p].ActSubProcesos = false;
+	}
+
+	p = 0;
+	/* realizamos el movimiento */
+	while (p < TipoJuego.NumeroDeSubProcesos)
+	{
+		if (!HacerMovimiento(&TableroGlobal[p], &ListaMovimiento.Movimiento[i], true))
+		{
+			DeshacerMovimiento(&TableroGlobal[p]);
+			i++;
+			continue;
+		}
+		p++;
+		i++;
+		if (i >= ListaMovimiento.CantidadDeMovimiento)
+			break;
+	}
+	/* Lanzamos el subproceso*/
+	for (pp = 0; pp < p; pp++)
+	{
+		if (TableroGlobal[pp].ActSubProcesos == false)
+		{
+			TableroGlobal[pp].ActSubProcesos = true;
+			CREAR_SUBPROCESO(SubProcesos[TableroGlobal[pp].IdSubProcesos], P_Todo, (void*)&TableroGlobal[pp]);
+		}
+	}
+
+	while (true)
+	{
+		for (pp = 0; pp < p; pp++)
+		{
+			if (TableroGlobal[pp].ActSubProcesos == false)
+			{
+				ImprimirMovimientoCoordenadas(CUADRADO_ORIGEN(TableroGlobal[pp].Estado[TableroGlobal[pp].Ply - 1].Movimiento), CUADRADO_DESTINO(TableroGlobal[pp].Estado[TableroGlobal[pp].Ply - 1].Movimiento), CORONACION(TableroGlobal[pp].Estado[TableroGlobal[pp].Ply - 1].Movimiento));
+				printf(": "U64_FORMAT"\n", TableroGlobal[pp].Nodos);
+				fflush(stdout);
+
+				A_Nodos += TableroGlobal[pp].Nodos;
+				TableroGlobal[pp].Nodos = 0;
+
+				DeshacerMovimiento(&TableroGlobal[pp]);
+				if (i >= ListaMovimiento.CantidadDeMovimiento)
+				{
+					ESPERAR_SUBPROCESO(SubProcesos[pp]);
+					TableroGlobal[pp].ActSubProcesos = true;
+					TotalP++;
+					if (TotalP == TipoJuego.NumeroDeSubProcesos)
+						goto jump2;
+
+					continue;
+				}
+
+			jump:
+				if (!HacerMovimiento(&TableroGlobal[pp], &ListaMovimiento.Movimiento[i], true))
+				{
+					DeshacerMovimiento(&TableroGlobal[pp]);
+					i++;
+					goto jump;
+				}
+				i++;
+				TableroGlobal[pp].ActSubProcesos = true;
+				CREAR_SUBPROCESO(SubProcesos[TableroGlobal[pp].IdSubProcesos], P_Todo, (void*)&TableroGlobal[pp]);
+			}
+		}
+		Sleep(5);
+	}
+jump2:
+	printf("========================================\n");
+	Perft_Total.Tiempo = (ObtenerTiempo() - Perft_Total.Tiempo) + 1;
+	for (i = 0; i < TipoJuego.NumeroDeSubProcesos; i++)
+	{
+		Perft_Total.A_Capturas += Perft_Divide_Total[i].A_Capturas;
+		Perft_Total.A_Ep += Perft_Divide_Total[i].A_Ep;
+		Perft_Total.A_Enroques += Perft_Divide_Total[i].A_Enroques;
+		Perft_Total.A_Coronacion += Perft_Divide_Total[i].A_Coronacion;
+		Perft_Total.A_Jaque += Perft_Divide_Total[i].A_Jaque;
+		Perft_Total.A_JaqueMate += Perft_Divide_Total[i].A_JaqueMate;
+	}
+	printf("Nodes: "U64_FORMAT"\n", A_Nodos);
+	printf("Nps: "U64_FORMAT"\n", (U64)(A_Nodos / (Perft_Total.Tiempo / 1000.000f)));
+	printf("Time(ms): "S32_FORMAT"\n", Perft_Total.Tiempo);
+	printf("Captures: "U64_FORMAT"\n", Perft_Total.A_Capturas);
+	printf("Captures Ep: "U64_FORMAT"\n", Perft_Total.A_Ep);
+	printf("Castles: "U64_FORMAT"\n", Perft_Total.A_Enroques);
+	printf("Promotions: "U64_FORMAT"\n", Perft_Total.A_Coronacion);
+	printf("Checks: "U64_FORMAT"\n", Perft_Total.A_Jaque);
+	printf("Checkmates: "U64_FORMAT"\n", Perft_Total.A_JaqueMate);
+	printf("\n");
+	fflush(stdout);
+
+	free(Perft_Divide_Total);
+}
+void P_Todo(void *arg)
+{
+	_ST_TableroX64 *Tablero = (_ST_TableroX64*)arg;
+
+	P_MiniMax(Tablero, 1, &Tablero->Estado[0].Movimiento, &Perft_Divide_Total[Tablero->IdSubProcesos]);
+	Tablero->ActSubProcesos = false;
+}
+void P_MiniMax(_ST_TableroX64 *Tablero, int depth, int *P_Mov, _ST_Perft *Perft)
+{
+	_ST_Movimiento ListaMovimiento;
+	int i = 0;
+
+	if (depth == Perft->MaxDepth)
+	{
+		/* Para un aumento de velocidad en el perft. Quitar la comprobacion siguientes. */
+		if (CAPTURADA(*P_Mov) != MFLAGCAP)
+		{
+			Perft->A_Capturas++;
+		}
+		if (CAPTURA_ALPASO(*P_Mov) == MFLAGEP)
+		{
+			Perft->A_Ep++;
+			Perft->A_Capturas++;
+		}
+		if (ENROQUE(*P_Mov) == MFLAGCA)
+		{
+			Perft->A_Enroques++;
+		}
+		if (CORONACION(*P_Mov) != MFLAGPROM)
+		{
+			Perft->A_Coronacion++;
+		}
+		if (Jaque(Tablero, Tablero->MueveBlancas) == true)
+		{
+			Perft->A_Jaque++;
+			Perft->A_JaqueMate += P_EsJaqueMate(Tablero);
+		}
+
+		Tablero->Nodos++;
+		return;
+	}
+
+	GenerarMovimientos(Tablero, Todos, &ListaMovimiento);
+
+	for (i = 0; i < ListaMovimiento.CantidadDeMovimiento; i++)
+	{
+		if (!HacerMovimiento(Tablero, &ListaMovimiento.Movimiento[i], true))
+		{
+			DeshacerMovimiento(Tablero);
+			continue;
+		}
+
+		P_MiniMax(Tablero, depth + 1, &ListaMovimiento.Movimiento[i], Perft);
+
+		DeshacerMovimiento(Tablero);
+	}
+
+
+	return;
+}
+int P_EsJaqueMate(_ST_TableroX64 *Tablero)
+{
+	_ST_Movimiento ListaMovimiento;
+	int i = 0;
+
+	GenerarMovimientos(Tablero, Todos, &ListaMovimiento);
+	for (i = 0; i < ListaMovimiento.CantidadDeMovimiento; i++)
+	{
+		if (!HacerMovimiento(Tablero, &ListaMovimiento.Movimiento[i], true))
+		{
+			DeshacerMovimiento(Tablero);
+			continue;
+		}
+		DeshacerMovimiento(Tablero);
+		return false;
+	}
+	return true;
+}
+#endif

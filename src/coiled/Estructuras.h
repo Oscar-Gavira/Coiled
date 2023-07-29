@@ -1,7 +1,6 @@
 /*
-Coiled is a UCI chess playing engine authored by Oscar Gavira.
-Copyright (C) 2013-2021 Oscar Gavira.
-<https://github.com/Oscar-Gavira/Coiled>
+Coiled is a UCI compliant chess engine written in C
+Copyright (C) 2023 Oscar Gavira. <https://github.com/Oscar-Gavira/Coiled>
 
 Coiled is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,67 +19,20 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 /******************************************************************************
 						ESTRUCTURAS/ENUMERACIONES
 *******************************************************************************/
-#include "Definiciones.h"
 
 #ifndef ESTRUCTURAS_H
 #define ESTRUCTURAS_H
 
+#include "Definiciones.h"
+
 /******************************************************************************
 Estructuras
 ******************************************************************************/
-
-#ifdef USAR_SQLITE
-typedef struct sqlite3_stmt sqlite3_stmt;
-typedef struct sqlite3 sqlite3;
-
-typedef int (CDECL *SQLITE3_OPEN_V2)	(
-	const char *filename,   /* Database filename (UTF-8) */
-	sqlite3 **ppDb,         /* OUT: SQLite db handle */
-	int flags,              /* Flags */
-	const char *zVfs        /* Name of VFS module to use */
-	);
-/* Reinicia - Recarga la nueva informacion (Unido a tbcahe_restart) */
-typedef int (CDECL *SQLITE_PREPARE_V2) (
-	sqlite3 *db,            /* Database handle */
-	const char *zSql,       /* SQL statement, UTF-8 encoded */
-	int nByte,              /* Maximum length of zSql in bytes. */
-	sqlite3_stmt **ppStmt,  /* OUT: Statement handle */
-	const char **pzTail     /* OUT: Pointer to unused portion of zSql */
-	);
-typedef int (CDECL *SQLITE_STEP) (sqlite3_stmt*);
-typedef const unsigned char *(CDECL *SQLITE_COLUMN_TEXT) (sqlite3_stmt*, int iCol);
-typedef int (CDECL *SQLITE_RESET) (sqlite3_stmt* pStmt);
-typedef int (CDECL *SQLITE_CLOSE_V2) (sqlite3*);
-
-typedef struct tag_EstructuraBd {
-	sqlite3 *ConexionBD;											/* Puntero para conectar con la base de datos tipo FILE para archivos */
-	sqlite3_stmt *stmt;												/* Para obtener informacion de la tabla, columnas, filas, datos... (En .net seria un DataSet) */
-
-	int FinVariacion;												/* Si ya no encuentra jugada en el libro. true = dejamos de buscar / false = todavia pueden haber */
-	int UsarLibro;													/* Si podemos usar el libro de aperturas o no */
-	int LimiteJugadas;												/* Si podemos usar el libro de aperturas o no */
-
-	char Apertura[MAX_LONG + 1];									/* Almacena los movimientos realizados en la apertura */
-	char Jugada[5];													/* La jugada proporcionada por la Bd segun la apertura */
-	char Sql[MAX_DIR];												/* Sentencia Sql segun version */
-
-	char SqlTabla[9];												/* Tablas: Book y Chess960. Nombre de la tabla donde se almacenan las aperturas */
-	char Variante[9];												/* Almacena la posicion NRQNBKRB, RNQBBNKR, BQNBRKNR para asi buscar el tablero y obtener la apertura Ajedrez960 */
-	int AperturaEstandar;											/* True = Estandar, False = Ajedrez960. Indica si obtiene la jugada del libro de aperturas estandar o de Ajedrez960 */
-	int Dll_Cargada;												/* Esta cargada la DLL */
-} _ST_EstructuraBd;
-#endif
-
 #ifdef USAR_NNUE
-typedef int (CDECL *NNUE_INIT)(const char* ruta);
-typedef int (CDECL *NNUE_EVALUATE)(int player, int* pieces, int* squares);
-
 typedef struct tag_nnue {
-	int Usar;															/* Se puede usar la tablas de gaviota (true/false) */
-	int Dll_Cargada;													/* Esta cargada la DLL */
-	int Tecnologia;														/* 1 = SSE2	2 = SSE3	3 = SSE4.1		4 = AVX2 */
-	char Directorio[MAX_DIR];											/* Obtenemos las rutas a las tablas de finales */
-	int DirectorioNuevo;												/* Indica si el directorio es diferente (Nueva NNUE) */
+	int Usar;												/* Se puede usar la red neuronal (true/false) */
+	char ArchivoNnue[MAX_DIR];								/* Obtenemos las rutas a la red neuronal */
+	int DirectorioNuevo;									/* Indica si hay cambio de ruta a la red neuronal */
 } _ST_Nnue;
 #endif
 
@@ -90,180 +42,199 @@ typedef struct tag_TT_Opciones
 {
 	U64 tt_Mb;
 	U64 tt_Entradas;
-	U64 tt_Completo;
-	short tt_Edad;
+	U64 tt_HashCompleto;
+	int tt_Edad;
 } _ST_TT_Opciones;
 
 /* Estructura de la tabla hash */
-typedef struct	tag_TT_CacheC
+typedef struct tag_TT_CacheC
 {
-	U64 Hash;
+	U32 Hash;
 	int M;
 	short Puntos;
 	short Ev;
-	short Flag;
+	int Flag;
 } _ST_TT_CacheC;
 
-typedef struct	tag_TT_Cache
+typedef struct tag_TT_Cache
 {
 	_ST_TT_CacheC Celdas[CELDAS];
 } _ST_TT_Cache;
 #endif
 
-#ifdef USAR_TABLAS_DE_FINALES
-/* egbb */
-typedef int (CDECL *EGBB_PROBE_EGBB) (int player, int* piece, int* square);
-typedef int (CDECL *EGBB_LOAD_EGBB) (char* path, int cache_size, int load_options);
-
-/* syzygy */
-typedef U64(CDECL *SG_LARGEST);
-typedef int (CDECL *SG_INITS) (const char *ruta);
-typedef void(CDECL *SG_FREE)(void);
-typedef unsigned (CDECL *SG_PROBE_WDL) (U64 white, U64 black, U64 kings, U64 queens, U64 rooks, U64 bishops, U64 knights, U64 pawns, unsigned ep, int turn);
-
-/* tbprobe */
-/* Inicia la carga de la informacion */
-typedef char *(CDECL *TBINIT) (int verbosity, int compression_scheme, const char **paths);
-/* Reinicia - Recarga la nueva informacion (Unido a tbcahe_restart) */
-typedef char *(CDECL* TBRESTART) (int verbosity, int compression_scheme, const char **paths);
-/* Descarga la tb */
-typedef void (CDECL *TBDONE) (void);
-/* Busca informacion en la cache y si no encuentra ira al hdd (El comun a usar) */
-typedef int (CDECL *TBPROBE_HARD) (unsigned stm, unsigned epsq, unsigned castles, const unsigned *inp_wSQ, const unsigned *inp_bSQ, const unsigned char *inp_wPC, const unsigned char *inp_bPC, unsigned *tbinfo, unsigned *plies);
-typedef int (CDECL *TBPROBE_SOFT) (unsigned stm, unsigned epsq, unsigned castles, const unsigned *inp_wSQ, const unsigned *inp_bSQ, const unsigned char *inp_wPC, const unsigned char *inp_bPC, unsigned *tbinfo, unsigned *plies);
-typedef int (CDECL *TBIS_INITIALIZED) (void);
-/* Obtenemos informacion acerca de la tablas cargadas */
-typedef unsigned int (CDECL *TBAVAILABILITY) (void);
-/* Inicia la cache */
-typedef int (CDECL *TBCACHE_INIT) (size_t cache_mem, int wdl_fraction);
-/* Descarga la cache */
-typedef void (CDECL *TBCACHE_DONE) (void);
-typedef int (CDECL *TBCACHE_IS_ON) (void);
-typedef const char **(CDECL *TBPATHS_INIT) (void);
-typedef const char **(CDECL *TBPATHS_ADD) (const char **ps, const char *newpath);
-typedef const char **(CDECL *TBPATHS_DONE) (const char **ps);
-
-typedef struct tag_TablaDeFinales
+#ifdef PERFT
+typedef struct tag_Perft
 {
-	int Usar;														/* 0 = None		1 = Syzygy		2 = Gaviota		3 = BitBases */
-	int UsarNuevo;													/* Indica si hay cambio de tablas de finales */
-	U64 Acierto;													/* Cuando buscamos en la tabla y encontramos resultados, se va incrementando */
-	int Dll_CargadaSg;												/* Esta cargada la DLL Syzygy */
-	int Dll_CargadaGv;												/* Esta cargada la DLL Gaviota */
-	int Dll_CargadaBb;												/* Esta cargada la DLL BitBases */
-	unsigned int Piezas;											/* Que tablas de finales estan disponibles 3 o 4 o 5 o 6 piezas */
-	char Directorio[MAX_DIR];										/* Obtenemos las rutas a las tablas de finales */
-	int DirectorioNuevo;											/* Indica si hay cambio de ruta a las tablas de finales */
-	U64 CacheMB;													/* 32 MB */
-	int CacheNueva;													/* Indica si hay un cambio en el tamana de la cache true/false */
-	int Limite;														/* Indica a partir de que numero de pieza busca en las tablas de finales */
-	const char **paths;												/* Gaviota. Rutas para acceder a las tablas de finales */
-} _ST_TablaDeFinales;
+	U64 A_Capturas;						/* Capturas totales */
+	U64 A_Ep;							/* Capturas al paso totales */
+	U64 A_Enroques;						/* Enroques totales */
+	U64 A_Coronacion;					/* Coronaciones totales */
+	U64 A_Jaque;						/* Jaques totales */
+	U64 A_JaqueMate;					/* Jaque Mates totales */
+	int MaxDepth;						/* Profundidad maxima */
+	int Tiempo;							/* Tiempo */
+} _ST_Perft;
+
+typedef struct tag_Divide
+{
+	U64 D_Nodos;						/* Nodos por jugada principal (Para el Divide) */
+	char D_Jugada[6];					/* Almacenamos las coordenadas de cada jugada realizada (Para el Divide) */
+} _ST_Divide;
 #endif
+
+typedef struct tag_SeeDeshacerMovimiento
+{
+	int Movimiento;											/* Movimiento */
+	short PosicionReyB;										/* Posicion del rey blanco */
+	short PosicionReyN;										/* Posicion del rey negro */
+} _ST_SeeDeshacerMovimiento;
+
+typedef struct tag_SeeTablero
+{
+	_ST_SeeDeshacerMovimiento Estado[40];					/* Información del progreso de pacturas */
+	short SeePly;											/* Numero de capturas */
+} _ST_SeeTablero;
 
 typedef struct tag_TipoJuego
 {
-	int Interrumpir;					/* false o true - Cuando se excede el tiempo o se recibe el comando stop */
-	float Tiempo;						/* Tiempo ideal por movimiento. */
-	float TiempoMax1;					/* Tiempo medio por movimiento. */
-	float TiempoMax2;					/* Tiempo maximo por movimiento. */
-	int TiempoFactor;					/* Estabilidad de la Pv */
-	int PrevenirTiempoExcedido;			/* Para evitar un Timeout en un juego por tiempo. Descuenta tiempo en ms al tiempo de busqueda, para poder enviar el mejor movimiento sin exceder el tiempo limite. */
-	U64 Inicio;							/* Tiempo inicial. */
-	U64 TiempoTrascurrido;				/* Para detectar si excedemos el tiempo limite por jugada */
-	int Activo;							/* Si el juego es por 1 = tiempo. 2 = movetime. 0 = Mate, Infinite, profundidad (depth) */
-	int Infinito;						/* Activa el modo Analisis por asi decirlo, piensa hasta recibir un stop o una entrada */
-	int MaxDepth;						/* Maxima profundidad. Busqueda tipo go depth 15*/
-	int DepthAct;						/* Depth actual */
-	U64 Nodos;							/* Nodos totales */
-	int MejorJugada;					/* Mejor jugada */
-	int MejorJugadaAdv;					/* Mejor jugada para el adversario */
-	int BuscarMate;						/* Busca hasta localizar un mate en x */
-	int Ajedrez960;						/* Activa/desactiva el modo de juego Ajedrez960 */
-	int Ajedrez960Enroque;				/* Valor de 0 = UCI estandar. Valor de 1 O-O/O-O-O GUI Arena */
-	int JugadaIlegal;					/* Se activa si recibimos un movimiento incorrecto position fen rkbbnrqn/pppppppp/8/8/8/8/PPPPPPPP/RKBBNRQN w KQkq - 0 1 moves h1g3 .... f7f8*/
+	int SubProcesosActivo;									/* false o true - indica si hay una busqueda activa. */
+	int Interrumpir;										/* false o true - Termina la busqueda al exceder el tiempo o se recibe el comando stop */
+	
+	int TiempoIdeal;										/* Tiempo ideal por movimiento. */
+	int TiempoMed;											/* Tiempo medio por movimiento. */
+	int TiempoMax;											/* Tiempo maximo por movimiento. */
+	int TiempoConsumido;									/* Tiempo transcurrido */
+	int XTiempo;											/* Tiempo entre depth */
+	int TiempoFactor;										/* Estabilidad de la Pv */
+
+	int PrevenirTiempoExcedido;								/* Para evitar un Timeout en un juego por tiempo. Descuenta tiempo en ms al tiempo de busqueda, para poder enviar el mejor movimiento sin exceder el tiempo limite. */
+	int Inicio;												/* Tiempo inicial. */
+	int Activo;												/* Si el juego es por 1 = tiempo. 2 = movetime. 0 = Mate, Infinite, profundidad (depth) */
+	int MaxDepth;											/* Maxima profundidad. Busqueda tipo go depth 15*/
+	int BuscarMate;											/* Busca hasta localizar un mate en x */
+	/* Configuracion UCI */
+	int Ajedrez960;											/* Activa/desactiva el modo de juego Ajedrez960 */
+	int NumeroDeSubProcesos;								/* Numero de subprocesos seleccionados, por defecto 1 */
+	int NumeroDeSubProcesosMax;								/* Maximo numero de subprocesos. */
 } _ST_TipoJuego;
 
 typedef struct tag_Movimiento
 {
-	int Movimiento;						/* Movimiento en macro */
-	int Ordenar;						/* Valor numerico para ordenar las jugadas */
+	int Movimiento[MAX_JUGADAS];							/* Movimiento en macro */
+	short Ordenar[MAX_JUGADAS];								/* Valor numerico para ordenar las jugadas */
+	short HayHash;											/* Indica si hay Hash en dicha interaccion */
+	int CantidadDeMovimiento;								/* Numero de jugadas obtenidos */
 } _ST_Movimiento;
 
-/* No se puede poner en #ifdef, ya que se usa para el enroque normal */
-typedef struct tag_Ajedrez960 {
-	int TorreBlancaA;
-	int TorreBlancaH;
-	int TorreNegraA;
-	int TorreNegraH;
-} _ST_Ajedrez960;
-
-typedef struct tag_DeshacerMovimiento
-{
-	U64 Hash;							/* Hash anterior */
-	int Movimiento;						/* Movimiento en macro */
-    int PosicionReyB;					/* Indice del vector, posicion del rey Blanco */
-	int PosicionReyN;					/* Indice del vector, posicion del rey Negro */
-	int EnroqueB;						/* Enroque permitido con torres */
-	int EnroqueN;						/* Enroque permitido con torres */
-	int FichaAlPasoPosicion;			/* Indice del vector, pieza al paso. */
-	int Regla_50_Movimiento;			/* Regla 50 movimientos */
-} _ST_DeshacerMovimiento;
-
-/***********************************************************************************
-Tipo para almacenar datos de la evaluacion
-***********************************************************************************/
 typedef struct tag_Valor
 {
 	int Apertura;											/* Valor en apertura de juego */
 	int Final;												/* Valor en final de juego */
 } _Valor;
 
+typedef struct tag_Evaluacion {
+	_Valor PST[2][6][64];
+} _Evaluacion;
+
 typedef struct tag_Puntos {
 	/* Numero de piezas */
-	int PeonTotales;					/* Peones totales. */
-	int CaballosTotales;				/* Caballos totales. */
-	int AlfilTotales;					/* Alfiles totales. */
-	int TorresTotales;					/* Torres totales. */
-	int DamasTotales;					/* Damas totales. */
-	_Valor Puntos;						/* Puntos totales. pst, movilidad, ataques, pareja de alfiles... */
+	int PeonTotales;										/* Peones totales. */
+	int CaballosTotales;									/* Caballos totales. */
+	int AlfilTotales;										/* Alfiles totales. */
+	int TorresTotales;										/* Torres totales. */
+	int DamasTotales;										/* Damas totales. */
+	_Valor Puntos;											/* Puntos totales. pst, movilidad, ataques, pareja de alfiles... */
 
-	int PosicionTorre[8];				/* Se van anadiendo segun se encuentren. ( Si solo hay dos torres estaran en [0] y [1] ). Valor = Indice del vector. Valor vacio = -1  */
-	int PeonDoblados[8];				/* Almacena un valor por cada columna del vector (Horizontal A... H). Detectando si hay peones doblados siendo el valor > 1 doblado. Valor vacio 0 */
-	int GrupoPeonesQ;					/* Indica si hay peones en la columna a,b,c,d. */
-	int GrupoPeonesK;					/* Indica si hay peones en la columna e,f,g,h. */
+	int PosicionTorre[8];									/* Se van anadiendo segun se encuentren. ( Si solo hay dos torres estaran en [0] y [1] ). Valor = Indice del vector. Valor vacio = -1  */
+	int PeonDoblados[8];									/* Almacena un valor por cada columna del vector (Horizontal A... H). Detectando si hay peones doblados siendo el valor > 1 doblado. Valor vacio 0 */
+	int GrupoPeonesQ;										/* Indica si hay peones en la columna a,b,c,d. */
+	int GrupoPeonesK;										/* Indica si hay peones en la columna e,f,g,h. */
 
 	/* Seguridad del rey */
-	int ReyCuadrosAtacando;				/* Numero de cuadros atacando al rededor del rey */
-	int ReyAtaquesPiezas;				/* Numero de piezas atacando el area del rey */
-	_Valor ReyAtaquesValor;				/* Valor de las piezas que atacan */
-	int ReyJaquePieza[5];				/* Pieza que genera jaque. */
-	int ReyJaque;						/* Indica si hay jaque */
+	int ReyCuadrosAtacando;									/* Numero de cuadros atacando */
+	int ReyAtaquesPiezas;									/* Numero de piezas atacando el area del rey */
+	_Valor ReyAtaquesValor;									/* Valor de las piezas que atacan */
+	int ReyJaquePieza[5];									/* Pieza que genera jaque. */
 } _ST_Puntos;
+
+/* No se puede poner en #ifdef USAR_AJEDREZ960, ya que se usa para el enroque normal */
+typedef struct tag_Ajedrez960 {
+	int TorreBlancaA;										/* Indice del vector, posicion de la torre */
+	int TorreBlancaH;										/* Indice del vector, posicion de la torre */
+	int TorreNegraA;										/* Indice del vector, posicion de la torre */
+	int TorreNegraH;										/* Indice del vector, posicion de la torre */
+} _ST_Ajedrez960;
+
+typedef struct tag_DeshacerMovimiento
+{
+	U64 Hash;												/* Hash anterior */
+	int Movimiento;											/* Movimiento en macro */
+	int PosicionReyB;										/* Indice del vector, posicion del rey Blanco */
+	int PosicionReyN;										/* Indice del vector, posicion del rey Negro */
+	int EnroqueB;											/* Enroque permitido con torres */
+	int EnroqueN;											/* Enroque permitido con torres */
+	short FichaAlPasoPosicion;								/* Indice del vector, pieza al paso. */
+	short Regla_50_Movimiento;								/* Regla 50 movimientos */
+} _ST_DeshacerMovimiento;
+
+typedef struct tag_VariantePrincipal {
+	int vp_triangular[MAX_PLY][MAX_PLY];					/* Vp usada durante la busqueda */
+	int vp_root[MAX_PLY];									/* Vp terminada en root */
+	int vp_terminada[MAX_PLY];								/* Vp terminada y la mejor */
+	int vp_Ev[MAX_PLY];										/* Almacena la puntuacion del ply actual */
+} _ST_Vp;
+
+typedef struct tag_Historico {
+	S64 Historico_Movimientos[64][64];						/* [Origen][Destino] */
+	int Historico_Killer[MAX_PLY][2];						/* [MAXPLY][2 jugadas] */
+	int Historico_Killer_Mate[MAX_PLY][2];					/* [MAXPLY][2 jugadas] */
+	int HistoricoRefutacion[2][6][64][64];					/* [Color][Pieza][Origen][Destino] */
+	S64 HistoricoCaptura[64][64];							/* [Origen][Destino] */
+	S64 Max_Historico;										/* Valor maximo almacenado */
+	S64 Min_Historico;										/* Valor minimo almacenado */
+	S64 Max_Historico_Cap;									/* Valor maximo almacenado */
+	S64 Min_Historico_Cap;									/* Valor minimo almacenado */
+} _ST_Historico;
 
 /* Estructura del tablero */
 typedef struct tag_TableroX64 {
-    int PosicionReyB;					/* Indice del vector, posicion del rey Blanco */
-	int PosicionReyN;					/* Indice del vector, posicion del rey Negro */
-	int EnroqueB;						/* Enroque permitido con torres */
-	int EnroqueN;						/* Enroque permitido con torres */
-	_ST_Ajedrez960 Ajedrez960;			/* Posicion de las torres. Desde el rey hasta la torre no puede haber ninguna ficha ni pasar por casilla amenazada por el adversario. */
-	int FichaAlPasoPosicion;			/* Indice del vector, pieza al paso. */
-
-	int Ply;							/* Ply */
-	int MueveBlancas;					/* turno de jugador */
-	int Regla_50_Movimiento;			/* Regla 50 movimientos */
-	int Etapa;							/* Estado del juego. Apertura. medio juego, final. */
-	_ST_DeshacerMovimiento Estado[MAX_PLY];/* Almacena los avances de la jugada, para poder deshacer despues */
-
-#ifdef USAR_HASH_TB
-	U64 Historico[MAX_HISTORICO];		/* 800 movimientos. Lo normal son 200 o 250 jugadas, que es igual a 400 o 500 movimientos*/
-	int Hply;							/* Contador incremental de los movimientos que se van realizando en la variable Historico */
-	U64 Hash;							/* Hash del tablero */
+	short IdSubProcesos;									/* Id del subproceso */
+#ifdef PERFT
+	short ActSubProcesos;									/*  */
 #endif
 
-	int TableroColor[64];				/* Para detectar los margenes del tablero */
-	int Tablero[64];					/* Array donde estan las piezas en el tablero */
+	_ST_Puntos Blancas;										/* Almacenamos informacion de la evaluacion de las blancas */
+	_ST_Puntos Negras;										/* Almacenamos informacion de la evaluacion de las negras */
+
+	_ST_Vp Vp;												/* Variante principal usado por el subproceso principal */
+	_ST_Historico His;										/* Historico de la busqueda */
+
+	int Etapa;												/* Estado del juego. Apertura. medio juego, final. */
+	int DepthAct;											/* Depth alcanzado en la busqueda  */
+	int Puntos;												/* Puntos obtenidos en la busqueda */
+	U64 Nodos;												/* Nodos totales */
+
+	int PosicionReyB;										/* Indice del vector, posicion del rey Blanco */
+	int PosicionReyN;										/* Indice del vector, posicion del rey Negro */
+	int EnroqueB;											/* Enroque permitido con torres */
+	int EnroqueN;											/* Enroque permitido con torres */
+	_ST_Ajedrez960 Ajedrez960;								/* Posicion de las torres. Desde el rey hasta la torre no puede haber ninguna ficha ni pasar por casilla amenazada por el adversario. */
+	int FichaAlPasoPosicion;								/* Indice del vector, pieza al paso. */
+
+	int Ply;												/* Ply */
+	int selDepth;											/* Profundidad de busqueda maxima */
+	int MueveBlancas;										/* turno de jugador */
+	int Regla_50_Movimiento;								/* Regla 50 movimientos */
+	_ST_DeshacerMovimiento Estado[MAX_PLY];					/* Almacena los avances de la jugada, para poder deshacer despues */
+
+#ifdef USAR_HASH_TB
+	U64 Historico_Repeticion[MAX_HISTORICO];				/* (101 + MAX_PLY) */
+	int Hply;												/* Contador de los movimientos que se van realizando en la variable Historico */
+	U64 Hash;												/* Hash del tablero */
+#endif
+
+	int TableroColor[64];									/* Para detectar los margenes del tablero */
+	int Tablero[64];										/* Array donde estan las piezas en el tablero */
 	/*		INDICES								PIEZAS
       8- 00 01 02 03 04 05 06 07     =   11 09 10 12 13 10 09 11		NEGRAS.		VALOR de HORIZONTAL = 7:
 	  7- 08 09 10 11 12 13 14 15     =   08 08 08 08 08 08 08 08

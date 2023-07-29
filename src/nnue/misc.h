@@ -36,12 +36,20 @@ Intrinsic bsf
 #       include <intrin.h>
         INLINE int bsf(uint64_t b) {
             unsigned long x;
+#if defined(_WIN32)
+            _BitScanForward(&x, b);
+#else
             _BitScanForward64(&x, b);
+#endif
             return (int) x;
         }
         INLINE int bsr(uint64_t b) {
             unsigned long x;
+#if defined(_WIN32)
+            _BitScanReverse(&x, b);
+#else
             _BitScanReverse64(&x, b);
+#endif
             return (int) x;
         }
 #   endif
@@ -77,9 +85,6 @@ INLINE uint16_t readu_le_u16(const void *p)
   const uint8_t *q = (const uint8_t*) p;
   return q[0] | (q[1] << 8);
 }
-
-void decode_fen(const char* fen_str, int* player, int* castle,
-       int* fifty, int* move_number, int* piece, int* square);
 
 #define clamp(a, b, c) ((a) < (b) ? (b) : (a) > (c) ? (c) : (a))
 

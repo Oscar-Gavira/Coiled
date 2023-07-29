@@ -1,7 +1,6 @@
 /*
-Coiled is a UCI chess playing engine authored by Oscar Gavira.
-Copyright (C) 2013-2021 Oscar Gavira.
-<https://github.com/Oscar-Gavira/Coiled>
+Coiled is a UCI compliant chess engine written in C
+Copyright (C) 2023 Oscar Gavira. <https://github.com/Oscar-Gavira/Coiled>
 
 Coiled is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,83 +20,46 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 _ST_TT_Cache *TT_Datos;
 
-short GuardarFlag(int d, int e, int f)
-{
-	// 0000 0000 0111 1111 */		/*EDAD -  7 bit*/   Valor maximo 127
-	// 0001 1111 1000 0000 */		/*DEPTH - 6 bit*/   Valor maximo 63
-	// 0110 0000 0000 0000 */		/*FLAG -  2 bit*/   Valor maximo 3
-
-	if (d > (MAX_PLY / 2) - 1)		/* Evitamos superar los 6 bit */
-		d = (MAX_PLY / 2) - 1;
-	if (d < 0)						/* Evitamos valor negativo */
-		d = 0;
-	if (e > MAX_EDAD)				/* Evitamos superar los 7 bit */
-		e = MAX_EDAD;
-	if (e < 0)						/* Evitamos valor negativo */
-		e = 0;
-	if (f > TT_BETA)				/* Evitamos superar los 2 bit */
-		f = TT_BETA;
-	if (f < TT_DESCONOCIDO)			/* Evitamos valor negativo */
-		f = TT_DESCONOCIDO;
-
-	return  (short)((e) | ( (d) << 7) | ((f) << 13));
-}
-
-/* Obtengo el hash inicial */
-void ObtenerKey()
+void ObtenerKey(_ST_TableroX64 *Tablero)
 {
 	int i;
 
-	TableroGlobal.Hash = 0;
+	Tablero->Hash = 0;
 
 	/* Hash posicion de las piezas */
 	for (i = 0; i < 64; ++i)
 	{
-		if (TableroGlobal.Tablero[i] != CasillaVacia)
+		if (Tablero->Tablero[i] != CasillaVacia)
 		{
-			HASH_PIEZA(TableroGlobal.Tablero[i],i);
+			HASH_PIEZA(Tablero, Tablero->Tablero[i],i); 
 		}
 	}
 
 	/* Hash Al paso */
-	if (TableroGlobal.FichaAlPasoPosicion != 0)
+	if (Tablero->FichaAlPasoPosicion != 0)
 	{
-		HASH_EP(TableroGlobal.FichaAlPasoPosicion);
+		HASH_EP(Tablero, Tablero->FichaAlPasoPosicion);
 	}
 
 	/* Hash Enroque */
-	HASH_ENROQUE(1 + TableroGlobal.EnroqueN);
-	HASH_ENROQUE(62 - TableroGlobal.EnroqueB);
+	HASH_ENROQUE(Tablero, 1 + Tablero->EnroqueN);
+	HASH_ENROQUE(Tablero, 62 - Tablero->EnroqueB);
 
 	/* Hash turno */
-	HASH_LADO;
+	HASH_LADO(Tablero);
 }
-
-/* Creamos la tabla de hash aun tamana especifico */
-void CrearTransposicion(U64 MB)
+int CrearTransposicion()
 {
-	if (MB < MB_HASH_TABLE_MIN)
-	{
-		MB = MB_HASH_TABLE_MIN;
-	}
-	if (MB > MB_HASH_TABLE_MAX)
-	{
-		MB = MB_HASH_TABLE_MAX;
-	}
-
-	TT_Opciones.tt_Mb = MB;
-
 	TT_Opciones.tt_Entradas = TT_Opciones.tt_Mb * 1024 * 1024 / sizeof(_ST_TT_Cache);
 
-	LiberarMemoria();
-
-	if (TT_Opciones.tt_Entradas > 0)
+	if (TT_Datos != NULL && TT_Opciones.tt_Entradas > 0)
 	{
-		TT_Datos = (_ST_TT_Cache*)malloc( sizeof(_ST_TT_Cache) * TT_Opciones.tt_Entradas );
+		free(TT_Datos);
+		TT_Datos = (_ST_TT_Cache*)malloc(sizeof(_ST_TT_Cache) * TT_Opciones.tt_Entradas);
 	}
-	else
+	else if (TT_Opciones.tt_Entradas > 0)
 	{
-		Salir = true;
+		TT_Datos = (_ST_TT_Cache*)malloc(sizeof(_ST_TT_Cache) * TT_Opciones.tt_Entradas);
 	}
 
 #if defined(USAR_HASH_TB)
@@ -106,26 +68,23 @@ void CrearTransposicion(U64 MB)
 		printf(""INFO_STRING"Insufficient memory for hash table.\n");
 		fflush(stdout);
 
-		Salir = true;
-		return;
+		return false;
 	}
 #endif
 
-	LimpiarTransposicion();
+	return true;
 }
-
-void ConvertirValorTT(int *hPuntos)
+void ConvertirValorTT(_ST_TableroX64 *Tablero, int *hPuntos)
 {
-	if (*hPuntos >= VALOR_MATE_MIN)
+	if (*hPuntos >= VALOR_MATE_MAX)
 	{
-		*hPuntos += -TableroGlobal.Ply;
+		*hPuntos += -Tablero->Ply;
 	}
-	else if (*hPuntos <= -VALOR_MATE_MIN)
+	else if (*hPuntos <= -VALOR_MATE_MAX)
 	{
-		*hPuntos += TableroGlobal.Ply;
+		*hPuntos += Tablero->Ply;
 	}
 }
-
 int PodaHash(int *hFlag, int *beta, int *alpha, int *hPuntos)
 {
 	switch (FLAG(*hFlag))
@@ -141,37 +100,48 @@ int PodaHash(int *hFlag, int *beta, int *alpha, int *hPuntos)
 	}
 	return false;
 }
-/* Obtengo si la posicion ya a sido analizada y que valores tenia */
-int RecuperarPosicion(int *hPuntos, int *hEv, int *hMov, int *hFlag)
+int RecuperarPosicion(_ST_TableroX64 *Tablero, int *hPuntos, int *hEv, int *hMov, int *hFlag)
 {
-	U64 idx = (U64)(TableroGlobal.Hash % TT_Opciones.tt_Entradas);
+	U64 idx = (U64)(Tablero->Hash % TT_Opciones.tt_Entradas);
+#if defined(ARC_64BIT)
+	U32 Hash32 = (U32)(Tablero->Hash >> 32);
+#else
+	U32 Hash32 = Tablero->Hash;
+#endif
 	int i = 0;
-	
+
 	for (i = 0; i < CELDAS; i++)
 	{
-		if (TT_Datos[idx].Celdas[i].Hash == TableroGlobal.Hash)
+		if (TT_Datos[idx].Celdas[i].Hash == Hash32)
 		{
-			*hPuntos = (int)TT_Datos[idx].Celdas[i].Puntos;
 			*hMov = TT_Datos[idx].Celdas[i].M;
-			*hFlag = TT_Datos[idx].Celdas[i].Flag;
+			*hPuntos = TT_Datos[idx].Celdas[i].Puntos;
 			*hEv = TT_Datos[idx].Celdas[i].Ev;
+			*hFlag = TT_Datos[idx].Celdas[i].Flag;
 			return true;
 		}
 	}
 
 	return false;
 }
-/* Guardo la posicion analizada */
-void AlmacenarPosicion(int depth, int puntos, int hEv, int hFlag, int hMov)
+void AlmacenarPosicion(_ST_TableroX64 *Tablero, int depth, int puntos, int hEv, int hFlag, int hMov)
 {
-	U64 idx = (U64)(TableroGlobal.Hash % TT_Opciones.tt_Entradas);
+	U64 idx = (U64)(Tablero->Hash % TT_Opciones.tt_Entradas);
+#if defined(ARC_64BIT)
+	U32 Hash32 = (U32)(Tablero->Hash >> 32);
+#else
+	U32 Hash32 = Tablero->Hash;
+#endif
+	int idcE = -1;
+	int idcD = -1;
 	int idc = -1;
 	int i = 0;
-	int hEdad = TT_Opciones.tt_Edad - 2;
+	int hEdad = TT_Opciones.tt_Edad;
+	int hDepth = depth;
 
 	for (i = 0; i < CELDAS; i++)
 	{
-		if (TT_Datos[idx].Celdas[i].Hash == TableroGlobal.Hash)
+		if (TT_Datos[idx].Celdas[i].Hash == Hash32)
 		{
 			if (FLAG(TT_Datos[idx].Celdas[i].Flag) != TT_EXACTO
 				&& depth < DEPTH(TT_Datos[idx].Celdas[i].Flag) - 3) {
@@ -181,82 +151,67 @@ void AlmacenarPosicion(int depth, int puntos, int hEv, int hFlag, int hMov)
 			idc = i;
 			if (hMov == NO_MOVIMIENTO)
 				hMov = TT_Datos[idx].Celdas[i].M;
+
 			break;
 		}
 		else if (TT_Datos[idx].Celdas[i].Hash == 0)
 		{
-			TT_Opciones.tt_Completo++;
+			if (Tablero->IdSubProcesos == 0) TT_Opciones.tt_HashCompleto++;
 			idc = i;
 			break;
 		}
 		else
 		{
-			/* De una interaccion anterior, obtenemos el mas vieja. */
-			if ((short)EDAD(TT_Datos[idx].Celdas[i].Flag) < hEdad)
+			if (EDAD(TT_Datos[idx].Celdas[i].Flag) < hEdad && DEPTH(TT_Datos[idx].Celdas[i].Flag) < depth)
 			{
-				TT_Opciones.tt_Completo++;
 				hEdad = EDAD(TT_Datos[idx].Celdas[i].Flag);
-				idc = i;
+				idcE = i;
 			}
-			/* En el mismo momento, profundidad almacenada menor a la actual */
-			if ((short)EDAD(TT_Datos[idx].Celdas[i].Flag) == TT_Opciones.tt_Edad && (int)DEPTH(TT_Datos[idx].Celdas[i].Flag) < depth)
+			if (EDAD(TT_Datos[idx].Celdas[i].Flag) == TT_Opciones.tt_Edad && DEPTH(TT_Datos[idx].Celdas[i].Flag) < hDepth)
 			{
-				idc = i;
+				hDepth = DEPTH(TT_Datos[idx].Celdas[i].Flag);
+				idcD = i;
 			}
-			/* Final de la Celdas y sin coincidencia. Guardamos. */
-			if (i == CELDAS - 1 && idc == -1)
+			if (i == CELDAS - 1 && idcE == -1 && idcD == -1)
 			{
 				idc = i;
 			}
 		}
 	}
 
-	if (puntos >= VALOR_MATE_MIN)
+	if (idc == -1 && (idcE != -1 || idcD != -1))
 	{
-		puntos += TableroGlobal.Ply;
-	}
-	else if (puntos <= -VALOR_MATE_MIN)
-	{
-		puntos += -TableroGlobal.Ply;
+		if (idcE != -1)
+			idc = idcE; 
+		else
+			idc = idcD;
 	}
 
-	TT_Datos[idx].Celdas[idc].Hash = TableroGlobal.Hash;
-	TT_Datos[idx].Celdas[idc].Flag = GuardarFlag(depth, TT_Opciones.tt_Edad, hFlag);
-	TT_Datos[idx].Celdas[idc].Puntos = puntos;
-	TT_Datos[idx].Celdas[idc].Ev = hEv;
+	if (puntos >= VALOR_MATE_MAX)
+	{
+		puntos += Tablero->Ply;
+	}
+	else if (puntos <= -VALOR_MATE_MAX)
+	{
+		puntos += -Tablero->Ply;
+	}
+
+	TT_Datos[idx].Celdas[idc].Hash = Hash32;
 	TT_Datos[idx].Celdas[idc].M = hMov;
+	TT_Datos[idx].Celdas[idc].Puntos = (short)puntos;
+	TT_Datos[idx].Celdas[idc].Ev = (short)hEv;
+	TT_Datos[idx].Celdas[idc].Flag = GuardarFlag(TT_Opciones.tt_Edad, depth, hFlag);
 }
-
-/* Vacio la tabla hash */
 void LimpiarTransposicion()
 {
-	U64 i = 0;
-	int ii = 0;
-
-	for (i = 0; i < TT_Opciones.tt_Entradas; i++)
-	{
-		for (ii = 0; ii < CELDAS; ii++)
-		{
-			TT_Datos[i].Celdas[ii].Hash = 0;
-			TT_Datos[i].Celdas[ii].Puntos = VALOR_TB_VACIO;
-			TT_Datos[i].Celdas[ii].Ev = VALOR_TB_VACIO;
-			TT_Datos[i].Celdas[ii].Flag = GuardarFlag(0, 1, TT_DESCONOCIDO);
-			TT_Datos[i].Celdas[ii].M = NO_MOVIMIENTO;
-		}
-	}
-
-	TT_Opciones.tt_Edad = 1;
-	TT_Opciones.tt_Completo = 0;
+	memset(TT_Datos, 0, TT_Opciones.tt_Entradas * sizeof(_ST_TT_Cache));
+	TT_Opciones.tt_Edad = 0;
+	TT_Opciones.tt_HashCompleto = 0;
 }
-/* Obtengo el estado de la tabla (0%, 50%, 100%) */
 int ObtenerHashCompleto()
 {
-	if (TT_Opciones.tt_Completo > 0)
-		return (int)( (float)((float)TT_Opciones.tt_Completo / (float)(TT_Opciones.tt_Entradas * CELDAS)) * 1000.0f);
-	else
-		return 0;
+	return MIN(1000, (int)( (float)((float)(TT_Opciones.tt_HashCompleto * TipoJuego.NumeroDeSubProcesos) / (float)(TT_Opciones.tt_Entradas * CELDAS)) * 1000.0f));
 }
-/* Liberamos la memoria */
 void LiberarMemoria()
 {
 	if (TT_Datos != NULL)

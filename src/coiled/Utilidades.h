@@ -1,7 +1,6 @@
 /*
-Coiled is a UCI chess playing engine authored by Oscar Gavira.
-Copyright (C) 2013-2021 Oscar Gavira.
-<https://github.com/Oscar-Gavira/Coiled>
+Coiled is a UCI compliant chess engine written in C
+Copyright (C) 2023 Oscar Gavira. <https://github.com/Oscar-Gavira/Coiled>
 
 Coiled is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,18 +16,25 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Estructuras.h"
-#include "Tiempo.h"
 
 #ifndef UTILIDADES_H
 #define UTILIDADES_H
 
+#include "Externo.h"
+
 /******************************************************************************
 							Metodos
 ******************************************************************************/
+void MovimientoCoordenadas(int Inicio, int Fin, int PiezaCoronacion, char *mov);	/* Obtenemos el movimiento en coordenadas E2E4 */
 void ImprimirMovimientoCoordenadas(int Inicio, int Fin, int PiezaCoronacion);		/* Imprimir el movimiento en coordenadas E2E4 */
-int EntradaStdIn();																/* Comprobamos entradas durante la busqueda. */
 int ValorPieza(int Pieza);															/* Obtenemos el valor de la pieza */
-int IndexOfShift(char *base, char *str, int startIndex);							/* Devuelve el indice de la coincidencia dentro de un string. Si no hay devuelve -1 */
-void VerificarDir(char* base, int dir);
+void VerificarDir(char *base, int dir);												/* Trasforma la barra invertida, por barra inclinada. */
+int ArchivoExiste(char *archivo);													/* Comprobamos la existencia del archivo */
+void SubString(char *string, int indice);
+void SplitString(char *string, char *contenedor, int longitud);						/* Limpiamos cadenas con espacios */
+
+#ifndef _WIN32
+void Sleep(int milisegundos);
+#endif
+
 #endif

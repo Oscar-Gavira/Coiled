@@ -1,7 +1,6 @@
 /*
-Coiled is a UCI chess playing engine authored by Oscar Gavira.
-Copyright (C) 2013-2021 Oscar Gavira.
-<https://github.com/Oscar-Gavira/Coiled>
+Coiled is a UCI compliant chess engine written in C
+Copyright (C) 2023 Oscar Gavira. <https://github.com/Oscar-Gavira/Coiled>
 
 Coiled is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,122 +18,161 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "OrdenarMovimientos.h"
 
-/* Ordena los movimientos */
-void OrdenarMovimientosTodos(int *Capacidad, int *hMov, _ST_Movimiento *M)
+void OrdenarMovimientosPorValor(int *hMov, _ST_Movimiento *M, _ST_TableroX64 *Tablero)
 {
 	int i = 0;
 	int PiezaCapturada = 0;
 	int PiezaCoronacion = 0;
 	int _PiezaMovida = 0;
+	int Refu = HistoricoMovimientoRefutacion(Tablero);
+	int v = 0;
+	M->HayHash = false;
 
-	for (i = 0; i < *Capacidad; ++i)
+	for (i = 0; i < M->CantidadDeMovimiento; ++i)
 	{
 
-		M[i].Ordenar = 0;
+		M->Ordenar[i] = 0;
 
-#ifdef USAR_HASH_TB
-		if (M[i].Movimiento == *hMov)
+		if (M->Movimiento[i] == *hMov)
 		{
-			M[i].Ordenar = ORDENAR_HASH;
+			M->HayHash = true;
+			M->Ordenar[i] = ORDENAR_HASH;
 			continue;
 		}
-#endif
 
-		if (MovimientoTranquilo(&M[i].Movimiento))
+		if (MovimientoTranquilo(&M->Movimiento[i]))
 		{
-			if (HistoricoEsMovimientoKillerMate(&TableroGlobal.Ply, &M[i].Movimiento))
+			if (HistoricoEsMovimientoKillerMate(&M->Movimiento[i], Tablero))
 			{
-				M[i].Ordenar = ORDENAR_KILL_MATE + HistoricoValor(&M[i].Movimiento);
+				M->Ordenar[i] = ORDENAR_KILL_MATE + HistoricoValor(&M->Movimiento[i], Tablero);
 				continue;
 			}
-			if (HistoricoEsMovimientoKiller(&TableroGlobal.Ply, &M[i].Movimiento))
+			if (HistoricoEsMovimientoKiller(&M->Movimiento[i], Tablero))
 			{
-				M[i].Ordenar = ORDENAR_KILL + HistoricoValor(&M[i].Movimiento);
+				M->Ordenar[i] = ORDENAR_KILL + HistoricoValor(&M->Movimiento[i], Tablero);
 				continue;
 			}
-			if (HistoricoMovimientoRefutacion() == M[i].Movimiento)
+			if (Refu == M->Movimiento[i])
 			{
-				M[i].Ordenar = ORDENAR_REFUTACION;
+				M->Ordenar[i] = ORDENAR_REFUTACION;
 				continue;
 			}
 
-			M[i].Ordenar = HistoricoValor(&M[i].Movimiento);
+			M->Ordenar[i] = HistoricoValor(&M->Movimiento[i], Tablero);
+			if (M->Ordenar[i] < 0)
+				M->Ordenar[i] += -100;
+			if (M->Ordenar[i] == 0) /* Sin historico, ordenamos por figura */
+				M->Ordenar[i] = -PIEZAMOVIDA(M->Movimiento[i]);
+
 		}
 		else
 		{
-			PiezaCapturada = CAPTURADA(M[i].Movimiento);
-			_PiezaMovida = PIEZAMOVIDA(M[i].Movimiento);
-			PiezaCoronacion = CORONACION(M[i].Movimiento);
+			PiezaCapturada = CAPTURADA(M->Movimiento[i]);
+			_PiezaMovida = PIEZAMOVIDA(M->Movimiento[i]);
+			PiezaCoronacion = CORONACION(M->Movimiento[i]);
 			
 			if (_PiezaMovida > CasillaVacia)
 				_PiezaMovida = _PiezaMovida - 7;
 
-			if (PiezaCapturada > CasillaVacia)
+			if (PiezaCapturada != MFLAGCAP && PiezaCapturada > CasillaVacia)
 				PiezaCapturada = PiezaCapturada - 7;
 
 			if (PiezaCoronacion != MFLAGPROM && PiezaCoronacion > CasillaVacia)
 				PiezaCoronacion = PiezaCoronacion - 7;
 
-			if (CAPTURA_ALPASO(M[i].Movimiento) == MFLAGEP)
+			if (CAPTURA_ALPASO(M->Movimiento[i]) == MFLAGEP)
 			{
-				M[i].Ordenar = ORDENAR_CAPTURAS + (64 * _PiezaMovida - _PiezaMovida);
+				M->Ordenar[i] = ORDENAR_CAPTURAS;
                 continue;
 			}
+			v = HistoricoCapturaValor(&M->Movimiento[i], Tablero);
 			if (PiezaCoronacion != MFLAGPROM)
 			{
 				if (PiezaCoronacion == DamaB)
-					M[i].Ordenar = ORDENAR_CAPTURAS + (64 * _PiezaMovida - _PiezaMovida) + ORDENAR_REFUTACION;
+					M->Ordenar[i] = ORDENAR_CORONACION_DAMA;
 				else
-					M[i].Ordenar = ORDENAR_CAPTURAS + (64 * _PiezaMovida - _PiezaMovida);
+				{
+					if (v > 0)
+						M->Ordenar[i] = 1000 + ORDENAR_CORONACION + (64 * PiezaCoronacion) + v;
+					else if (v < 0)
+						M->Ordenar[i] = 500 + ORDENAR_CORONACION + (64 * PiezaCoronacion) + v;
+					else
+						M->Ordenar[i] = ORDENAR_CORONACION + PiezaCoronacion;
+
+				}
 
 				continue;
 			}
 			if (PiezaCapturada != MFLAGCAP)
 			{
-				M[i].Ordenar = ORDENAR_CAPTURAS + (64 * PiezaCapturada - _PiezaMovida);
+				if (v > 0)
+					M->Ordenar[i] = 1000 + ORDENAR_CAPTURAS + (64 * PiezaCapturada - _PiezaMovida) + v;
+				else if (v < 0)
+					M->Ordenar[i] = 500 + ORDENAR_CAPTURAS + (64 * PiezaCapturada - _PiezaMovida) + v;
+				else
+					M->Ordenar[i] = ORDENAR_CAPTURAS + (64 * PiezaCapturada - _PiezaMovida);
+
 				continue;
 			}
 		}
 	}
-	M[*Capacidad].Ordenar = -ORDENAR_HASH;
-
 }
-
-/* Ordenamos los movimientos. */
-void OrdenaMovimiento(int *indice, int *Capacidad, _ST_Movimiento *M)
+void ObtenerMovimiento(int *indice, _ST_Movimiento *M, _ST_TableroX64 *Tablero)
 {
 	int i, j, Max;
-	_ST_Movimiento Tmp;
+	int Tmp1 = 0;
+	int Tmp2 = 0;
+	int pSee = 0;
 
-	Max = M[*indice].Ordenar;
+	Max = M->Ordenar[*indice];
 	j = *indice;
-	for (i = *indice + 1; i < *Capacidad; i++)
+	for (i = *indice + 1; i < M->CantidadDeMovimiento; i++)
 	{
-		if (M[i].Ordenar > Max)
+		if (M->Ordenar[i] > Max)
 		{
-			Max = M[i].Ordenar;
+			Max = M->Ordenar[i];
 			j = i;
 		}
 	}
 
 	if (j != *indice)
 	{
-		Tmp.Movimiento = M[*indice].Movimiento;
-		Tmp.Ordenar = M[*indice].Ordenar;
+		Tmp1 = M->Movimiento[*indice];
+		Tmp2 = M->Ordenar[*indice];
 
-		M[*indice].Movimiento = M[j].Movimiento;
-		M[*indice].Ordenar = M[j].Ordenar;
+		M->Movimiento[*indice] = M->Movimiento[j];
+		M->Ordenar[*indice] = M->Ordenar[j];
 
-		M[j].Movimiento = Tmp.Movimiento;
-		M[j].Ordenar = Tmp.Ordenar;
+		M->Movimiento[j] = Tmp1;
+		M->Ordenar[j] = Tmp2;
 	}
 
-	if (M[*indice].Ordenar > ORDENAR_CAPTURAS && M[*indice].Ordenar < ORDENAR_HASH)
+	/* Mala captura */
+	if (M->Ordenar[*indice] > ORDENAR_CAPTURAS && M->Ordenar[*indice] < ORDENAR_HASH)
 	{
-		if (See(&M[*indice].Movimiento, TableroGlobal.MueveBlancas) < 0)
+		pSee = See(&M->Movimiento[*indice], Tablero->MueveBlancas, Tablero);
+		if (pSee < 0)
 		{
-			M[*indice].Ordenar = -M[*indice].Ordenar;
-			OrdenaMovimiento(indice, Capacidad, M);
+			if (M->HayHash == false)
+			{
+				if (CORONACION(M->Movimiento[*indice]) != MFLAGPROM)
+				{
+					if (ValorPieza(CORONACION(M->Movimiento[*indice])) == SeeDamaValor)
+						M->Ordenar[*indice] = 20000 + pSee;
+					else
+						M->Ordenar[*indice] = 15000 + pSee;
+				}
+				else if (CAPTURADA(M->Movimiento[*indice]) != MFLAGCAP)
+				{
+					M->Ordenar[*indice] = 10000 + pSee;
+				}
+			}
+			else
+			{
+				M->Ordenar[*indice] = -ORDENAR_CAPTURAS + pSee;
+			}
+			if (*indice + 1 < M->CantidadDeMovimiento)
+				ObtenerMovimiento(indice, M, Tablero);
 		}
 	}
 }

@@ -1,7 +1,6 @@
 /*
-Coiled is a UCI chess playing engine authored by Oscar Gavira.
-Copyright (C) 2013-2021 Oscar Gavira.
-<https://github.com/Oscar-Gavira/Coiled>
+Coiled is a UCI compliant chess engine written in C
+Copyright (C) 2023 Oscar Gavira. <https://github.com/Oscar-Gavira/Coiled>
 
 Coiled is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,83 +18,70 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Tiempo.h"
 
-/* Obtenemos el tiempo */
-U64 ObtenerTiempo()
+int ObtenerTiempo()
 {
 #if defined(_WIN32)
-    return GetTickCount();
+    return (int)GetTickCount();
 #else
     struct timeval tv;
 
     gettimeofday(&tv, NULL);
-    return (U64)(tv.tv_sec * 1000 + tv.tv_usec / 1000);
+    return (int)(tv.tv_sec * 1000 + tv.tv_usec / 1000);
 #endif
 }
-/* Tiempo trascurrido */
-U64 TiempoTrascurrido(_ST_TipoJuego *Tiempo)
+int TiempoTranscurrido(_ST_TipoJuego *Tiempo)
 {
     return ObtenerTiempo() - Tiempo->Inicio;
 }
-/* Configuracion del tiempo */
 void TiempoInicio(_ST_TipoJuego *Tiempo, int Movestogo, int TiempoTotal, int inc)
 {
     Tiempo->TiempoFactor = 0;
 
-    if (Movestogo != 0)
+   if (Movestogo != 0)
     {
-        Tiempo->Tiempo = 0.67f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc;
-        Tiempo->TiempoMax1 = 1.00f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc;
-        Tiempo->TiempoMax2 = 2.00f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc;
+        Movestogo += 1;
+        Tiempo->TiempoIdeal = (int)(0.67f * (float)((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc);
+        Tiempo->TiempoMed = (int)(1.20f * (float)((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc);
+        Tiempo->TiempoMax = (int)(1.80f * (float)((TiempoTotal - Tiempo->PrevenirTiempoExcedido) / Movestogo) + inc);
     }
     else {
-        Tiempo->Tiempo = 0.90f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) + 25 * inc) / 50;
-        Tiempo->TiempoMax1 = 2.00f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) + 25 * inc) / 50;
-        Tiempo->TiempoMax2 = 3.00f * ((TiempoTotal - Tiempo->PrevenirTiempoExcedido) + 25 * inc) / 50;
+        Tiempo->TiempoIdeal = (int)(0.85f * (float)((TiempoTotal - Tiempo->PrevenirTiempoExcedido) + 25 * inc) / 50);
+        Tiempo->TiempoMed = (int)(1.90f * (float)((TiempoTotal - Tiempo->PrevenirTiempoExcedido) + 25 * inc) / 50);
+        Tiempo->TiempoMax = (int)(2.55f * (float)((TiempoTotal - Tiempo->PrevenirTiempoExcedido) + 25 * inc) / 50);
     }
 
-    Tiempo->Tiempo = MIN(Tiempo->Tiempo, TiempoTotal - Tiempo->PrevenirTiempoExcedido);
-    Tiempo->TiempoMax1 = MIN(Tiempo->TiempoMax1, TiempoTotal - Tiempo->PrevenirTiempoExcedido);
-    Tiempo->TiempoMax2= MIN(Tiempo->TiempoMax2, TiempoTotal - Tiempo->PrevenirTiempoExcedido);
+    Tiempo->TiempoIdeal = MIN(Tiempo->TiempoIdeal, TiempoTotal - Tiempo->PrevenirTiempoExcedido);
+    Tiempo->TiempoMed = MIN(Tiempo->TiempoMed, TiempoTotal - Tiempo->PrevenirTiempoExcedido * 2);
+    Tiempo->TiempoMax = MIN(Tiempo->TiempoMax, TiempoTotal - Tiempo->PrevenirTiempoExcedido * 3);
 }
-
-/* Ajuste del tiempo por perdida o aumento de puntos. */
-int TiempoActualizar(_ST_TipoJuego *Tiempo, int Valor, int ValorAnterior, int MejorJugada, int MejorJugadaAnterior, int depth)
+void TiempoActualizar(_ST_TipoJuego *Tiempo, int Valor, int ValorAnterior, int MejorJugada, int MejorJugadaAnterior)
 {
-    float FactorPv = 0.0f;
+    if (ValorAnterior > Valor + 10) Tiempo->TiempoIdeal = Tiempo->TiempoIdeal * 1.050f;
+    if (ValorAnterior > Valor + 20) Tiempo->TiempoIdeal = Tiempo->TiempoIdeal * 1.050f;
+    if (ValorAnterior > Valor + 40) Tiempo->TiempoIdeal = Tiempo->TiempoIdeal * 1.050f;
 
-    /* Si es de tipo movetime 2000, mate X, infinito, depth... no actualizamos. */
-    if (Tiempo->Activo != true || depth < 4) return false;
+    if (ValorAnterior + 15 < Valor) Tiempo->TiempoIdeal = Tiempo->TiempoIdeal * 1.050f;
+    if (ValorAnterior + 30 < Valor) Tiempo->TiempoIdeal = Tiempo->TiempoIdeal * 1.050f;
 
-    // Aumentamos tiempo si la puntuacion cae 
-    if (ValorAnterior > Valor + 10) Tiempo->Tiempo *= 1.050f;
-    if (ValorAnterior > Valor + 20) Tiempo->Tiempo *= 1.050f;
-    if (ValorAnterior > Valor + 40) Tiempo->Tiempo *= 1.050f;
-
-    // Aumentar tiempo si la puntuacion se eleva
-    if (ValorAnterior + 15 < Valor) Tiempo->Tiempo *= 1.050f;
-    if (ValorAnterior + 30 < Valor) Tiempo->Tiempo *= 1.050f;
-
-    /* Estabilidad de la variante principal. */
     Tiempo->TiempoFactor = MAX(0, Tiempo->TiempoFactor - 1);
-    if (MejorJugada != MejorJugadaAnterior)
-        Tiempo->TiempoFactor = 5;
-
-    /* Si la variante principal es estable, cortamos. */
-    FactorPv = Tiempo->Tiempo;
-    FactorPv *= 1.0f + Tiempo->TiempoFactor * 0.185f;
-    return TiempoTrascurrido(Tiempo) > MIN(FactorPv, Tiempo->TiempoMax1);
+    if (MejorJugada != MejorJugadaAnterior) Tiempo->TiempoFactor = 3;
 }
-
-/* Si excedemos el tiempo maximo, cortamos. */
-int TerminarTiempoLimite(_ST_TipoJuego *Tiempo)
+int TerminarTiempoIdeal(_ST_TipoJuego *Tiempo)
 {
-    if (Tiempo->Activo >= true
-        && Tiempo->DepthAct > 1
-        && TiempoTrascurrido(Tiempo) >= Tiempo->TiempoMax2)
-    {
-        Tiempo->Interrumpir = true;
-        return true;
-    }
-    return false;
-}
+    int TiempoEntreDepth = 0;
+    int FactorPvValor = FactorPvValor = (Tiempo->TiempoMax - Tiempo->TiempoIdeal) / 3;
+    int FactorPv = Tiempo->TiempoIdeal + Tiempo->TiempoFactor * FactorPvValor;
 
+    Tiempo->TiempoConsumido = TiempoTranscurrido(Tiempo);
+    TiempoEntreDepth = Tiempo->TiempoConsumido - Tiempo->XTiempo;
+    Tiempo->XTiempo = Tiempo->TiempoConsumido;
+
+    if (Tiempo->TiempoConsumido + TiempoEntreDepth > Tiempo->TiempoMed)
+        return true;
+
+    return Tiempo->TiempoConsumido > MIN(FactorPv, Tiempo->TiempoMed);
+}
+void TerminarTiempoLimite(_ST_TipoJuego *Tiempo)
+{
+    if (Tiempo->Activo != 0 && TiempoTranscurrido(Tiempo) >= Tiempo->TiempoMax) Tiempo->Interrumpir = true;
+}

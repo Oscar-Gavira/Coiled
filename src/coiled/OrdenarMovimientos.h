@@ -1,7 +1,6 @@
 /*
-Coiled is a UCI chess playing engine authored by Oscar Gavira.
-Copyright (C) 2013-2021 Oscar Gavira.
-<https://github.com/Oscar-Gavira/Coiled>
+Coiled is a UCI compliant chess engine written in C
+Copyright (C) 2023 Oscar Gavira. <https://github.com/Oscar-Gavira/Coiled>
 
 Coiled is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,18 +20,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define ORDERNARMOVIMIENTOS_H
 
 #include "Externo.h"
-#include "Utilidades.h"
 #include "Historico.h"
-#include "GeneradorDeMovimientos.h"
 #include "See.h"
 
-/* Valores para ordenar los movimientos */
-#define ORDENAR_HASH				(4000000)
-#define	ORDENAR_CAPTURAS			(3000000)
-#define ORDENAR_KILL_MATE			(2000000)
-#define	ORDENAR_KILL				(1000000)
-#define	ORDENAR_REFUTACION			 (500000)
-
-extern void OrdenarMovimientosTodos(int *Capacidad, int *hMov, _ST_Movimiento *M);			/* Asignamos valores a los movimientos generados */
-extern void OrdenaMovimiento(int *indice, int *Capacidad, _ST_Movimiento *M);				/* Ordenamos el movimiento segun su valor de mayor a menor */
+void OrdenarMovimientosPorValor(int *hMov, _ST_Movimiento *M, _ST_TableroX64 *Tablero);			/* Asignamos valores a los movimientos generados */
+void ObtenerMovimiento(int *indice, _ST_Movimiento *M, _ST_TableroX64 *Tablero);				/* Ordenamos el movimiento segun su valor de mayor a menor */
 #endif

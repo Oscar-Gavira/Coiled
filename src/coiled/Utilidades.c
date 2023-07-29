@@ -1,7 +1,6 @@
 /*
-Coiled is a UCI chess playing engine authored by Oscar Gavira.
-Copyright (C) 2013-2021 Oscar Gavira.
-<https://github.com/Oscar-Gavira/Coiled>
+Coiled is a UCI compliant chess engine written in C
+Copyright (C) 2023 Oscar Gavira. <https://github.com/Oscar-Gavira/Coiled>
 
 Coiled is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,11 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Externo.h"
 #include "Utilidades.h"
-#include "See.h"
 
-/* Imprimir el movimiento en coordenadas E2E4 */
 void ImprimirMovimientoCoordenadas(int Inicio, int Fin, int PiezaCoronacion)
 {
 	char Movi[6];
@@ -29,8 +25,6 @@ void ImprimirMovimientoCoordenadas(int Inicio, int Fin, int PiezaCoronacion)
 	MovimientoCoordenadas(Inicio, Fin, PiezaCoronacion, Movi);
 	printf(""STRING_FORMAT"", Movi);
 }
-
-/* Obtenemos el movimiento en coordenadas E2E4 */
 void MovimientoCoordenadas(int Inicio, int Fin, int PiezaCoronacion, char *mov)
 {
 	mov[0] = 'a' + COLUMNA(Inicio);
@@ -78,87 +72,51 @@ void MovimientoCoordenadas(int Inicio, int Fin, int PiezaCoronacion, char *mov)
 			break;
 	}
 }
-
-void SplitString(char *_string, char *contenedor, int longitud)
+void SplitString(char *string, char *contenedor, int longitud)
 {
-    int ll = 0;
 	int i = 0;
-	int len = strlen(_string);
-	char *ptr = _string;
+	int len = strlen(string);
+	int indice = 0;
 
-	while (*ptr == ' ')
+	while (string[indice] == ' ')
 	{
-		ll++;
-		ptr++;
+		string++;
 	}
 
-	while (*ptr != ' ' && *ptr != '\0')
+	while (string[indice] != ' ' && string[indice] != '\0')
 	{
-        ll++;
-
-		if (ll >= longitud)
+		if (indice >= longitud - 1)
 		{
 			contenedor[longitud - 1] = '\0';
 			break;
 		}
 
-		*contenedor++ = *ptr++;
+		contenedor[indice] = string[indice];
+		indice++;
 	}
-	*contenedor = '\0';
+	contenedor[indice] = '\0';
 	
-	while (*ptr == ' ')
+	while (string[indice] == ' ')
 	{
-		ll++;
-		ptr++;
+		indice++;
 	}
-	for (i = 0; i < len; i++)
+	for (i = 0; i < len - indice; i++)
 	{
-		_string[i] = _string[i + ll];
+		string[i] = string[i + indice];
 	}
+	string[i] = '\0';
 }
-
-int EntradaStdIn ()
+void SubString(char *string, int indice)
 {
-#ifdef _WIN32
-	static int init = 0, pipe;
-	static HANDLE inh;
-	DWORD dw;
-	if (!init)
-	{
-		init = 1;
-		inh = GetStdHandle(STD_INPUT_HANDLE);
-		pipe = !GetConsoleMode(inh, &dw);
-		if (!pipe)
-		{
-			SetConsoleMode(inh, dw & ~(ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT));
-			FlushConsoleInputBuffer(inh);
-		}
-	}
-	if (pipe)
-	{
-		if (!PeekNamedPipe(inh, NULL, 0, NULL, &dw, NULL))
-			return 1;
-		return dw > 0;
-	}
-	else
-	{
-		GetNumberOfConsoleInputEvents(inh, &dw);
-		return dw <= 1 ? 0 : 1;
-	}
-#else
-	fd_set readfds;
-	struct timeval tv;
+	int i = 0;
+	int len = strlen(string);
 
-	FD_ZERO(&readfds);
-	FD_SET(STDIN_FILENO, &readfds);
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	select(STDIN_FILENO + 1, &readfds, NULL, NULL, &tv);
-	return FD_ISSET(STDIN_FILENO, &readfds);
-#endif
+	for (i = 0; i < len - indice; i++)
+	{
+		string[i] = string[i + indice];
+	}
+	string[i] = '\0';
 }
-
-/* Obtenemos el valor de la pieza */
 int ValorPieza(int Pieza)
 {
 	switch (Pieza)
@@ -207,34 +165,11 @@ int ValorPieza(int Pieza)
 			break;
 	}
 }
-
-int IndexOfShift(char *base, char *str, int startIndex) {
-	int result;
-	int baselen = strlen(base);
-	if ((int)strlen(str) > baselen || startIndex > baselen)
-	{
-		result = -1;
-	}
-	else 
-	{
-		if (startIndex < 0) startIndex = 0;
-		char *pos = strstr(base + startIndex, str);
-		if (pos == NULL) 
-			result = -1;
-		else 
-			result = pos - base;
-	}
-
-	return result;
-}
-
 void VerificarDir(char *base, int dir)
 {
-	int startIndex = 0;
 	int baselen = strlen(base);
 	int i = 0;
 
-	/* Formato linux */
 	char buscar = '\\';
 	char remplazar = '/';
 
@@ -252,3 +187,26 @@ void VerificarDir(char *base, int dir)
 			base[baselen] = remplazar;
 	}
 }
+int ArchivoExiste(char *archivo)
+{
+	FILE *fp;
+
+	if ((fp = fopen(archivo, "r")) == NULL)
+		return false;
+
+	fclose(fp);
+	return true;
+}
+
+#ifndef _WIN32
+void Sleep(int milisegundos)
+{
+	static int SECS_TO_SLEEP = 0, NSEC_TO_SLEEP = 1000000;
+	struct timespec remaining, request = { SECS_TO_SLEEP,  milisegundos * NSEC_TO_SLEEP };
+
+	if (nanosleep(&request, &remaining) != -1)
+	{
+		printf("OK.\n");
+	}
+}
+#endif

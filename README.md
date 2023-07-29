@@ -1,65 +1,72 @@
 ![Release](https://img.shields.io/github/v/release/Oscar-Gavira/Coiled)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/Oscar-Gavira/Coiled/blob/main/LICENSE)
+![Language: C](https://img.shields.io/badge/Language-gnu11-blue)
+[![c-Compiler](https://github.com/Oscar-Gavira/Coiled/actions/workflows/coiled.yml/badge.svg)](https://github.com/Oscar-Gavira/Coiled/actions/workflows/coiled.yml)
+
 
 # ![imagen](https://user-images.githubusercontent.com/33672268/136560248-95e1ebf4-9405-414c-9827-6f1f3cf76b05.png) Coiled - Motor de ajedrez.
 
 ## :clipboard: Características
 
-|                            |    CARACTERISTICAS                                                                              |
-| -------------------------- | ----------------------------------------------------------------------------------------------- |
-| Protocolo de comunicación  | [UCI](https://www.shredderchess.com/download/div/uci.zip)                                       |
-| Código abierto             | Si                                                                                              |
-| Tipo de licencia           | [GNU General Public License v3.0](https://github.com/Oscar-Gavira/Coiled/blob/master/LICENSE)   |
-| Sistema operativo          | Windows y Linux. 32&64 bit                                                                      |
-| Representación del tablero | Mailbox. 8x8 unidimensional.                                                                    |
-| Ajedrez960 / FRC           | Si.                                                                                             |
-| Soporta redes neuronales   | Si. (NNUE)                                                                                      |
-| Tablas de finales          | Si. Syzygy. Por Ronald de Man. Gaviota. Por Miguel Ballicora. BitBases. Por daniel shawul.      |
-| Libro de aperturas         | Si. Formato SqlIte                                                                              |
-| Lenguaje de programación   | C                                                                                               |
-| Ponder                     | No                                                                                              |
-| Multihilo                  | No                                                                                              |
-| ELO estimado               | ± 3300 NNUE. ± 2700 Interna.                                                                    |
-
-
-- Tablas de finales disponibles en internet. [http://oics.olympuschess.com/tracker/](http://oics.olympuschess.com/tracker/)
+|                            |    CARACTERISTICAS                                                                                 |
+| -------------------------- | -------------------------------------------------------------------------------------------------- |
+| Sistema operativo          | Windows y Linux. 32&64 bit                                                                         |
+| Protocolo de comunicación  | [UCI](https://github.com/Oscar-Gavira/Coiled/blob/main/UCI.md)                                     |
+| Código abierto             | Si.                                                                                                |
+| Tipo de licencia           | [GNU General Public License v3.0](https://github.com/Oscar-Gavira/Coiled/blob/master/LICENSE)      |
+| Representación del tablero | Mailbox. 8x8 unidimensional.                                                                       |
+| Forma de juego             | Ajedrez estándar o Chess960.                                                                       |
+| Tipo de evaluación         | Interna o Nnue.                                                                                    |
+| Multihilo                  | Si.                                                                                                |
+| Tablas de finales          | No.                                                                                                |
+| Modo de juego:             | Por tiempo: Convencional, Convencional e incremental, por movimiento. Profundidad. Mate. Infinito. |
+| Otros                      | Reglas de la FIDE. Incluyendo triple repetición, 50 movimientos. Tablas por material insuficiente. |
+| Lenguaje de programación   | C                                                                                                  |
+| ELO estimado               | ± 2850 Interna. ± 3400 con NNUE. Incremento ± 75 con 4CPU                                          |
 
 
 ## :rocket: Introducción
 
-Coiled es un motor de ajedrez de protocolo UCI escrito en C. Es un programa de línea de comandos (Aplicación de consola), que no está diseñado para usarse directamente, sino a través de una interfaz de usuario o GUI, con capacidad para tratar el protocolo UCI, como: Cute Chess, Tarrasch, Banksia, Arena, Fritz...
+Coiled es un motor de ajedrez de protocolo UCI escrito en C. Diseñado para ofrecer una experiencia de juego excepcional a través de distintas interfaces de usuario o GUI como: Cute Chess, Tarrasch, Banksia, Arena, Fritz...
 
-En un principio el motor lo realicé en Visual basic .Net, pero su rendimiento era bajo. Finalmente opté por hacerlo en el lenguaje de programación C.
+Inicialmente el motor lo realicé en Visual basic .Net ya que la idea era unirlo a la parte gráfica (AjedreNet). Pero su rendimiento era bajo. Finalmente opté por reconstruirlo en C.
 
-Reconozco que me ha costado y me cuesta manejar C, ya que no he programado nunca en este formato, sobre todo el trato con cadenas (lo que sería un string). Sin embargo, la sintaxis es parecida a PHP (sintaxis que sí conozco) y casi todo el programa son funciones matemáticas y poco trato con cadenas.
+Reconozco que me cuesta manejar C, ya que no he programado nunca en este lenguaje de programación, sobre todo el trato con cadenas (lo que sería un string). Sin embargo, la sintaxis es parecida a PHP (sintaxis que sí conozco) y casi todo el programa se basa en poderosos cálculos matemáticos.
 
-En agosto del 2013, Coiled fue publicado por primera vez para el usuario final. Desde entonces, he ido realizando actualizaciones, depurando errores, incrementando su fuerza de ELO, etc.
+Lanzado por primera vez en agosto del 2013, Coiled ha evolucionado constantemente. Mediante actualizaciones periódicas, se han corregido errores, incrementado la fuerza de ELO y añadido nuevas funciones.
 
-Actualmente Coiled es capaz de jugar a la variante Chess960 de usar tablas de finales, soporta redes neuronales.
+Hoy en día, Coiled es capaz de jugar al ajedrez estándar y a la variante Chess960, además de utilizar tablas de finales y soportar redes neuronales.
 
-Para leer más sobre algunas de las técnicas utilizadas en Coiled, consulte la página Wiki de programación de ajedrez de [Coiled.](https://www.chessprogramming.org/Coiled) (inglés)
+¿Deseas conocer más sobre las técnicas utilizadas en Coiled? Nuestra [Wiki](https://www.chessprogramming.org/Coiled) de programación de ajedrez ofrece una completa documentación en inglés.
+
+Coiled, contribuye a la comunidad de investigación de ajedrez y programación. Por eso, este proyecto es de código abierto, lo que permite a jugadores y desarrolladores colaborar y mejorar la experiencia de juego para todos.
+
+Si eres un apasionado del ajedrez, un desarrollador entusiasta o simplemente alguien interesado en la inteligencia artificial, te invitamos a probar Coiled y disfrutar de su poder y flexibilidad. ¡Te garantizamos una experiencia de ajedrez sin igual!
 
 
 ## :ballot_box_with_check: Requisitos mínimo
 
-| SISTEMA OPERATIVO | Windows 32 bit             | Windows 64 bit.                                           |
-| ----------------- | -------------------------- | --------------------------------------------------------- |
-| PROCESADOR        | Intel Pentium Pro o Amd K7 | Intel Core 2 o Ahtlon 64 con soporte MMX, SSE, SSE2, SSE3 |
-| RAM               | 16 MB.                     | 64 MB.                                                    |
+| SISTEMA OPERATIVO | Windows 32 bit                                            | Windows 64 bit.                                           |
+| ----------------- | --------------------------------------------------------- | --------------------------------------------------------- |
+| PROCESADOR        | Intel Pentium 4 o Amd K7. Con soporte MMX, SSE, SSE2      | Core 2 o Ahtlon 64. Con soporte MMX, SSE, SSE2 y SSE3     |
+| RAM               | 2 MB.                                                     | 4 MB.                                                     |
 
 
 ## :nut_and_bolt: Redes neuronales (NNUE)
 
-
-Actualmente Coiled utiliza la red neuronal de Fisherman.
+Coiled incluye la red neuronal del autor Fisherman. Pero no es necesario su utilización, ya que coiled dispone de su evaluación interna.
+Puede cargar redes neuronales compatibles (nnue antiguas de 20MB) y realizar pruebas, comparaciones, torneos con las misma NN para los participantes...
 
 | Autor     | Creado              | Url                                                          |
 | --------- | ------------------- | ------------------------------------------------------------ |
 | Fisherman |  21-03-20 23:34:03  | https://tests.stockfishchess.org/api/nn/nn-a9f9e868162a.nnue |
 
 
-
 ## :wrench: Instalación
+
+Coiled es un motor y como tal no incluye de un tablero de ajedrez, solo calcula los movimientos.
+Es por eso que requiere de una parte gráfica para que el usuario final pueda jugar cómodamente.
+Existen diversos programas para esta tarea, pudiendo elegir el que más agrade al usuario.
 
 GUI de entornos gratuito:
 
@@ -76,81 +83,87 @@ GUI de entornos gratuito:
 Consultar el manual de instalación de un motor de ajedrez en dicha GUI.
 
 
-## :trophy: Clasificación ELO 
+## :trophy: Progreso de ELO 
 
 
-| VERSION NNUE |   ELO  |
-| ------------ | ------ |
-| Coiled 0.7   | 3050 ± |
-| Coiled 0.8   | 3250 ± |
-| Coiled 0.9   | 3250 ± |
-| Coiled 1.0   | 3250 ± |
-| Coiled 1.1   | 3300 ± |
-
-- [CCRL (40/4)](http://ccrl.chessdom.com/ccrl/404/)
-
-| VERSION NO NNUE     |   ELO  |
-| ------------------- | ------ |
-| Coiled 0.1a         | 1694 ± |
-| Coiled 0.2b         | 1996 ± |
-| Coiled 0.4          | 2508 ± |
-| Coiled 0.5          | 2600 ± |
-| Coiled 1.1          | 2725 ± |
+| VERSION NNUE        | [Chess Engines Diary](https://chessengines.blogspot.com/) | [SPCC](https://www.sp-cc.de/) | [Owl Chess Blitz](http://chessowl.blogspot.com/) |
+| ------------------- | --------------------------------------------------------- | ----------------------------- | ------------------------------------------------ |
+| Coiled 1.1          | 3326 ±                                                    | 3343 ±                        |  3110 ±                                          |
 
 
-- [CEGT (40/4)](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)
-
-| VERSION NO NNUE     |   ELO  |
-| ------------------- | ------ |
-| Coiled 0.2b         | 1824 ± |
-| Coiled 0.4          | 2334 ± |
-| Coiled 0.6          | 2446 ± |
+| VERSION NO NNUE     | [CCRL Blitz](http://ccrl.chessdom.com/ccrl/404/)  | [CCRL (40/15)](http://ccrl.chessdom.com/ccrl/4040/) | [CEGT (40/4)](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html) | [CCRL 40/2 FRC](http://ccrl.chessdom.com/ccrl/404FRC/) |
+| ------------------- | ------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Coiled 0.1a         | 1692 ±                                            |                                                     |                                                                               |                                                        |
+| Coiled 0.2b         | 1998 ±                                            |                                                     | 1824 ±                                                                        |                                                        |
+| Coiled 0.4          | 2510 ±                                            | 2565 ±                                              | 2334 ±                                                                        |                                                        |
+| Coiled 0.5          | 2613 ±                                            |                                                     |                                                                               |                                                        |
+| Coiled 0.6          | 2619 ±                                            | 2590 ±                                              | 2445 ±                                                                        |                                                        |
+| Coiled 1.1          | 2764 ±                                            | 2790 ±                                              |                                                                               | 2652 ±                                                 |
 
 
 ## :gear: Opciones Uci
-|                                    OPCIONES                                                                |                                          DESCRIPCION                                                                     |
-| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Hash                                                                                                       | Para ajustar el tamaño de la tabla hash en MB.                                                                           |
-| OwnBook                                                                                                    | Para usar el libro de apertura propio del motor. (por defecto: false)                                                    |
-| OwnBookLimit                                                                                               | Para limitar el número de jugadas máximas obtenidas desde el libro de apertura. (por defecto: 8)                         |
-| PreventTimeout                                                                                             | Para evitar Timeout en un juego por tiempo. Valor en milisegundo. Descuenta X ms al tiempo por jugada. (por defecto: 150)|
-| EndGamesTablebases                                                                                         | Seleccione entre la tabla de finales a usar: Ninguna, Syzygy, Gaviota y BitBases. (por defecto: Ninguna)                 |
-| EndGamesTablebasesPath                                                                                     | Para asignar la carpeta/directorio de las tablas de finales. Syzygy, Gaviota y BitBases. (por defecto: Vacío)            |
-| EndGamesTablebasesLimit                                                                                    | Indica a partir de cuantas piezas busca en la tabla de finales. Syzygy, Gaviota y BitBases. (por defecto: 5)             |
-| EndGamesTablebasesCache                                                                                    | Para ajustar el tamaño de la cache en MB de las tablas de finales. Gaviota y BitBases. (por defecto: 32MB)               |
-| NnueUse \*                                                                                                 | Activa/desactiva el uso de redes neuronales. (por defecto: true)                                                         |
-| NnuePath \*                                                                                                | Para asignar la ruta de la red neuronal. (por defecto: nn-a9f9e868162a.nnue)                                             |
-| NnueTechnology \*                                                                                          | Indica el tipo de tecnología que utiliza la red neuronal. AVX2, SSE4.1, SSE3 o SSE2. (por defecto: Auto)                 |
-| UCI\_Chess960 \*\*                                                                                         | Activa/desactiva el modo de juego Chess960. (por defecto: false)                                                         |
-| UCI\_Chess960CastlingSign \*\*                                                                             | Indica si utiliza el enroque estándar del protocolo UCI o el de la GUI Arena (por defecto: UCI)                          |
 
-\* Opciones disponibles, solo en la versión de 64bits.
+|                     OPCIONES                        |                                          DESCRIPCION                                                                           |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Hash                                                | Para ajustar el tamaño de la tabla hash en MB.                                                                                 |
+| Threads                                             | Numero de subprocesos que usará mientras realiza la búsqueda. (por defecto: 1)                                                 |
+| MoveOverhead                                        | Reserva X milisegundos para la comunicación del movimiento y la interfaz gráfica de usuario. (por defecto: 50)                 |
+| NnueFile \*                                         | Para asignar la red neuronal a utilizar. Sin red neuronal, juega con la evaluación interna. (por defecto: Vació)               |
+| UCI\_Chess960                                       | Activa/desactiva el modo de juego Chess960. Se configura automáticamente por la GUI. (por defecto: false)                      |
 
-\*\* Si activa UCI\_Chess960 y utiliza la GUI de Arena, en la opción UCI\_Chess960CastlingSign debes seleccionar la configuración: O-O/O-O-O. Para un correcto funcionamiento con la GUI Arena.
+
+\* Opciones disponibles, solo en la versión de 64bit.
 
 ## :open_book: Comandos adicionales no oficiales UCI
 
-- perft [x]: Ejecutando perft hasta [profundidad] en la posición actual.
+Existe la posibilidad de realizar un Perft. Esta opción sirve para descubrir fallos en la generación de movimientos.
 
-- perftdiv [x]: Ejecutando perft divide hasta [profundidad] en la posición actual.
+Active la opción 'UCI_Chess960' para realizar 'perft' en tableros Chess960.
 
-- book: Verifica el libro de aperturas.
+Puedes realizar una búsqueda de todos los movimientos hasta la profundidad que se desee, con divide.
 
-Estas opciones también están disponibles para el modo Chess960, solo has de activar el modo UCI_Chess960.
-    
-## :hammer_and_wrench: Construido y compilado con
+Escribiendo los siguientes comandos:
 
-* [CodeBlocks](https://www.codeblocks.org/)
-* [Visual Studio](https://visualstudio.microsoft.com/es/)
-* MinGW 8.1 incluido en codeblocks.
+Desde una posición en concreto:
 
-- Puede usar cualquier otro editor, al igual que puede usar otro compilador. 
-- Para compilar en linux: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile)
-- Formas de compilar: make help
-- Para compilar en Windows 32 bit: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile) con [codeblocks](https://github.com/Oscar-Gavira/Coiled/blob/master/src/Coiled_Windows_x86.cbp)
-- Para compilar en Windows 64 bit: [makefile](https://github.com/Oscar-Gavira/Coiled/blob/master/src/makefile) con [codeblocks](https://github.com/Oscar-Gavira/Coiled/blob/master/src/Coiled_Windows_x64.cbp)
+- setoption name Threads value 4
 
-<img src="https://github.com/Oscar-Gavira/Coiled/blob/main/src/makefile_codeblocks.jpg" width="50%" height="50%" />
+- position fen 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -
+
+- perft <X>
+
+
+
+## :hammer_and_wrench: Compilando
+
+Puede descargar Coiled ya compilado desde [aquí](https://github.com/Oscar-Gavira/Coiled/releases)
+
+Si prefiere compilar Coiled para mejor compatibilidad con su CPU.
+
+Requisitos: Tener instalado Git. Ubuntu: sudo apt install git.
+
+En Linux:
+```bash
+$ git clone https://github.com/Oscar-Gavira/Coiled
+$ cd Coiled/src
+$ make
+$ ./Coiled_1.2_avx2_x64
+```
+
+En Windows, usar:
+* [MSYS2.](https://www.msys2.org/) Versión actual: gcc version 13.1.0 (Rev6, Built by MSYS2 project) Thread model: posix. Supported LTO compression algorithms: zlib zstd
+
+Una vez instalado MSYS2. Abrimos MSYS2 MINGW64 o MSYS2 CLANG64.
+<img src="https://github.com/Oscar-Gavira/Coiled/blob/main/src/makefile_msys.png" width="75%" height="75%" />
+
+```bash
+$ git clone https://github.com/Oscar-Gavira/Coiled
+$ cd Coiled/src
+$ make
+$ cp -r release c:/Users/[Tu Usuario]/Documents/Coiled
+```
+
+Ahora puedes ir al navegador de archivos en Documentos, y encontrar la carpeta Coiled, donde estará compilado Coiled.
 
 
 ## :pencil: Términos de Uso
@@ -160,6 +173,7 @@ Coiled es gratuito y se distribuye bajo la licencia pública general GNU versió
 La única limitación real es que siempre que distribuya Coiled de alguna manera, siempre debe incluir el código fuente completo o un puntero al lugar donde se puede encontrar el código fuente. Si realiza algún cambio en el código fuente, estos cambios también deben estar disponibles bajo la GPL.
 
 Para obtener todos los detalles, lea la copia de la GPL v3 que se encuentra en el archivo llamado [LICENSE](https://github.com/Oscar-Gavira/Coiled/blob/master/LICENSE).
+
 
 ## :gift: Agradecimientos
 
@@ -191,7 +205,7 @@ Estoy muy agradecido a las siguientes personas:
 
 - Grupo de Stockfish. [Aquí](https://tests.stockfishchess.org/nns) encontraras una gran variedad de redes neuronales.
 
-Seleccionar la red neuronal descargada mediante las opciones UCI o renombrar el archivo a red_neuronal.nnue (Nombre por defecto) y colóquelo en el mismo directorio del motor Coiled.
+Seleccionar la red neuronal descargada mediante las opciones UCI.
 
 ---
 con :heart: por [Oscar](https://github.com/Oscar-Gavira) 😊

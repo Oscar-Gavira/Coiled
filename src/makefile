@@ -1,256 +1,191 @@
-#################################COMPILADOR#############################################
+############################################################################################
 CC = gcc
-CXX = g++
+#[native/generic]. Genera una compilacion en modo cpu generica o cpu local donde se compila.
+CPU = native
+#[true/false]. Para compilar con opciones de depuracion.
+DEBUG = false
+#Genera en modo forzado 32 o 64. Valor [true/false/auto].
+X32 = auto
+#Si genera error al limpiar, des-comentar esta linea
+#RM = del
 
-#################################COMPILAR EN WINDOWS CON MAKEFILE Y CODEBLOCK###########
-ifeq ($(WindowsX86),true)
-BIT = 32
-WINDOWS = true
-ICON = windres.exe -J rc -O coff -i 
-ICONFILECOMP = coiled/ver.rc -o coiled/ver.res
-ICONFILE = coiled/ver.res
-else ifeq ($(WindowsX64),true)
-BIT = 64
-WINDOWS = true
-ICON = windres.exe -J rc -O coff -i 
-ICONFILECOMP = coiled/ver.rc -o coiled/ver.res
-ICONFILE = coiled/ver.res
-else ifeq ($(LinuxX86),true)
-BIT = 32
-WINDOWS = false
-ICON =
-ICONFILE =
-else ifeq ($(LinuxX64),true)
-BIT = 64
-WINDOWS = false
-ICON =
-ICONFILE =
-endif
-
-##################################WINDOWS O LINUX#########################################
-ifdef SystemRoot
-EXT = .dll
-EXT2 = .exe
-DEL1 = del egbbdll\*.o
-DEL2 = del fathom\*.o
-DEL3 = del gtbprobe\*.o
-DEL4 = del gtbprobe\sysport\*.o
-DEL5 = del gtbprobe\compression\*.o
-DEL6 = del gtbprobe\compression\lzma\*.o
-DEL7 = del nnue\*.o
-DEL8 = del coiled\*.o
-DEL9 = del coiled\*.res
-else
-EXT = .so
-DEL1 = rm -rf egbbdll/*.o
-DEL2 = rm -rf fathom/*.o
-DEL3 = rm -rf gtbprobe/*.o
-DEL4 = rm -rf gtbprobe/sysport/*.o
-DEL5 = rm -rf gtbprobe/compression/*.o
-DEL6 = rm -rf gtbprobe/compression/lzma/*.o
-DEL7 = rm -rf nnue/*.o
-DEL8 = rm -rf coiled/*.o
-DEL9 = 
-endif
-
-##################################32 O 64 BIT############################################
-ifeq ($(BIT),64)
-ARCHITECTURE = x64
-X86_64 = -march=x86-64 -mtune=generic
-else
-ARCHITECTURE = x86
-X86_64 = -march=i686 -mtune=generic
-endif
-
-################################COILED##################################################
+############################################################################################
+#Nombre 
 EXE = Coiled
-VERSION = 1.1
-
-ifeq ($(WINDOWS),false)
-LIBS = -lm -ldl
-else
-LIBS = -lm
-endif
-
-ifeq ($(BIT),64)
-DEFINES += -DARC_64BIT
-endif
-
-WFLAGS = -g -Wall -Wextra -Wshadow
-CFLAGS = -O2 -std=c11 $(X86_64)
-
-#################################EGBBDLL###############################################
-ifeq ($(WINDOWS),false)
-EGBB = libegbb
-EGBBLIBS = -lm -shared
-else
-EGBB = egbb
-EGBBLIBS = -lm -shared -static
-endif
-
-#EGBBDEFINES = -DPARALLEL
-ifeq ($(BIT),64)
-EGBBDEFINES += -DARC_64BIT
-endif
-#GBBDEFINES += -DHAS_POPCNT
-#GBBDEFINES += -DHAS_PREFETCH -DUSE_SPINLOCK
-
-EGBBUNUSED = -Wno-unused-variable -Wno-unused-result 
-EGBBUNUSED += -Wno-unused-but-set-variable -Wno-maybe-uninitialized -Wno-psabi
-
-WEGBBFLAGS = -g -Wall -Wextra -Wshadow -fstrict-aliasing -fno-exceptions -fno-rtti $(EGBBUNUSED)
-CEGBBFLAGS += -O2 -std=c++11 $(X86_64) -fomit-frame-pointer
-
-##############################FATHOM#####################################################
-ifeq ($(WINDOWS),false)
-FATHOM = libsyzygy
-FATHOMLIBS = -lm -shared
-else
-FATHOM = syzygy
-FATHOMLIBS = -lm -shared -static
-endif
-
-FATHOMDEFINES = -DTB_NO_THREADS
-
-WFATHOMFLAGS = -g -Wall -Wextra -Wshadow -I..
-CFATHOMFLAGS = -O2 -std=c99 $(X86_64)
-
-##############################GAVIOTA####################################################
-ifeq ($(WINDOWS),false)
-GTB = libgtb
-GTBDEFINES = -DGCCLINUX -DNDEBUG -DZ_PREFIX
-else
-GTB = gtb
-GTBDEFINES = -DMINGW -DNDEBUG -DZ_PREFIX
-endif
-
-GTBLIBS = -shared
-
-WGTBFLAGS = -g -Wall -Wextra
-CGTBFLAGS = -std=c99 -O2 $(X86_64)
-
-#############################NNUE########################################################
-ifeq ($(WINDOWS),false)
-NNUE = libnnue
-NNUELIBS = -lm -shared
-else
-NNUE = nnue
-NNUELIBS = -lm -shared -static
-endif
-
-ifeq ($(BIT),64)
-NNUEDEFINES = -DIS_64BIT
-endif
-
+#Versión
+VERSION = 1.2
+#Tecnología AVX2 o SSE2 para NNUE
 TECNOLOGY1 = avx2
-TECNOLOGY2 = sse4.1
-TECNOLOGY3 = sse3
-TECNOLOGY4 = sse2
+TECNOLOGY2 = sse2
 
-NNUEDEFINES1 = $(X86_64) -mavx2 -msse4.1 -msse3 -msse2 -msse -DUSE_AVX2
-NNUEDEFINES2 = $(X86_64) -msse4.1 -msse3 -msse2 -msse -DUSE_SSE41
-NNUEDEFINES3 = $(X86_64) -msse3 -msse2 -msse -DUSE_SSE3
-NNUEDEFINES4 = $(X86_64) -msse2 -msse -DUSE_SSE2
+############################################################################################
+#En caso de compilar en Linux OS obtiene el valor de 'Linux', mediante $(shell uname -s)
+#En caso de compilar en windows OS tiene el valor predeterminado de Windows_NT. Y $(shell uname -s) no funciona.
+KERNEL = $(shell uname -s)
+ifeq ($(KERNEL),Linux)
+    OS = Linux
+endif
 
-WNNUEFLAGS = -g -Wall -Wno-unused-variable -Wno-unused-result -Wno-unused-but-set-variable -Wno-maybe-uninitialized
-CNNUEFLAGS = -std=c++11 -O2 -fomit-frame-pointer -fstrict-aliasing -fno-exceptions -fno-rtti
+ifeq ($(OS),Windows_NT)
+    ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+        ARCHITECTURE = x64
+        BIT = 64
+    endif
+    ifeq ($(PROCESSOR_ARCHITECTURE),x86)
+        ARCHITECTURE = x86
+        BIT = 32
+    endif
 
-#########################################################################################
+    ifeq ($(CC),clang)
+        LIBS = -lpthread -static
+    endif
+    ifeq ($(CC),gcc)
+        LIBS = -lm -lpthread -static
+    endif
+
+    DEFINES = 
+
+    EXT = .exe
+    DEL1 = nnue/*.o
+    DEL2 = coiled/*.o
+    DEL3 = coiled/resource/*.res
+    ICON = windres.exe -J rc -O coff -i 
+    ICONFILECOMP = coiled/resource/ver.rc -o coiled/resource/ver.res
+    ICONFILE = coiled/resource/ver.res
+endif
+ifeq ($(OS),Linux)
+    UNAME_P := $(shell uname -m)
+    ifeq ($(UNAME_P),x86_64)
+        ARCHITECTURE = x64
+        BIT = 64
+    else
+        ARCHITECTURE = x86
+        BIT = 32
+    endif
+
+    LIBS = -lm -lpthread
+
+    DEFINES = 
+
+    EXT = 
+    DEL1 = nnue/*.o
+    DEL2 = coiled/*.o
+    DEL3 = 
+endif
+
+############################################################################################
+ifeq ($(X32),false)
+    ARCHITECTURE = x64
+    BIT = 64
+endif
+ifeq ($(X32),true)
+    ARCHITECTURE = x86
+    BIT = 32
+endif
+
+############################################################################################
+ifeq ($(BIT),64)
+    ifeq ($(CPU),native)
+        X86_64 = -m64 -march=native -mtune=native
+        NNUEDEFINES = -DUSE_AVX2
+        DEFINES += -DARC_64BIT
+    endif
+    ifeq ($(CPU),generic)
+        X86_64 = -m64 -march=x86-64 -mtune=generic -msse -msse2
+        NNUEDEFINES = -mavx2 -mavx -msse4.1 -msse3 -DUSE_AVX2
+        DEFINES += -DARC_64BIT
+    endif
+endif
+ifeq ($(BIT),32)
+    ifeq ($(CPU),native)
+        X86_64 = -m32 -march=native -mtune=native
+    endif
+    ifeq ($(CPU),generic)
+        X86_64 = -m32 -march=pentium4 -mtune=generic
+    endif
+endif
+
+############################################################################################
+WFLAGS = -g -Wall -Wextra -Wshadow -pedantic -Wpedantic -pedantic-errors
+CFLAGS = -O3 -std=gnu11
+
+ifeq ($(DEBUG),true)
+CFLAGS += $(WFLAGS)
+DEFINES += -DDEBUG
+endif
+
+############################################################################################
+.PHONY: all coiled64 coiled32 clean help
 	
-.PHONY: all
-all: help
+ifeq ($(BIT),32)
+all: coiled32 clean
+endif
+ifeq ($(BIT),64)
+all: coiled64 clean
+endif
 	
-.PHONY: X86
-X86: egbb gtb engine 
-	
-.PHONY: X64
-X64: egbb syzygy gtb nn engine 
-	
-engine:
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/AlphaBeta.c -o coiled/AlphaBeta.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/Cpu.c -o coiled/Cpu.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/egbb.c -o coiled/egbb.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/Evaluacion.c -o coiled/Evaluacion.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/Fen.c -o coiled/Fen.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/GeneradorDeMovimientos.c -o coiled/GeneradorDeMovimientos.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/Hash.c -o coiled/Hash.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/Historico.c -o coiled/Historico.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/Inicio.c -o coiled/Inicio.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/LibroAperturas.c -o coiled/LibroAperturas.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/nnue.c -o coiled/nnue.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/OrdenarMovimientos.c -o coiled/OrdenarMovimientos.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/Perft.c -o coiled/Perft.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/See.c -o coiled/See.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/syzygy.c -o coiled/syzygy.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/tbprobe.c -o coiled/tbprobe.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/Utilidades.c -o coiled/Utilidades.o
-	$(CC) $(CFLAGS) $(DEFINES) -c coiled/Tiempo.c -o coiled/Tiempo.o
+coiled64:
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/AlphaBeta.c -o coiled/AlphaBeta.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Evaluacion.c -o coiled/Evaluacion.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/GeneradorDeMovimientos.c -o coiled/GeneradorDeMovimientos.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Hash.c -o coiled/Hash.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Historico.c -o coiled/Historico.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Inicio.c -o coiled/Inicio.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/nn.c -o coiled/nn.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/OrdenarMovimientos.c -o coiled/OrdenarMovimientos.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/See.c -o coiled/See.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Utilidades.c -o coiled/Utilidades.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Tiempo.c -o coiled/Tiempo.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c nnue/misc.c -o nnue/misc.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c nnue/nnue.c -o nnue/nnue.o
 	$(ICON) $(ICONFILECOMP)
-	$(CC) -o $(EXE)_$(VERSION)_$(ARCHITECTURE)$(EXT2) coiled/AlphaBeta.o coiled/Cpu.o coiled/egbb.o coiled/Evaluacion.o coiled/Fen.o coiled/GeneradorDeMovimientos.o coiled/Hash.o coiled/Historico.o coiled/Inicio.o coiled/LibroAperturas.o coiled/nnue.o coiled/OrdenarMovimientos.o coiled/Perft.o coiled/See.o coiled/syzygy.o coiled/tbprobe.o coiled/Utilidades.o coiled/Tiempo.o $(ICONFILE) $(LIBS)
+	$(CC) -o $(EXE)_$(VERSION)_$(TECNOLOGY2)_$(ARCHITECTURE)$(EXT) coiled/nn.o nnue/misc.o nnue/nnue.o coiled/AlphaBeta.o coiled/Evaluacion.o coiled/GeneradorDeMovimientos.o coiled/Hash.o coiled/Historico.o coiled/Inicio.o coiled/OrdenarMovimientos.o coiled/See.o coiled/Utilidades.o coiled/Tiempo.o $(ICONFILE) $(LIBS)
+	$(RM) $(DEL1)
 	
-egbb:
-	$(CXX) $(CEGBBFLAGS) $(EGBBDEFINES) -c -fPIC -o egbbdll/egbbdll.o egbbdll/egbbdll.cpp
-	$(CXX) $(CEGBBFLAGS) $(EGBBDEFINES) -c -fPIC -o egbbdll/moves.o egbbdll/moves.cpp
-	$(CXX) $(CEGBBFLAGS) $(EGBBDEFINES) -c -fPIC -o egbbdll/index.o egbbdll/index.cpp
-	$(CXX) $(CEGBBFLAGS) $(EGBBDEFINES) -c -fPIC -o egbbdll/decompress.o egbbdll/decompress.cpp
-	$(CXX) $(CEGBBFLAGS) $(EGBBDEFINES) -c -fPIC -o egbbdll/codec.o egbbdll/codec.cpp
-	$(CXX) $(CEGBBFLAGS) $(EGBBDEFINES) -c -fPIC -o egbbdll/cache.o egbbdll/cache.cpp
-	$(CXX) -o $(EGBB)_$(ARCHITECTURE)$(EXT) egbbdll/egbbdll.o egbbdll/moves.o egbbdll/index.o egbbdll/decompress.o egbbdll/codec.o egbbdll/cache.o $(EGBBLIBS)
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) $(NNUEDEFINES) -c nnue/misc.c -o nnue/misc.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) $(NNUEDEFINES) -c nnue/nnue.c -o nnue/nnue.o
+	$(ICON) $(ICONFILECOMP)
+	$(CC) -o $(EXE)_$(VERSION)_$(TECNOLOGY1)_$(ARCHITECTURE)$(EXT) coiled/nn.o nnue/misc.o nnue/nnue.o coiled/AlphaBeta.o coiled/Evaluacion.o coiled/GeneradorDeMovimientos.o coiled/Hash.o coiled/Historico.o coiled/Inicio.o coiled/OrdenarMovimientos.o coiled/See.o coiled/Utilidades.o coiled/Tiempo.o $(ICONFILE) $(LIBS)
+
 	
-syzygy:
-	$(CC) $(CFATHOMFLAGS) $(FATHOMDEFINES) -c -fPIC -o fathom/tbprobe.o fathom/tbprobe.c
-	$(CC) -o $(FATHOM)_$(ARCHITECTURE)$(EXT) fathom/tbprobe.o $(FATHOMLIBS)
-	
-gtb:
-	$(CC) $(CGTBFLAGS) $(GTBDEFINES) -c -fPIC -o gtbprobe/gtb-probe.o gtbprobe/gtb-probe.c
-	$(CC) $(CGTBFLAGS) $(GTBDEFINES) -c -fPIC -o gtbprobe/gtb-dec.o gtbprobe/gtb-dec.c
-	$(CC) $(CGTBFLAGS) $(GTBDEFINES) -c -fPIC -o gtbprobe/gtb-att.o gtbprobe/gtb-att.c
-	$(CC) $(CGTBFLAGS) $(GTBDEFINES) -c -fPIC -o gtbprobe/sysport/sysport.o gtbprobe/sysport/sysport.c
-	$(CC) $(CGTBFLAGS) $(GTBDEFINES) -c -fPIC -o gtbprobe/compression/wrap.o gtbprobe/compression/wrap.c
-	$(CC) $(CGTBFLAGS) $(GTBDEFINES) -c -fPIC -o gtbprobe/compression/lzma/LzmaDec.o gtbprobe/compression/lzma/LzmaDec.c
-	$(CC) $(CGTBFLAGS) $(GTBDEFINES) -c -fPIC -o gtbprobe/compression/lzma/Alloc.o gtbprobe/compression/lzma/Alloc.c
-	$(CC) $(CGTBFLAGS) $(GTBDEFINES) -c -fPIC -o gtbprobe/compression/lzma/LzFind.o gtbprobe/compression/lzma/LzFind.c
-	$(CC) $(CGTBFLAGS) $(GTBDEFINES) -c -fPIC -o gtbprobe/compression/lzma/Lzma86Dec.o gtbprobe/compression/lzma/Lzma86Dec.c
-	$(CC) $(CGTBFLAGS) $(GTBDEFINES) -c -fPIC -o gtbprobe/compression/lzma/Bra86.o gtbprobe/compression/lzma/Bra86.c
-	$(CC) -o $(GTB)_$(ARCHITECTURE)$(EXT) gtbprobe/gtb-probe.o gtbprobe/gtb-dec.o gtbprobe/gtb-att.o gtbprobe/sysport/sysport.o gtbprobe/compression/wrap.o gtbprobe/compression/lzma/LzmaDec.o gtbprobe/compression/lzma/Alloc.o gtbprobe/compression/lzma/LzFind.o gtbprobe/compression/lzma/Lzma86Dec.o gtbprobe/compression/lzma/Bra86.o -Wl,-soname=libgtb.so.1 $(GTBLIBS)
-	
-nn:
-	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES1) -c -fPIC -o nnue/misc.o nnue/misc.cpp
-	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES1) -c -fPIC -o nnue/nnue.o nnue/nnue.cpp
-	$(CXX) -o $(NNUE)_$(TECNOLOGY1)$(EXT) nnue/misc.o nnue/nnue.o $(NNUELIBS)
-	
-	
-	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES2) -c -fPIC -o nnue/misc.o nnue/misc.cpp
-	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES2) -c -fPIC -o nnue/nnue.o nnue/nnue.cpp
-	$(CXX) -o $(NNUE)_$(TECNOLOGY2)$(EXT) nnue/misc.o nnue/nnue.o $(NNUELIBS)
-	
-	
-	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES3) -c -fPIC -o nnue/misc.o nnue/misc.cpp
-	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES3) -c -fPIC -o nnue/nnue.o nnue/nnue.cpp
-	$(CXX) -o $(NNUE)_$(TECNOLOGY3)$(EXT) nnue/misc.o nnue/nnue.o $(NNUELIBS)
-	
-	
-	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES4) -c -fPIC -o nnue/misc.o nnue/misc.cpp
-	$(CXX) $(CNNUEFLAGS) $(NNUEDEFINES4) -c -fPIC -o nnue/nnue.o nnue/nnue.cpp
-	$(CXX) -o $(NNUE)_$(TECNOLOGY4)$(EXT) nnue/misc.o nnue/nnue.o $(NNUELIBS)
+coiled32:
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/AlphaBeta.c -o coiled/AlphaBeta.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Evaluacion.c -o coiled/Evaluacion.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/GeneradorDeMovimientos.c -o coiled/GeneradorDeMovimientos.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Hash.c -o coiled/Hash.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Historico.c -o coiled/Historico.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Inicio.c -o coiled/Inicio.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/nn.c -o coiled/nn.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/OrdenarMovimientos.c -o coiled/OrdenarMovimientos.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/See.c -o coiled/See.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Utilidades.c -o coiled/Utilidades.o
+	$(CC) $(CFLAGS) $(X86_64) $(DEFINES) -c coiled/Tiempo.c -o coiled/Tiempo.o
+	$(ICON) $(ICONFILECOMP)
+	$(CC) -o $(EXE)_$(VERSION)_$(ARCHITECTURE)$(EXT) coiled/AlphaBeta.o coiled/Evaluacion.o coiled/GeneradorDeMovimientos.o coiled/Hash.o coiled/Historico.o coiled/Inicio.o coiled/nn.o coiled/OrdenarMovimientos.o coiled/See.o coiled/Utilidades.o coiled/Tiempo.o $(ICONFILE) $(LIBS)
 	
 clean:
-	$(DEL1)
-	$(DEL2)
-	$(DEL3)
-	$(DEL4)
-	$(DEL5)
-	$(DEL6)
-	$(DEL7)
-	$(DEL8)
-	$(DEL9)
+	$(RM) $(DEL1)
+	$(RM) $(DEL2)
+	$(RM) $(DEL3)
+	
+version:
+	$(CC) -v
 	
 help:
 	@echo ""
-	@echo "1. make LinuxX86=true X86 - Compile all for linux x86"
-	@echo "2. make LinuxX64=true X64 - Compile all for linux x64"
-	@echo "3. make WindowsX86=true X86 - Compile all for windows x86"
-	@echo "4. make WindowsX64=true X64 - Compile all for windows x64"
-	@echo "5. make clean - remove all *.o"
+	@echo "1. make - Compile all for 32 or 64 bit, depends on your operating system"
+	@echo "2. make clean - remove all *.o"
 	@echo ""
-	
+	@echo "Additional parameters:"
+	@echo "Add DEBUG=true - Compile in debug mode."
+	@echo "Add X32=true - Force compile to 32bit."
+	@echo "Add CPU=native - Compile for your CPU."
+	@echo "Add CC=clang - Compile with Clang."
+	@echo ""
+	@echo "Examples:"
+	@echo "make CC=clang CPU=native"
+	@echo "make CC=clang X32=true"
+	@echo "make CPU=native"
+	@echo "make X32=true DEBUG=true"
+	@echo "make DEBUG=true"
+	@echo "make ..."

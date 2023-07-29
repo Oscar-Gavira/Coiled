@@ -1,7 +1,6 @@
 /*
-Coiled is a UCI chess playing engine authored by Oscar Gavira.
-Copyright (C) 2013-2021 Oscar Gavira.
-<https://github.com/Oscar-Gavira/Coiled>
+Coiled is a UCI compliant chess engine written in C
+Copyright (C) 2023 Oscar Gavira. <https://github.com/Oscar-Gavira/Coiled>
 
 Coiled is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,21 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Externo.h"
 #include "Historico.h"
 
-/*******************************************************************************
-							Variables
-*******************************************************************************/
-S64 Historico[64][64];													/* [Origen][Destino] */
-int Historico_Killer[MAX_PLY][2];										/* [MAXPLY][2 jugadas] */
-int Historico_Killer_Mate[MAX_PLY][2];									/* [MAXPLY][2 jugadas] */
-int HistoricoRefutacion[7][64][64];										/* [Pieza][Origen][Destino] */
-
-S64 Max_Historico = 0;
-S64 Min_Historico = 0;
-
-/* Es un movimiento tranquilo */
+void HistoricoIniciar(_ST_TableroX64 *Tablero)
+{
+	memset(Tablero->His.Historico_Movimientos, 0, sizeof(Tablero->His.Historico_Movimientos));
+	memset(Tablero->His.Historico_Killer, 0, sizeof(Tablero->His.Historico_Killer));
+	memset(Tablero->His.Historico_Killer_Mate, 0, sizeof(Tablero->His.Historico_Killer_Mate));
+	memset(Tablero->His.HistoricoRefutacion, 0, sizeof(Tablero->His.HistoricoRefutacion));
+	memset(Tablero->His.HistoricoCaptura, 0, sizeof(Tablero->His.HistoricoCaptura));
+	Tablero->His.Max_Historico = 0;
+	Tablero->His.Min_Historico = 0;
+	Tablero->His.Max_Historico_Cap = 0;
+	Tablero->His.Min_Historico_Cap = 0;
+}
 int MovimientoTranquilo(int *M)
 {
 	/*
@@ -41,48 +39,34 @@ int MovimientoTranquilo(int *M)
 	*/
 
 	if (CAPTURADA(*M) != MFLAGCAP)
-	{
 		return false;
-	}
 	if (CORONACION(*M) != MFLAGPROM)
-	{
 		return false;
-	}
 	if (CAPTURA_ALPASO(*M) == MFLAGEP)
-	{
 		return false;
-	}
 
 	return true;
 }
-
-/* Indica si el movimiento es un killer y Mate killer */
-int MovimientoKiller(int *ply, int *M)
+int MovimientoKiller(int *M, _ST_TableroX64 *Tablero)
 {
-	if (!HistoricoEsMovimientoKiller(ply, M))
-	{
-		return HistoricoEsMovimientoKillerMate(ply, M);
-	}
+	if (!HistoricoEsMovimientoKiller(M, Tablero))
+		return HistoricoEsMovimientoKillerMate(M, Tablero);
 	else
-	{
 		return true;
-	}
 }
-
-/* Inicializar Historico y killer heuristico */
-void HistoricoIniciar()
+int HistoricoEsMovimientoKiller(int *M, _ST_TableroX64 *Tablero)
 {
-	memset(Historico, 0, 64 * 64 * sizeof(S64));
-	memset(Historico_Killer, 0, MAX_PLY * 2 * sizeof(int));
-	memset(Historico_Killer_Mate, 0, MAX_PLY * 2 * sizeof(int));
-	memset(HistoricoRefutacion, 0, 7 * 64 * 64 * sizeof(int));
-
-	Max_Historico = 0;
-	Min_Historico = 0;
+	if (*M == Tablero->His.Historico_Killer[Tablero->Ply][0]) return true;
+	if (*M == Tablero->His.Historico_Killer[Tablero->Ply][1]) return true;
+	return false;
 }
-
-/* Actualizamos historico y killer */
-void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmov)
+int HistoricoEsMovimientoKillerMate(int *M, _ST_TableroX64 *Tablero)
+{
+	if (*M == Tablero->His.Historico_Killer_Mate[Tablero->Ply][0]) return true;
+	if (*M == Tablero->His.Historico_Killer_Mate[Tablero->Ply][1]) return true;
+	return false;
+}
+void HistoricoActualizar(int depth, int *ply, int M, int kMate, int ML[], int Nmov, _ST_TableroX64 *Tablero)
 {
 	int i = 0;
 	S64 h = 0;
@@ -92,112 +76,121 @@ void HistoricoActualizar(int depth, int *ply, int M, int kMate, int *ML, int Nmo
 	int PiezaCn = NO_MOVIMIENTO;
 	int DestinoCn = 0;
 	int OrigenCn = 0;
+	int Color = 0;
 
-	/* Killer */
 	if (kMate)
 	{
-		if (M != Historico_Killer_Mate[*ply][0])
+		if (M != Tablero->His.Historico_Killer_Mate[*ply][0])
 		{
-			Historico_Killer_Mate[*ply][1] = Historico_Killer_Mate[*ply][0];
-			Historico_Killer_Mate[*ply][0] = M;
+			Tablero->His.Historico_Killer_Mate[*ply][1] = Tablero->His.Historico_Killer_Mate[*ply][0];
+			Tablero->His.Historico_Killer_Mate[*ply][0] = M;
 		}
 	}
 	else
 	{
-		if (M != Historico_Killer[*ply][0])
+		if (M != Tablero->His.Historico_Killer[*ply][0])
 		{
-			Historico_Killer[*ply][1] = Historico_Killer[*ply][0];
-			Historico_Killer[*ply][0] = M;
+			Tablero->His.Historico_Killer[*ply][1] = Tablero->His.Historico_Killer[*ply][0];
+			Tablero->His.Historico_Killer[*ply][0] = M;
 		}
 	}
-	/* Refutation */
-	if (*ply > 0 && TableroGlobal.Estado[*ply - 1].Movimiento != NO_MOVIMIENTO)
+
+	if (*ply > 0 && Tablero->Estado[*ply - 1].Movimiento != NO_MOVIMIENTO)
 	{
-		PiezaCn = PIEZAMOVIDA(TableroGlobal.Estado[*ply - 1].Movimiento);
-		DestinoCn = CUADRADO_DESTINO(TableroGlobal.Estado[*ply - 1].Movimiento);
-		OrigenCn = CUADRADO_ORIGEN(TableroGlobal.Estado[*ply - 1].Movimiento);
+		PiezaCn = PIEZAMOVIDA(Tablero->Estado[*ply - 1].Movimiento);
+		DestinoCn = CUADRADO_DESTINO(Tablero->Estado[*ply - 1].Movimiento);
+		OrigenCn = CUADRADO_ORIGEN(Tablero->Estado[*ply - 1].Movimiento);
 
 		if (PiezaCn > NO_MOVIMIENTO && PiezaCn < NoPieza)
 		{
 			if (PiezaCn > CasillaVacia)
+			{
 				PiezaCn = PiezaCn - 7;
+				Color = 1;
+			}
 
-			HistoricoRefutacion[PiezaCn][OrigenCn][DestinoCn] = M;
+			PiezaCn -= 1;
+
+			Tablero->His.HistoricoRefutacion[Color][PiezaCn][OrigenCn][DestinoCn] = M;
 		}
 	}
-	/* Historico */
+
 	for (i = 0; i < Nmov; i++)
 	{
 		Fin = CUADRADO_DESTINO(ML[i]);
 		Inicio = CUADRADO_ORIGEN(ML[i]);
-
 		Puntos = (ML[i] == M) ? (depth * depth) : -(depth * depth);
-
-		Historico[Inicio][Fin] += Puntos;
-		h = Historico[Inicio][Fin];
-		if (h > Max_Historico) Max_Historico = h;
-		else if (h < Min_Historico) Min_Historico = h;
+		Tablero->His.Historico_Movimientos[Inicio][Fin] += Puntos;
+		h = Tablero->His.Historico_Movimientos[Inicio][Fin];
+		if (h > Tablero->His.Max_Historico) Tablero->His.Max_Historico = h;
+		else if (h < Tablero->His.Min_Historico) Tablero->His.Min_Historico = h;
 	}
 }
-
-/* Indica si es un movimiento killer */
-int HistoricoEsMovimientoKiller(int *ply, int *M)
+void HistoricoActualizarCapturas(int depth, int M, int MC[], int Ncap, _ST_TableroX64 *Tablero)
 {
-	if (*M == Historico_Killer[*ply][0])
-	{
-		return true;
-	}
-	if (*M == Historico_Killer[*ply][1])
-	{
-		return true;
-	}
+	int i = 0;
+	S64 h = 0;
+	int Inicio = 0;
+	int Fin = 0;
+	int Puntos = 0;
 
-	return false;
+	for (i = 0; i < Ncap; i++)
+	{
+		Fin = CUADRADO_DESTINO(MC[i]);
+		Inicio = CUADRADO_ORIGEN(MC[i]);
+		Puntos = (MC[i] == M) ? (depth * depth) : -(depth * depth);
+		Tablero->His.HistoricoCaptura[Inicio][Fin] += Puntos;
+		h = Tablero->His.HistoricoCaptura[Inicio][Fin];
+		if (h > Tablero->His.Max_Historico_Cap) Tablero->His.Max_Historico_Cap = h;
+		else if (h < Tablero->His.Min_Historico_Cap) Tablero->His.Min_Historico_Cap = h;
+	}
 }
-
-/* Indica si es un movimiento killer mate */
-int HistoricoEsMovimientoKillerMate(int *ply, int *M)
+int HistoricoMovimientoRefutacion(_ST_TableroX64 *Tablero)
 {
-	if (*M == Historico_Killer_Mate[*ply][0])
+	if (Tablero->Ply > 1 && Tablero->Estado[Tablero->Ply - 1].Movimiento != NO_MOVIMIENTO)
 	{
-		return true;
-	}
-	if (*M == Historico_Killer_Mate[*ply][1])
-	{
-		return true;
-	}
-
-	return false;
-}
-
-int HistoricoMovimientoRefutacion()
-{
-	if (TableroGlobal.Ply - 1 && TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento != NO_MOVIMIENTO)
-	{
-		int PiezaCn = PIEZAMOVIDA(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
-		int DestinoCn = CUADRADO_DESTINO(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
-		int OrigenCn = CUADRADO_ORIGEN(TableroGlobal.Estado[TableroGlobal.Ply - 1].Movimiento);
+		int PiezaCn = PIEZAMOVIDA(Tablero->Estado[Tablero->Ply - 1].Movimiento);
+		int DestinoCn = CUADRADO_DESTINO(Tablero->Estado[Tablero->Ply - 1].Movimiento);
+		int OrigenCn = CUADRADO_ORIGEN(Tablero->Estado[Tablero->Ply - 1].Movimiento);
+		int Color = 0;
 
 		if (PiezaCn > NO_MOVIMIENTO && PiezaCn < NoPieza)
 		{
 			if (PiezaCn > CasillaVacia)
+			{
 				PiezaCn = PiezaCn - 7;
+				Color = 1;
+			}
 
-			return HistoricoRefutacion[PiezaCn][OrigenCn][DestinoCn];
+			PiezaCn -= 1;
+
+			return Tablero->His.HistoricoRefutacion[Color][PiezaCn][OrigenCn][DestinoCn];
 		}
 	}
 	return NO_MOVIMIENTO;
 }
-
-/* Historico. Para la ordenacion de movimientos. Devuelve del -102 al 100. Porcentaje en vez de valor*/
-int HistoricoValor(int *M)
+int HistoricoValor(int *M, _ST_TableroX64 *Tablero)
 {
-	S64 v = Historico[CUADRADO_ORIGEN(*M)][CUADRADO_DESTINO(*M)];
-
-	if (v > 0 && Max_Historico != 0)
-		return (int)((S64)((S64)100 * v) / Max_Historico) + 1;	/* Los decimales 0,02 se convierten en 1. Valor maximo 101 */
-	else if (v < 0 && Min_Historico != 0)
-		return (int)((S64)((S64 )-100 * v) / Min_Historico) + -1;	/* Los decimales -0,01 se convierten en -1. Valor maximo -101 */
+	int Inicio = CUADRADO_ORIGEN(*M);
+	int Fin = CUADRADO_DESTINO(*M);
+	S64 v = Tablero->His.Historico_Movimientos[Inicio][Fin];
+	if (v > 0 && Tablero->His.Max_Historico != 0)
+		return (int)((S64)((S64)100 * v) / Tablero->His.Max_Historico) + 1;
+	else if (v < 0 && Tablero->His.Min_Historico != 0)
+		return (int)((S64)((S64 )-100 * v) / Tablero->His.Min_Historico) + -1;
 	else
 		return 0;
 }
+int HistoricoCapturaValor(int *M, _ST_TableroX64 *Tablero)
+{
+	int Inicio = CUADRADO_ORIGEN(*M);
+	int Fin = CUADRADO_DESTINO(*M);
+	S64 v = Tablero->His.HistoricoCaptura[Inicio][Fin];
+	if (v > 0 && Tablero->His.Max_Historico_Cap != 0)
+		return (int)((S64)((S64)100 * v) / Tablero->His.Max_Historico_Cap) + 1;
+	else if (v < 0 && Tablero->His.Min_Historico_Cap != 0)
+		return (int)((S64)((S64)-100 * v) / Tablero->His.Min_Historico_Cap) + -1;
+	else
+		return 0;
+}
+

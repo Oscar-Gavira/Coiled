@@ -1,0 +1,49 @@
+name: build
+
+on:
+  push:
+
+  workflow_dispatch:
+
+jobs:
+  Ubuntu64:
+    runs-on: ubuntu-latest
+      
+    strategy:
+      matrix:
+        target: [all]
+        parametre: [native]
+        compiler: [gcc, clang]
+        
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create build x64
+        run: |
+         cd src
+         make ${{ matrix.target }} CPU=${{ matrix.parametre }} CC=${{ matrix.compiler }}
+
+  Windows:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        target: [all]
+        parametre: [native]
+        compiler: [gcc]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
+          install: mingw-w64-x86_64-gcc make git
+
+      - name: Add compiler to $PATH env
+        shell: bash
+        run: echo "PATH=$PATH:/c/msys64/mingw64/bin" >> $GITHUB_ENV
+
+      - name: Create build x64
+        shell: msys2 {0}
+        run: |
+         cd src
+         make ${{ matrix.target }} CPU=${{ matrix.parametre }} CC=${{ matrix.compiler }}
